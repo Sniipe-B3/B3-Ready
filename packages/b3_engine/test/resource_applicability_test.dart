@@ -1,40 +1,41 @@
 import 'package:test/test.dart';
 import 'package:b3_engine/b3_engine.dart';
-import 'dart:convert';
 
 void main() {
   final recEngine = RecommendationEngine(b3KnowledgeBase);
   final scenarioElec = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-  final scenarioElecGaz = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
+  final scenarioElecGaz =
+      DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
 
   test('TEST A — Ressource connue suffisante', () {
     final household = HouseholdConfig(
-      ownedAssets: ['rechaud_bois'],
-      ownedResources: ['bois'],
-      assessedResources: {'bois'},
-      resourceDurations: {'bois': Duration(hours: 72)},
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+        ownedAssets: ['rechaud_bois'],
+        ownedResources: ['bois'],
+        assessedResources: {'bois'},
+        resourceDurations: {'bois': Duration(hours: 72)},
+        assessedCapabilities: {'cuisiner'});
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
     final recs = recEngine.generate(result, household, scenarioElec);
 
     expect(result.nodeStates['cuisiner'], B3State.maintained);
-    expect(recs.any((r) => r.capabilityId == 'cuisiner'), false); // Aucune recommandation
+    expect(recs.any((r) => r.capabilityId == 'cuisiner'),
+        false); // Aucune recommandation
   });
 
   test('TEST B — Ressource connue insuffisante', () {
     final household = HouseholdConfig(
-      ownedAssets: ['rechaud_bois'],
-      ownedResources: ['bois'],
-      assessedResources: {'bois'},
-      resourceDurations: {'bois': Duration(hours: 12)},
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+        ownedAssets: ['rechaud_bois'],
+        ownedResources: ['bois'],
+        assessedResources: {'bois'},
+        resourceDurations: {'bois': Duration(hours: 12)},
+        assessedCapabilities: {'cuisiner'});
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
     final recs = recEngine.generate(result, household, scenarioElec);
 
     expect(result.nodeStates['cuisiner'], B3State.degraded);
-    
+
     // Doit proposer d'augmenter le bois
     final rec = recs.firstWhere((r) => r.id.contains('rechaud_bois'));
     expect(rec.type, RecommendationType.organize);
@@ -43,16 +44,22 @@ void main() {
 
   test('TEST C — Ressource absente', () {
     final household = HouseholdConfig(
-      ownedAssets: ['rechaud_gaz'],
-      ownedResources: [], // Ne possède PAS de gaz
-      assessedResources: {'gaz'}, // Mais on a évalué le gaz (l'utilisateur a dit "non")
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+        ownedAssets: [
+          'rechaud_gaz'
+        ],
+        ownedResources: [], // Ne possède PAS de gaz
+        assessedResources: {
+          'gaz'
+        }, // Mais on a évalué le gaz (l'utilisateur a dit "non")
+        assessedCapabilities: {
+          'cuisiner'
+        });
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
     final recs = recEngine.generate(result, household, scenarioElec);
 
     expect(result.nodeStates['cuisiner'], B3State.failed);
-    
+
     // La reco doit dire "Acquérir la ressource : Gaz"
     final rec = recs.firstWhere((r) => r.id.contains('rechaud_gaz'));
     expect(rec.type, RecommendationType.acquire);
@@ -61,38 +68,37 @@ void main() {
 
   test('TEST D — Ressource présente mais durée inconnue', () {
     final household = HouseholdConfig(
-      ownedAssets: ['rechaud_gaz'],
-      ownedResources: ['gaz'],
-      assessedResources: {'gaz'},
-      // Aucune duration spécifiée
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
-    
+        ownedAssets: ['rechaud_gaz'],
+        ownedResources: ['gaz'],
+        assessedResources: {'gaz'},
+        // Aucune duration spécifiée
+        assessedCapabilities: {'cuisiner'});
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+
     // Le moteur considère que dur==null -> unknown
     expect(result.nodeStates['cuisiner'], B3State.unknown);
   });
 
   test('TEST E — Ressource jamais évaluée', () {
     final household = HouseholdConfig(
-      ownedAssets: ['rechaud_gaz'],
-      ownedResources: [], 
-      assessedResources: {}, // Jamais évalué
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
-    
+        ownedAssets: ['rechaud_gaz'],
+        ownedResources: [],
+        assessedResources: {}, // Jamais évalué
+        assessedCapabilities: {'cuisiner'});
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+
     // Doit être NOT_ASSESSED, qui remonte la chaîne via ANY/ALL jusqu'à la capability
     expect(result.nodeStates['cuisiner'], B3State.notAssessed);
   });
 
   test('TEST F — Alternative théorique mais prérequis affecté', () {
     final household = HouseholdConfig(
-      ownedAssets: ['plaque_elec'],
-      assessedCapabilities: {'cuisiner'}
-    );
+        ownedAssets: ['plaque_elec'], assessedCapabilities: {'cuisiner'});
     // Panne elec ET panne gaz
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElecGaz);
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElecGaz);
     final recs = recEngine.generate(result, household, scenarioElecGaz);
 
     expect(result.nodeStates['cuisiner'], B3State.failed);
@@ -100,12 +106,13 @@ void main() {
     expect(recs.any((r) => r.targetAssetId == 'rechaud_gaz'), false);
   });
 
-  test('TEST G — Alternative indépendante (Recommandation avec condition ressource)', () {
+  test(
+      'TEST G — Alternative indépendante (Recommandation avec condition ressource)',
+      () {
     final household = HouseholdConfig(
-      ownedAssets: ['plaque_elec'],
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+        ownedAssets: ['plaque_elec'], assessedCapabilities: {'cuisiner'});
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
     final recs = recEngine.generate(result, household, scenarioElec);
 
     // Rechaud gaz proposé, et la description doit contenir la réserve
@@ -124,22 +131,28 @@ void main() {
     ''';
     final customEngine = RecommendationEngine(minimalJson);
     final scenario = DataMapper.parseScenario(minimalJson, 'panne');
-    final household = HouseholdConfig(ownedAssets: ['plaque'], assessedCapabilities: {'cuisiner'});
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(minimalJson, household), scenario);
+    final household = HouseholdConfig(
+        ownedAssets: ['plaque'], assessedCapabilities: {'cuisiner'});
+    final result = B3Engine()
+        .runSimulation(DataMapper.buildGraph(minimalJson, household), scenario);
     final recs = customEngine.generate(result, household, scenario);
 
-    expect(recs.where((r) => r.type == RecommendationType.createAlternative).isEmpty, true);
+    expect(
+        recs
+            .where((r) => r.type == RecommendationType.createAlternative)
+            .isEmpty,
+        true);
   });
 
   test('TEST I — Redondance réelle + ressource', () {
     final household = HouseholdConfig(
-      ownedAssets: ['plaque_elec', 'rechaud_gaz'],
-      ownedResources: ['gaz'],
-      assessedResources: {'gaz'},
-      resourceDurations: {'gaz': Duration(hours: 72)},
-      assessedCapabilities: {'cuisiner'}
-    );
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+        ownedAssets: ['plaque_elec', 'rechaud_gaz'],
+        ownedResources: ['gaz'],
+        assessedResources: {'gaz'},
+        resourceDurations: {'gaz': Duration(hours: 72)},
+        assessedCapabilities: {'cuisiner'});
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
     final recs = recEngine.generate(result, household, scenarioElec);
 
     expect(result.nodeStates['cuisiner'], B3State.maintained);
@@ -147,17 +160,39 @@ void main() {
   });
 
   test('TEST J — Multi-système + ressources', () {
-    final household = HouseholdConfig(
-      ownedAssets: ['plaque_elec', 'rechaud_gaz', 'rechaud_bois'],
-      ownedResources: ['gaz', 'bois'],
-      assessedResources: {'gaz', 'bois'},
-      resourceDurations: {'gaz': Duration(hours: 72), 'bois': Duration(hours: 72)},
-      assessedCapabilities: {'cuisiner'}
-    );
+    final household = HouseholdConfig(ownedAssets: [
+      'plaque_elec',
+      'rechaud_gaz',
+      'rechaud_bois'
+    ], ownedResources: [
+      'gaz',
+      'bois'
+    ], assessedResources: {
+      'gaz',
+      'bois'
+    }, resourceDurations: {
+      'gaz': Duration(hours: 72),
+      'bois': Duration(hours: 72)
+    }, assessedCapabilities: {
+      'cuisiner'
+    });
     // Panne elec + gaz
-    final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElecGaz);
-    
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElecGaz);
+
     // plaque_elec = FAILED, rechaud_gaz = FAILED, rechaud_bois = MAINTAINED
     expect(result.nodeStates['cuisiner'], B3State.maintained);
+  });
+  test('TEST K - STRICT NON-INVENTION DEFAULT', () {
+    final household = HouseholdConfig(
+        ownedAssets: ['rechaud_gaz'], assessedCapabilities: {'cuisiner'});
+    final scenarioElec =
+        DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
+    final result = B3Engine().runSimulation(
+        DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
+
+    expect(result.nodeStates['cuisiner'], B3State.notAssessed);
+    expect(household.ownedResources.isEmpty, true);
+    expect(household.assessedResources.isEmpty, true);
   });
 }
