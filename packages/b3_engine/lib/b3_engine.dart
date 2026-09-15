@@ -4,3 +4,4 @@ export 'src/data_mapper.dart';
 export 'src/knowledge_dataset.dart';
 export 'src/diagnostic.dart';
 export 'src/diagnostic_dataset.dart';
+export 'src/recommendation.dart';
