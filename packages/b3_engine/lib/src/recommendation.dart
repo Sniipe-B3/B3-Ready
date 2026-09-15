@@ -99,55 +99,80 @@ class RecommendationEngine {
         final requires = List<String>.from(assetData['requires'] ?? []);
 
         if (household.ownedAssets.contains(assetId)) {
-          // L'utilisateur le possède déjà mais il a échoué (ou dégradé)
-          bool isResourceExhausted = false;
           final assetTrace = result.traces[assetId];
           if (assetTrace != null && assetTrace.steps.isNotEmpty) {
              final lastStep = assetTrace.steps.last;
-             if (lastStep.type == ReasonType.resourceExhausted) isResourceExhausted = true;
              
-             // Check children recursively for resource exhaustion
              if (lastStep.dependencyStates != null) {
-               for (var depId in lastStep.dependencyStates!.keys) {
-                 final depTrace = result.traces[depId];
-                 if (depTrace != null && depTrace.steps.isNotEmpty && depTrace.steps.last.type == ReasonType.resourceExhausted) {
-                   isResourceExhausted = true;
+               lastStep.dependencyStates!.forEach((depId, state) {
+                 final isResource = (data['resources'] as List?)?.any((r) => r['id'] == depId) ?? false;
+                 if (isResource) {
+                   final resName = (data['resources'] as List).firstWhere((r) => r['id'] == depId)['name'];
+                   if (state == B3State.degraded || lastStep.type == ReasonType.resourceExhausted) {
+                     recommendations.add(Recommendation(
+                        id: 'rec_org_${assetId}_$depId',
+                        type: RecommendationType.organize,
+                        priority: priority,
+                        capabilityId: capId,
+                        title: 'Augmenter l\'autonomie : $resName',
+                        description: 'Vous possédez cette solution mais les réserves sont insuffisantes pour tenir ${scenario.duration.inHours}h.',
+                        reason: 'Ressource épuisée avant la fin du scénario.',
+                        targetAssetId: assetId,
+                     ));
+                   } else if (state == B3State.failed) {
+                     recommendations.add(Recommendation(
+                        id: 'rec_acq_${assetId}_$depId',
+                        type: RecommendationType.acquire,
+                        priority: priority,
+                        capabilityId: capId,
+                        title: 'Acquérir la ressource : $resName',
+                        description: 'Votre équipement (${assetData['name']}) ne peut pas fonctionner sans cette ressource.',
+                        reason: 'Ressource nécessaire absente.',
+                        targetAssetId: assetId,
+                     ));
+                   } else if (state == B3State.unknown || state == B3State.notAssessed) {
+                     recommendations.add(Recommendation(
+                        id: 'rec_ver_${assetId}_$depId',
+                        type: RecommendationType.verify,
+                        priority: priority,
+                        capabilityId: capId,
+                        title: 'Vérifier la disponibilité : $resName',
+                        description: 'B3 ne sait pas si vous possédez suffisamment de cette ressource pour faire fonctionner votre équipement.',
+                        reason: 'Prérequis inconnu.',
+                        targetAssetId: assetId,
+                     ));
+                   }
                  }
-               }
-             }
-             
-             if (isResourceExhausted) {
-                // Manque de ressource (ex: bois, gaz, batterie)
-                recommendations.add(Recommendation(
-                  id: 'rec_org_$assetId',
-                  type: RecommendationType.organize,
-                  priority: priority,
-                  capabilityId: capId,
-                  title: 'Augmenter l\'autonomie : ${assetData['name']}',
-                  description: 'Vous possédez cette solution mais les réserves sont insuffisantes pour tenir ${scenario.duration.inHours}h.',
-                  reason: 'Ressource épuisée avant la fin du scénario.',
-                  targetAssetId: assetId,
-                ));
+               });
              }
           }
         } else {
-          // L'utilisateur ne le possède pas. Est-ce une bonne alternative ?
+          // L'utilisateur ne le possède pas
           bool survives = true;
+          bool requiresResource = false;
+          
           for (var req in requires) {
             if (scenario.systemOverrides[req] == B3State.failed) {
               survives = false;
               break;
             }
+            if ((data['resources'] as List?)?.any((r) => r['id'] == req) ?? false) {
+              requiresResource = true;
+            }
           }
           
           if (survives) {
+             String caveat = requiresResource 
+                 ? ' (sous réserve que le combustible/ressource nécessaire soit disponible)' 
+                 : '';
+                 
              recommendations.add(Recommendation(
                 id: 'rec_alt_$assetId',
                 type: RecommendationType.createAlternative,
                 priority: priority,
                 capabilityId: capId,
                 title: 'Créer une alternative : ${assetData['name']}',
-                description: 'Ajouter cette solution permettrait de restaurer la capacité.',
+                description: 'Cette solution pourrait maintenir la capacité$caveat.',
                 reason: reasonPrefix + 'Cette solution est indépendante des systèmes affectés.',
                 targetAssetId: assetId,
              ));
@@ -156,7 +181,6 @@ class RecommendationEngine {
       }
     }
     
-    // Assurer le déterminisme de la liste
     recommendations.sort((a, b) {
       if (a.priority != b.priority) return a.priority.index.compareTo(b.priority.index);
       if (a.type != b.type) return a.type.index.compareTo(b.type.index);

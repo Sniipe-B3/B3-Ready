@@ -22,6 +22,7 @@ void main() {
   test('TEST 2 — Pas de recommandation d achat inutile', () {
     final household = HouseholdConfig(
       ownedAssets: ['plaque_elec', 'rechaud_gaz'],
+      ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)},
       assessedCapabilities: {'cuisiner'}
     );
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
@@ -102,7 +103,7 @@ void main() {
   test('TEST 9 — Solution déjà possédée (Resource Exhausted)', () {
     final household = HouseholdConfig(
       ownedAssets: ['rechaud_bois'],
-      resourceDurations: {'bois': Duration(hours: 12)}, // 12h de bois
+      ownedResources: ['bois'], assessedResources: {'bois'}, resourceDurations: {'bois': Duration(hours: 12)}, // 12h de bois
       assessedCapabilities: {'cuisiner'}
     );
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);

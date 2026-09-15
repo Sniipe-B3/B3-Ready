@@ -110,6 +110,8 @@ class DiagnosticState {
 
   HouseholdConfig toHouseholdConfig(List<DiagnosticQuestion> questions) {
     final ownedAssets = <String>{};
+    final ownedResources = <String>{};
+    final assessedResources = <String>{};
     final resourceDurations = <String, Duration>{};
     final assessedCapabilities = <String>{};
     final capabilityOverrides = <String, B3State>{};
@@ -122,7 +124,11 @@ class DiagnosticState {
       if (opt == null) continue;
       
       for (var fact in opt.facts) {
-        if (fact.type == 'add_asset') {
+        if (fact.type == 'add_resource') {
+          ownedResources.add(fact.value);
+        } else if (fact.type == 'assess_resource') {
+          assessedResources.add(fact.value);
+        } else if (fact.type == 'add_asset') {
           ownedAssets.add(fact.value);
         } else if (fact.type == 'add_resource_duration' && fact.duration != null) {
           resourceDurations[fact.value] = Duration(hours: fact.duration!);
@@ -137,6 +143,8 @@ class DiagnosticState {
 
     return HouseholdConfig(
       ownedAssets: ownedAssets.toList(),
+      ownedResources: ownedResources.toList(),
+      assessedResources: assessedResources,
       resourceDurations: resourceDurations,
       assessedCapabilities: assessedCapabilities,
       capabilityOverrides: capabilityOverrides,

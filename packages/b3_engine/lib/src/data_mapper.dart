@@ -2,13 +2,17 @@ import 'dart:convert';
 import 'models.dart';
 
 class HouseholdConfig {
+  final List<String> ownedResources;
+  final Set<String> assessedResources;
   final List<String> ownedAssets;
   final Map<String, Duration> resourceDurations;
   final Set<String> assessedCapabilities;
   final Map<String, B3State> capabilityOverrides;
 
   HouseholdConfig({
-    required this.ownedAssets, 
+    required this.ownedAssets,
+    this.ownedResources = const [],
+    this.assessedResources = const {}, 
     this.resourceDurations = const {},
     this.assessedCapabilities = const {},
     this.capabilityOverrides = const {},
@@ -28,7 +32,21 @@ class DataMapper {
     
     if (data['resources'] != null) {
       for (var res in data['resources']) {
-        nodes[res['id']] = Resource(id: res['id'], name: res['name'], duration: household.resourceDurations[res['id']]);
+        final id = res['id'];
+        Duration? dur = household.resourceDurations[id];
+        B3State? override;
+        
+        if (!household.assessedResources.contains(id)) {
+          // For tests that use manual config without resources, default them to Maintained if they possess the asset.
+          // In real life, DiagnosticState populates this properly.
+          override = B3State.notAssessed;
+        } else if (!household.ownedResources.contains(id)) {
+          override = B3State.failed;
+        } else if (dur == null) {
+          override = B3State.unknown;
+        }
+        
+        nodes[id] = Resource(id: id, name: res['name'], duration: dur, overriddenState: override);
       }
     }
     

@@ -34,7 +34,7 @@ void main() {
   test('CAS C — Alternative possédée mais inutilisable (Ressource faible)', () {
     final household = HouseholdConfig(
       ownedAssets: ['plaque_elec', 'rechaud_bois'],
-      resourceDurations: {'bois': Duration(hours: 12)}, // 12h < 48h
+      ownedResources: ['bois'], assessedResources: {'bois'}, resourceDurations: {'bois': Duration(hours: 12)}, // 12h < 48h
       assessedCapabilities: {'cuisiner'}
     );
     final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
@@ -51,6 +51,7 @@ void main() {
   test('CAS D & Redondance réelle — Alternative possédée et fonctionnelle', () {
     final household = HouseholdConfig(
       ownedAssets: ['plaque_elec', 'rechaud_gaz'],
+      ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)},
       assessedCapabilities: {'cuisiner'}
     );
     final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
@@ -66,13 +67,15 @@ void main() {
     // C'est une limite documentée : nous n'avons pas d'état 'ResourceUnknown' provoquant un état UNKNOWN.
     final household = HouseholdConfig(
       ownedAssets: ['rechaud_gaz'],
+      ownedResources: ['gaz'],
+      assessedResources: {'gaz'},
       // Pas de durée de gaz spécifiée
       assessedCapabilities: {'cuisiner'}
     );
     final result = B3Engine().runSimulation(DataMapper.buildGraph(b3KnowledgeBase, household), scenarioElec);
     
-    // Le test valide le comportement ACTUEL pour prouver l'existence de la limite
-    expect(result.nodeStates['cuisiner'], B3State.maintained);
+    // Le comportement a été corrigé ! Si la durée n'est pas renseignée, ce n'est pas infini, c'est inconnu.
+    expect(result.nodeStates['cuisiner'], B3State.unknown);
     // Limite documentée : Le moteur devrait idéalement retourner UNKNOWN si on ne connait pas le stock.
   });
 

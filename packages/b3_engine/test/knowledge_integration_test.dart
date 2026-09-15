@@ -5,7 +5,7 @@ void main() {
   final engine = B3Engine();
 
   test('Test 1: Le JSON est correctement chargé', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz']);
+    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz'], ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)});
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     
     final cuisiner = graph.firstWhere((n) => n.id == 'cuisiner') as Capability;
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('Test 3: Le réchaud gaz maintient la capacité', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz']);
+    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz'], ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)});
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
     
@@ -36,7 +36,7 @@ void main() {
   });
 
   test('Test 4: Panne électrique + gaz fait échouer cuisiner', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz']);
+    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz'], ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)});
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
     
