@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class B3Theme {
-  static const Color b3Primary = Color(0xFF2C3E50); // Sombre, sérieux, professionnel
-  static const Color b3Surface = Color(0xFFF8F9FA); // Fond légèrement teinté (gris très clair) au lieu de blanc pur
+  static const Color b3Primary = Color(0xFF2C3E50);
+  static const Color b3Surface = Color(0xFFECEFF1); // Plus teinté que F8F9FA, un gris bleuté clair (Blue Grey 50) pour contraster avec les cartes blanches
   
   static const Color b3Green = Color(0xFF2E7D32);
   static const Color b3Orange = Color(0xFFE65100);
@@ -32,10 +32,11 @@ class B3Theme {
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 1,
+        elevation: 0, // Plat, moderne
         shadowColor: Colors.black.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE0E0E0), width: 1), // Bordure légère
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -70,7 +71,7 @@ class B3Theme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: b3Primary,
-          side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
+          side: const BorderSide(color: Color(0xFFCFD8DC), width: 1.5), // Bordure un peu plus marquée que E5E7EB
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

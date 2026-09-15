@@ -63,9 +63,16 @@ void main() {
     // 6. Résultats
     expect(find.text('Bilan de résilience'), findsOneWidget);
     
-    // Vérifier l'absence de jargon technique
-    expect(find.text('cuisiner'), findsNothing); // Tout est formaté CUISINER
-    expect(find.text('system_elec'), findsNothing);
+    // VÉRIFICATION ANTI-JARGON ABSOLUE
+    final fullTextStr = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
+    expect(fullTextStr.contains('total point >'), false, reason: "Le jargon 'total point >' ne doit pas s'afficher");
+    expect(fullTextStr.contains('\${totalPoints'), false, reason: "Les interpolations cassées ne doivent pas fuiter");
+    expect(fullTextStr.contains('system_'), false, reason: "Les IDs de systèmes (ex: system_elec) ne doivent pas s'afficher");
+    expect(fullTextStr.contains('cuisiner_failed'), false, reason: "Les IDs d'états ne doivent pas s'afficher");
+    expect(fullTextStr.contains('causeNodeIds'), false, reason: "Les variables internes ne doivent pas s'afficher");
+    expect(fullTextStr.contains('B3State.degraded'), false, reason: "Les enums ne doivent pas s'afficher");
+
+    expect(find.textContaining('points de vigilance'), findsOneWidget); // Texte naturel correct
 
     expect(find.text('CUISINER'), findsOneWidget);
     expect(find.text('SE CHAUFFER'), findsOneWidget);

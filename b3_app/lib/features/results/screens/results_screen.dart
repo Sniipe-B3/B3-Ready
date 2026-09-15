@@ -75,11 +75,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final degraded = _simulationResult.vulnerabilities.where((v) => v.state == B3State.degraded).toList();
     
     final totalPoints = vulns.length + degraded.length;
+    
+    final String vigilanceText = totalPoints > 1 
+        ? "$totalPoints points de vigilance identifiés." 
+        : "1 point de vigilance identifié.";
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bilan de résilience'),
-        automaticallyImplyLeading: false, // On contrôle la nav
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -94,7 +98,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               const SizedBox(height: 16),
               if (totalPoints > 0)
                 Text(
-                  "$totalPoints point\${totalPoints > 1 ? 's' : ''} mérite\${totalPoints > 1 ? 'nt' : ''} votre attention",
+                  vigilanceText,
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: vulns.isNotEmpty ? B3Theme.b3Red : B3Theme.b3Orange,
                   ),
@@ -139,18 +143,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
     if (capabilityId == 'cuisiner') return 'CUISINER';
     if (capabilityId == 'chauffer') return 'SE CHAUFFER';
     if (capabilityId == 'eclairage') return 'S\'ÉCLAIRER';
-    return capabilityId.toUpperCase();
+    return capabilityId.toUpperCase(); // Fallback générique
   }
 
   Widget _buildVulnCard(Vulnerability v, ThemeData theme, Color color, String subtitle) {
     final capId = v.capability.id;
     return Card(
       margin: const EdgeInsets.only(bottom: 24.0),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade300),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
