@@ -103,39 +103,25 @@ void main() {
   });
 
   test('TEST 6 — UNKNOWN', () {
-    final b = System(
-        id: 'asset_branch_b', name: 'B', overriddenState: B3State.unknown);
-    final a = System(
-        id: 'asset_branch_a', name: 'A', overriddenState: B3State.failed);
-    final cap = Capability(
-        id: 'cap_multi',
-        name: 'Cap',
-        children: [a, b],
-        rule: EvaluationRule.all);
-
+    final b = System(id: 'asset_branch_b', name: 'B', overriddenState: B3State.unknown);
+    final a = System(id: 'asset_branch_a', name: 'A', overriddenState: B3State.failed);
+    final cap = Capability(id: 'cap_multi', name: 'Cap', children: [a, b], rule: EvaluationRule.all);
+    
     final result = B3Engine().runSimulation([a, b, cap], scenarioA);
 
-    final vuln = result.vulnerabilities
-        .firstWhere((v) => v.capability.id == 'cap_multi');
+    final vuln = result.vulnerabilities.firstWhere((v) => v.capability.id == 'cap_multi');
     expect(vuln.causeNodeIds.contains('asset_branch_a'), true);
     expect(vuln.causeNodeIds.contains('asset_branch_b'), true);
   });
 
   test('TEST 7 — NOT_ASSESSED', () {
-    final b = System(
-        id: 'asset_branch_b', name: 'B', overriddenState: B3State.notAssessed);
-    final a = System(
-        id: 'asset_branch_a', name: 'A', overriddenState: B3State.failed);
-    final cap = Capability(
-        id: 'cap_multi',
-        name: 'Cap',
-        children: [a, b],
-        rule: EvaluationRule.all);
-
+    final b = System(id: 'asset_branch_b', name: 'B', overriddenState: B3State.notAssessed);
+    final a = System(id: 'asset_branch_a', name: 'A', overriddenState: B3State.failed);
+    final cap = Capability(id: 'cap_multi', name: 'Cap', children: [a, b], rule: EvaluationRule.all);
+    
     final result = B3Engine().runSimulation([a, b, cap], scenarioA);
 
-    final vuln = result.vulnerabilities
-        .firstWhere((v) => v.capability.id == 'cap_multi');
+    final vuln = result.vulnerabilities.firstWhere((v) => v.capability.id == 'cap_multi');
     expect(vuln.causeNodeIds.contains('asset_branch_a'), true);
     expect(vuln.causeNodeIds.contains('asset_branch_b'), true);
   });
@@ -146,17 +132,12 @@ void main() {
     a.children.add(b);
     b.children.add(a); // Create explicit cycle
     final cap = Capability(id: 'cap_cycle', name: 'C', children: [a]);
-
-    final result = B3Engine().runSimulation([a, b, cap],
-        Scenario(name: 'S', duration: Duration(hours: 1), systemOverrides: {}));
-
-    final unc =
-        result.uncertainties.firstWhere((u) => u.capability.id == 'cap_cycle');
+    
+    final result = B3Engine().runSimulation([a, b, cap], Scenario(name: 'S', duration: Duration(hours: 1), systemOverrides: {}));
+    
+    final unc = result.uncertainties.firstWhere((u) => u.capability.id == 'cap_cycle');
     expect(unc.state, B3State.unknown);
-    expect(
-        unc.causeNodeIds.contains('asset_cycle_a') ||
-            unc.causeNodeIds.contains('asset_cycle_b'),
-        true);
+    expect(unc.causeNodeIds.contains('asset_cycle_a') || unc.causeNodeIds.contains('asset_cycle_b'), true);
   });
 
   test('TEST 9 — CAUSE SCÉNARIO', () {
@@ -166,8 +147,8 @@ void main() {
     final graph = DataMapper.buildGraph(auditKnowledge, household);
     final result = B3Engine().runSimulation(graph, scenarioA);
 
-    final vuln =
-        result.vulnerabilities.firstWhere((v) => v.capability.id == 'cap_deep');
+    final vuln = result.vulnerabilities
+        .firstWhere((v) => v.capability.id == 'cap_deep');
     expect(vuln.causeNodeIds.contains('sys_a'), true);
   });
 
