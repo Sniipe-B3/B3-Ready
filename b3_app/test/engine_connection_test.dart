@@ -14,9 +14,10 @@ void main() {
     );
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-    
+
     final result = B3Engine().runSimulation(graph, scenario);
-    
-    expect(result.uncertainties.isNotEmpty || result.vulnerabilities.isNotEmpty, true);
+
+    expect(result.uncertainties.isNotEmpty || result.vulnerabilities.isNotEmpty,
+        true);
   });
 }
