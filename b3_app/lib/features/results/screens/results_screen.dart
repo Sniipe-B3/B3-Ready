@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
+import '../../../app/theme/theme.dart';
+import 'vulnerability_detail_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
   final DiagnosticState diagnosticState;
@@ -38,7 +40,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
     _recommendations = RecommendationEngine(b3KnowledgeBase)
         .generate(_simulationResult, householdConfig, scenario);
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 800));
 
     if (mounted) {
       setState(() {
@@ -60,7 +62,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               const CircularProgressIndicator(),
               const SizedBox(height: 24),
               Text(
-                "Analyse de votre foyer...",
+                "Analyse des dépendances...",
                 style: theme.textTheme.titleLarge,
               ),
             ],
@@ -69,14 +71,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
       );
     }
 
-    final vulnCount = _simulationResult.vulnerabilities.length;
-    final unkCount = _simulationResult.uncertainties.length;
+    final vulns = _simulationResult.vulnerabilities.where((v) => v.state == B3State.failed).toList();
+    final degraded = _simulationResult.vulnerabilities.where((v) => v.state == B3State.degraded).toList();
+    
+    final totalPoints = vulns.length + degraded.length;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Votre situation'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+        title: const Text('Bilan de résilience'),
+        automaticallyImplyLeading: false, // On contrôle la nav
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -89,37 +92,25 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 style: theme.textTheme.headlineLarge,
               ),
               const SizedBox(height: 16),
-              Text(
-                "$vulnCount point\${vulnCount > 1 ? 's' : ''} à améliorer en cas de panne électrique.",
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: vulnCount > 0
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.secondary,
-                ),
-              ),
-              if (unkCount > 0) ...[
-                const SizedBox(height: 8),
+              if (totalPoints > 0)
                 Text(
-                  "$unkCount information\${unkCount > 1 ? 's' : ''} manquante\${unkCount > 1 ? 's' : ''}.",
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ],
-              const SizedBox(height: 32),
-              if (vulnCount > 0)
-                ..._simulationResult.vulnerabilities
-                    .map((v) => _buildVulnerabilityCard(v, theme)),
-              if (vulnCount == 0 && unkCount == 0)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Text(
-                      "Votre foyer semble bien préparé à ce scénario !",
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(color: theme.colorScheme.secondary),
-                      textAlign: TextAlign.center,
-                    ),
+                  "$totalPoints point\${totalPoints > 1 ? 's' : ''} mérite\${totalPoints > 1 ? 'nt' : ''} votre attention",
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: vulns.isNotEmpty ? B3Theme.b3Red : B3Theme.b3Orange,
+                  ),
+                )
+              else
+                Text(
+                  "Votre foyer semble bien préparé pour ce scénario.",
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: B3Theme.b3Green,
                   ),
                 ),
+              const SizedBox(height: 32),
+              
+              ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de panne électrique")),
+              ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, "Partiellement vulnérable (réserve limitée)")),
+              
               const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
@@ -137,11 +128,22 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  Widget _buildVulnerabilityCard(Vulnerability v, ThemeData theme) {
-    final recsForCap = _recommendations
-        .where((r) => r.capabilityId == v.capability.id)
-        .toList();
+  String _getEmoji(String capabilityId) {
+    if (capabilityId == 'cuisiner') return '🍳';
+    if (capabilityId == 'chauffer') return '🌡️';
+    if (capabilityId == 'eclairage') return '💡';
+    return '🔧';
+  }
 
+  String _getCapabilityName(String capabilityId) {
+    if (capabilityId == 'cuisiner') return 'CUISINER';
+    if (capabilityId == 'chauffer') return 'SE CHAUFFER';
+    if (capabilityId == 'eclairage') return 'S\'ÉCLAIRER';
+    return capabilityId.toUpperCase();
+  }
+
+  Widget _buildVulnCard(Vulnerability v, ThemeData theme, Color color, String subtitle) {
+    final capId = v.capability.id;
     return Card(
       margin: const EdgeInsets.only(bottom: 24.0),
       elevation: 0,
@@ -150,62 +152,59 @@ class _ResultsScreenState extends State<ResultsScreen> {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.warning_amber_rounded,
-                    color: theme.colorScheme.error),
+                Text(
+                  _getEmoji(capId),
+                  style: const TextStyle(fontSize: 28),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    v.capability.name.toUpperCase(),
+                    _getCapabilityName(capId),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
-              "En cas de panne électrique, votre capacité à \${v.capability.name.toLowerCase()} dépend d'équipements impactés.",
-              style: theme.textTheme.bodyLarge,
+              subtitle,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            if (recsForCap.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  backgroundColor: color.withValues(alpha: 0.1),
+                  foregroundColor: color,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Action proposée",
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.secondary,
+                onPressed: () {
+                  final recs = _recommendations.where((r) => r.capabilityId == capId).toList();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => VulnerabilityDetailScreen(
+                        vulnerability: v,
+                        recommendations: recs,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      recsForCap.first.title,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      recsForCap.first.description,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
+                  );
+                },
+                child: const Text('Comprendre', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-            ]
+            ),
           ],
         ),
       ),
