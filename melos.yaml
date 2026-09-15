@@ -1,0 +1,4 @@
+name: b3_ready
+packages:
+  - b3_app/
+  - packages/*
