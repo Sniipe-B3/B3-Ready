@@ -5,9 +5,9 @@ const String b3DiagnosticQuestionsJson = '''
     "text": "Comment cuisinez-vous principalement ?",
     "type": "single_choice",
     "options": [
-      {"id": "opt_plaque", "text": "Plaque électrique", "facts": [{"type": "add_asset", "value": "plaque_elec"}]},
-      {"id": "opt_gaz", "text": "Gazinière", "facts": [{"type": "add_asset", "value": "rechaud_gaz"}]},
-      {"id": "opt_unk", "text": "Je ne sais pas", "facts": [{"type": "add_asset", "value": "unknown_cuisiner"}]}
+      {"id": "opt_plaque", "text": "Plaque électrique", "facts": [{"type": "assess_capability", "value": "cuisiner"}, {"type": "add_asset", "value": "plaque_elec"}]},
+      {"id": "opt_gaz", "text": "Gazinière", "facts": [{"type": "assess_capability", "value": "cuisiner"}, {"type": "add_asset", "value": "rechaud_gaz"}]},
+      {"id": "opt_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_capability", "value": "cuisiner"}, {"type": "override_capability", "value": "cuisiner", "state": "unknown"}]}
     ]
   },
   {
@@ -35,8 +35,8 @@ const String b3DiagnosticQuestionsJson = '''
     "text": "Comment chauffez-vous votre logement ?",
     "type": "single_choice",
     "options": [
-      {"id": "opt_rad_elec", "text": "Radiateurs électriques", "facts": [{"type": "add_asset", "value": "radiateur_elec"}]},
-      {"id": "opt_poele", "text": "Poêle à bois", "facts": [{"type": "add_asset", "value": "poele_bois"}]}
+      {"id": "opt_rad_elec", "text": "Radiateurs électriques", "facts": [{"type": "assess_capability", "value": "chauffer"}, {"type": "add_asset", "value": "radiateur_elec"}]},
+      {"id": "opt_poele", "text": "Poêle à bois", "facts": [{"type": "assess_capability", "value": "chauffer"}, {"type": "add_asset", "value": "poele_bois"}]}
     ]
   },
   {
@@ -44,8 +44,9 @@ const String b3DiagnosticQuestionsJson = '''
     "text": "Disposez-vous d'un éclairage de secours sur batterie ?",
     "type": "single_choice",
     "options": [
-      {"id": "opt_lamp_bat", "text": "Oui", "facts": [{"type": "add_asset", "value": "lampe_batterie"}]},
-      {"id": "opt_no_lamp", "text": "Non (secteur uniquement)", "facts": [{"type": "add_asset", "value": "lampe_secteur"}]}
+      {"id": "opt_lamp_bat", "text": "Oui", "facts": [{"type": "assess_capability", "value": "eclairage"}, {"type": "add_asset", "value": "lampe_batterie"}]},
+      {"id": "opt_no_lamp", "text": "Non (secteur uniquement)", "facts": [{"type": "assess_capability", "value": "eclairage"}, {"type": "add_asset", "value": "lampe_secteur"}]},
+      {"id": "opt_no_light_at_all", "text": "Je n'ai aucun éclairage (Absence réelle)", "facts": [{"type": "assess_capability", "value": "eclairage"}]}
     ]
   }
 ]

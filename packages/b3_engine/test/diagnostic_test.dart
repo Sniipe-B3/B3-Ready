@@ -40,13 +40,13 @@ void main() {
     state.answerQuestion('q_cook_main', 'opt_unk'); // Je ne sais pas
     
     final config = state.toHouseholdConfig(questions);
-    expect(config.ownedAssets.contains('unknown_cuisiner'), true);
+    // unknown_cuisiner removed. Relying on capability override.
     
     final graph = DataMapper.buildGraph(b3KnowledgeBase, config);
     final engine = B3Engine();
     
     // We override 'unk_sys' to B3State.unknown in the scenario
-    final scenario = Scenario(name: 'S', duration: Duration(), systemOverrides: {'unk_sys': B3State.unknown});
+    final scenario = Scenario(name: 'S', duration: Duration(), systemOverrides: {});
     final result = engine.runSimulation(graph, scenario);
     
     expect(result.nodeStates['cuisiner'], B3State.unknown); 

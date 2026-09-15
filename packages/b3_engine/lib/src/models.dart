@@ -2,6 +2,7 @@ enum B3State {
   maintained,
   degraded,
   unknown,
+  notAssessed,
   failed,
 }
 
@@ -16,10 +17,7 @@ abstract class B3Node {
   final EvaluationRule rule;
   final List<B3Node> children;
   
-  // Modifiable during simulation
   B3State? overriddenState;
-  
-  // Resource duration
   final Duration? duration;
 
   B3Node({
@@ -33,8 +31,8 @@ abstract class B3Node {
 }
 
 class Capability extends B3Node {
-  Capability({required String id, required String name, EvaluationRule rule = EvaluationRule.any, List<B3Node> children = const []})
-      : super(id: id, name: name, rule: rule, children: children);
+  Capability({required String id, required String name, EvaluationRule rule = EvaluationRule.any, List<B3Node> children = const [], B3State? overriddenState})
+      : super(id: id, name: name, rule: rule, children: children, overriddenState: overriddenState);
 }
 
 class System extends B3Node {
@@ -104,15 +102,16 @@ class ReasoningTrace {
 
 class Vulnerability {
   final Capability capability;
-  final B3State state; // failed or degraded
+  final B3State state;
   
   Vulnerability(this.capability, this.state);
 }
 
 class Uncertainty {
   final Capability capability;
+  final B3State state;
   
-  Uncertainty(this.capability);
+  Uncertainty(this.capability, this.state);
 }
 
 class SimulationResult {
