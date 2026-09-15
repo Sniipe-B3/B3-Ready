@@ -12,7 +12,7 @@ class HouseholdConfig {
   HouseholdConfig({
     required this.ownedAssets,
     this.ownedResources = const [],
-    this.assessedResources = const {}, 
+    this.assessedResources = const {},
     this.resourceDurations = const {},
     this.assessedCapabilities = const {},
     this.capabilityOverrides = const {},
@@ -20,22 +20,23 @@ class HouseholdConfig {
 }
 
 class DataMapper {
-  static List<B3Node> buildGraph(String knowledgeJson, HouseholdConfig household) {
+  static List<B3Node> buildGraph(
+      String knowledgeJson, HouseholdConfig household) {
     final data = jsonDecode(knowledgeJson);
     final nodes = <String, B3Node>{};
-    
+
     if (data['systems'] != null) {
       for (var sys in data['systems']) {
         nodes[sys['id']] = System(id: sys['id'], name: sys['name']);
       }
     }
-    
+
     if (data['resources'] != null) {
       for (var res in data['resources']) {
         final id = res['id'];
         Duration? dur = household.resourceDurations[id];
         B3State? override;
-        
+
         if (!household.assessedResources.contains(id)) {
           // For tests that use manual config without resources, default them to Maintained if they possess the asset.
           // In real life, DiagnosticState populates this properly.
@@ -45,11 +46,15 @@ class DataMapper {
         } else if (dur == null) {
           override = B3State.unknown;
         }
-        
-        nodes[id] = Resource(id: id, name: res['name'], duration: dur, overriddenState: override);
+
+        nodes[id] = Resource(
+            id: id,
+            name: res['name'],
+            duration: dur,
+            overriddenState: override);
       }
     }
-    
+
     if (data['assets'] != null) {
       for (var assetData in data['assets']) {
         final id = assetData['id'];
@@ -63,7 +68,7 @@ class DataMapper {
         nodes[id] = Asset(id: id, name: assetData['name'], children: children);
       }
     }
-    
+
     if (data['capabilities'] != null) {
       for (var capData in data['capabilities']) {
         final id = capData['id'];
@@ -73,7 +78,7 @@ class DataMapper {
             if (nodes.containsKey(assetId)) children.add(nodes[assetId]!);
           }
         }
-        
+
         B3State? override = household.capabilityOverrides[id];
         if (override == null) {
           if (children.isEmpty) {
@@ -84,10 +89,14 @@ class DataMapper {
           }
         }
 
-        nodes[id] = Capability(id: id, name: capData['name'], children: children, overriddenState: override);
+        nodes[id] = Capability(
+            id: id,
+            name: capData['name'],
+            children: children,
+            overriddenState: override);
       }
     }
-    
+
     return nodes.values.toList();
   }
 
@@ -106,7 +115,10 @@ class DataMapper {
               if (v == 'notAssessed') overrides[k] = B3State.notAssessed;
             });
           }
-          return Scenario(name: scen['name'], duration: Duration(hours: scen['duration'] ?? 0), systemOverrides: overrides);
+          return Scenario(
+              name: scen['name'],
+              duration: Duration(hours: scen['duration'] ?? 0),
+              systemOverrides: overrides);
         }
       }
     }

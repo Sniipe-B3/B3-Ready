@@ -5,9 +5,13 @@ void main() {
   final engine = B3Engine();
 
   test('Test 1: Le JSON est correctement chargé', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz'], ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)});
+    final household = HouseholdConfig(
+        ownedAssets: ['plaque_elec', 'rechaud_gaz'],
+        ownedResources: ['gaz'],
+        assessedResources: {'gaz'},
+        resourceDurations: {'gaz': Duration(hours: 72)});
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
-    
+
     final cuisiner = graph.firstWhere((n) => n.id == 'cuisiner') as Capability;
     expect(cuisiner.children.length, 2);
     expect(cuisiner.children.any((c) => c.id == 'plaque_elec'), true);
@@ -18,17 +22,21 @@ void main() {
     final household = HouseholdConfig(ownedAssets: ['plaque_elec']);
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-    
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['plaque_elec'], B3State.failed);
     expect(result.nodeStates['cuisiner'], B3State.failed);
   });
 
   test('Test 3: Le réchaud gaz maintient la capacité', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz'], ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)});
+    final household = HouseholdConfig(
+        ownedAssets: ['plaque_elec', 'rechaud_gaz'],
+        ownedResources: ['gaz'],
+        assessedResources: {'gaz'},
+        resourceDurations: {'gaz': Duration(hours: 72)});
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-    
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['plaque_elec'], B3State.failed);
     expect(result.nodeStates['rechaud_gaz'], B3State.maintained);
@@ -36,46 +44,62 @@ void main() {
   });
 
   test('Test 4: Panne électrique + gaz fait échouer cuisiner', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'rechaud_gaz'], ownedResources: ['gaz'], assessedResources: {'gaz'}, resourceDurations: {'gaz': Duration(hours: 72)});
+    final household = HouseholdConfig(
+        ownedAssets: ['plaque_elec', 'rechaud_gaz'],
+        ownedResources: ['gaz'],
+        assessedResources: {'gaz'},
+        resourceDurations: {'gaz': Duration(hours: 72)});
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
-    final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
-    
+    final scenario =
+        DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['cuisiner'], B3State.failed);
   });
 
   test('Test 5: Plaque + four n est pas une vraie redondance', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'four_elec']);
+    final household =
+        HouseholdConfig(ownedAssets: ['plaque_elec', 'four_elec']);
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-    
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['plaque_elec'], B3State.failed);
     expect(result.nodeStates['four_elec'], B3State.failed);
     expect(result.nodeStates['cuisiner'], B3State.failed);
   });
 
-  test('Test 6: Scénario internet affecte uniquement les capacités dépendantes', () {
+  test('Test 6: Scénario internet affecte uniquement les capacités dépendantes',
+      () {
     final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'voip']);
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
-    final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_internet');
-    
+    final scenario =
+        DataMapper.parseScenario(b3KnowledgeBase, 'panne_internet');
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['cuisiner'], B3State.maintained);
     expect(result.nodeStates['communiquer'], B3State.failed);
   });
 
-  test('Test 7: Panne électrique affecte plusieurs capacités simultanément', () {
-    final household = HouseholdConfig(ownedAssets: ['plaque_elec', 'lampe_secteur', 'radiateur_elec', 'frigo', 'robinet']);
+  test('Test 7: Panne électrique affecte plusieurs capacités simultanément',
+      () {
+    final household = HouseholdConfig(ownedAssets: [
+      'plaque_elec',
+      'lampe_secteur',
+      'radiateur_elec',
+      'frigo',
+      'robinet'
+    ]);
     final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
     final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-    
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['cuisiner'], B3State.failed);
     expect(result.nodeStates['eclairage'], B3State.failed);
     expect(result.nodeStates['chauffer'], B3State.failed);
     expect(result.nodeStates['conserver'], B3State.failed);
-    expect(result.nodeStates['boire'], B3State.maintained); // Robinet direct dépend de l'eau, pas elec
+    expect(result.nodeStates['boire'],
+        B3State.maintained); // Robinet direct dépend de l'eau, pas elec
   });
 
   test('Test 8: Le moteur fonctionne sans connaître le vocabulaire', () {
@@ -91,7 +115,7 @@ void main() {
     final household = HouseholdConfig(ownedAssets: ['a1']);
     final graph = DataMapper.buildGraph(genericJson, household);
     final scenario = DataMapper.parseScenario(genericJson, 'scen1');
-    
+
     final result = engine.runSimulation(graph, scenario);
     expect(result.nodeStates['c1'], B3State.failed);
   });

@@ -16,7 +16,7 @@ abstract class B3Node {
   final String name;
   final EvaluationRule rule;
   final List<B3Node> children;
-  
+
   B3State? overriddenState;
   final Duration? duration;
 
@@ -31,23 +31,50 @@ abstract class B3Node {
 }
 
 class Capability extends B3Node {
-  Capability({required String id, required String name, EvaluationRule rule = EvaluationRule.any, List<B3Node> children = const [], B3State? overriddenState})
-      : super(id: id, name: name, rule: rule, children: children, overriddenState: overriddenState);
+  Capability(
+      {required String id,
+      required String name,
+      EvaluationRule rule = EvaluationRule.any,
+      List<B3Node> children = const [],
+      B3State? overriddenState})
+      : super(
+            id: id,
+            name: name,
+            rule: rule,
+            children: children,
+            overriddenState: overriddenState);
 }
 
 class System extends B3Node {
   System({required String id, required String name, B3State? overriddenState})
-      : super(id: id, name: name, rule: EvaluationRule.all, overriddenState: overriddenState);
+      : super(
+            id: id,
+            name: name,
+            rule: EvaluationRule.all,
+            overriddenState: overriddenState);
 }
 
 class Asset extends B3Node {
-  Asset({required String id, required String name, EvaluationRule rule = EvaluationRule.all, List<B3Node> children = const []})
+  Asset(
+      {required String id,
+      required String name,
+      EvaluationRule rule = EvaluationRule.all,
+      List<B3Node> children = const []})
       : super(id: id, name: name, rule: rule, children: children);
 }
 
 class Resource extends B3Node {
-  Resource({required String id, required String name, Duration? duration, B3State? overriddenState})
-      : super(id: id, name: name, rule: EvaluationRule.all, duration: duration, overriddenState: overriddenState);
+  Resource(
+      {required String id,
+      required String name,
+      Duration? duration,
+      B3State? overriddenState})
+      : super(
+            id: id,
+            name: name,
+            rule: EvaluationRule.all,
+            duration: duration,
+            overriddenState: overriddenState);
 }
 
 class Scenario {
@@ -55,7 +82,10 @@ class Scenario {
   final Duration duration;
   final Map<String, B3State> systemOverrides;
 
-  Scenario({required this.name, required this.duration, required this.systemOverrides});
+  Scenario(
+      {required this.name,
+      required this.duration,
+      required this.systemOverrides});
 }
 
 enum ReasonType {
@@ -84,7 +114,7 @@ class TraceStep {
     this.dependencyStates,
     this.scenario,
   });
-  
+
   @override
   String toString() {
     var deps = dependencyStates != null ? ' deps:$dependencyStates' : '';
@@ -94,7 +124,7 @@ class TraceStep {
 
 class ReasoningTrace {
   final List<TraceStep> steps = [];
-  
+
   void add(TraceStep step) {
     steps.add(step);
   }
@@ -103,15 +133,17 @@ class ReasoningTrace {
 class Vulnerability {
   final Capability capability;
   final B3State state;
-  
-  Vulnerability(this.capability, this.state);
+  final Set<String> causeNodeIds;
+
+  Vulnerability(this.capability, this.state, this.causeNodeIds);
 }
 
 class Uncertainty {
   final Capability capability;
   final B3State state;
-  
-  Uncertainty(this.capability, this.state);
+  final Set<String> causeNodeIds;
+
+  Uncertainty(this.capability, this.state, this.causeNodeIds);
 }
 
 class SimulationResult {
@@ -120,5 +152,41 @@ class SimulationResult {
   final List<Vulnerability> vulnerabilities;
   final List<Uncertainty> uncertainties;
 
-  SimulationResult(this.nodeStates, this.traces, this.vulnerabilities, this.uncertainties);
+  SimulationResult(
+      this.nodeStates, this.traces, this.vulnerabilities, this.uncertainties);
+
+  Set<String> getRootCauses(String nodeId) {
+    final causes = <String>{};
+    final visited = <String>{};
+
+    void walk(String current) {
+      if (visited.contains(current)) return;
+      visited.add(current);
+
+      final trace = traces[current];
+      if (trace == null || trace.steps.isEmpty) return;
+
+      final last = trace.steps.last;
+
+      if (last.type == ReasonType.scenarioOverride ||
+          last.type == ReasonType.initialOverride ||
+          last.type == ReasonType.resourceExhausted ||
+          last.type == ReasonType.noDependencies) {
+        causes.add(current);
+      } else if (last.type == ReasonType.evaluatedChildren &&
+          last.dependencyStates != null) {
+        last.dependencyStates!.forEach((depId, state) {
+          if (state == B3State.failed ||
+              state == B3State.degraded ||
+              state == B3State.unknown ||
+              state == B3State.notAssessed) {
+            walk(depId);
+          }
+        });
+      }
+    }
+
+    walk(nodeId);
+    return causes;
+  }
 }
