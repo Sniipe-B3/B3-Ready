@@ -5,94 +5,81 @@ import 'package:b3_app/app/app.dart';
 void main() {
   testWidgets('Parcours complet: Home -> Diagnostic -> Results',
       (WidgetTester tester) async {
-    // 1. Démarrer l'application (viewport plus haut pour ne pas avoir à scroller tout le temps)
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 3.0;
 
     await tester.pumpWidget(const B3App());
     await tester.pumpAndSettle();
 
-    // Vérifier qu'on est sur la Home
     expect(find.text('B3 Ready'), findsOneWidget);
     
     final btnStart = find.widgetWithText(FilledButton, 'Commencer mon diagnostic');
     await tester.ensureVisible(btnStart);
     await tester.pumpAndSettle();
-
-    // 2. Cliquer sur commencer
     await tester.tap(btnStart);
     await tester.pumpAndSettle();
 
-    // 3. Question 1: Cuisine (multiple_choice)
-    expect(find.text('Comment pouvez-vous cuisiner actuellement ?'), findsOneWidget);
-    await tester.tap(find.text('Plaque électrique')); // Select checkbox
+    // 1. Question: Chauffage (multiple_choice)
+    expect(find.text('Comment chauffez-vous principalement votre logement ?'), findsOneWidget);
+    await tester.tap(find.text('Radiateurs électriques'));
     await tester.pumpAndSettle();
     
-    // Test backward navigation (Optionnel)
+    // Back and forth test
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
-    expect(find.text('Commencer mon diagnostic'), findsOneWidget); // Retour à la home
-    
-    // Re-rentrer
+    expect(find.text('Commencer mon diagnostic'), findsOneWidget); 
     await tester.tap(btnStart);
     await tester.pumpAndSettle();
     
-    // Re-selectionner
-    await tester.tap(find.text('Plaque électrique'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Continuer')); // C'est un multiple_choice
-    await tester.pumpAndSettle();
-
-    // 4. Question: Chauffage (multiple_choice)
-    expect(find.text('Comment chauffez-vous votre logement ?'), findsOneWidget);
-    await tester.tap(find.text('Radiateurs / pompe à chaleur électrique'));
+    await tester.tap(find.text('Radiateurs électriques'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
-    // 5. Question: Éclairage (multiple_choice)
-    expect(find.text("De quoi disposez-vous pour l'éclairage de nuit ?"), findsOneWidget);
-    await tester.tap(find.text('Luminaires classiques (branchés sur secteur)'));
+    // 2. Question: Cuisine (multiple_choice)
+    expect(find.text('De quels équipements disposez-vous pour cuisiner ?'), findsOneWidget);
+    await tester.tap(find.text('Plaque électrique / induction')); // Select checkbox
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    // 3. Question: Éclairage (multiple_choice)
+    expect(find.text("De quoi disposez-vous pour l'éclairage en cas de coupure électrique ?"), findsOneWidget);
+    await tester.tap(find.text('Rien de spécifique (luminaires branchés sur secteur)'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continuer'));
     
-    // Le diagnostic charge les résultats (async 800ms)
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
 
-    // 6. Résultats
+    // Résultats
     expect(find.text('Bilan de résilience'), findsOneWidget);
     
-    // VÉRIFICATION ANTI-JARGON ABSOLUE
     final fullTextStr = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
-    expect(fullTextStr.contains('total point >'), false, reason: "Le jargon 'total point >' ne doit pas s'afficher");
-    expect(fullTextStr.contains('\${totalPoints'), false, reason: "Les interpolations cassées ne doivent pas fuiter");
-    expect(fullTextStr.contains('system_'), false, reason: "Les IDs de systèmes (ex: system_elec) ne doivent pas s'afficher");
-    expect(fullTextStr.contains('cuisiner_failed'), false, reason: "Les IDs d'états ne doivent pas s'afficher");
-    expect(fullTextStr.contains('causeNodeIds'), false, reason: "Les variables internes ne doivent pas s'afficher");
-    expect(fullTextStr.contains('B3State.degraded'), false, reason: "Les enums ne doivent pas s'afficher");
+    expect(fullTextStr.contains('total point >'), false);
+    expect(fullTextStr.contains('\${totalPoints'), false);
+    expect(fullTextStr.contains('system_'), false);
+    expect(fullTextStr.contains('cuisiner_failed'), false);
+    expect(fullTextStr.contains('causeNodeIds'), false);
+    expect(fullTextStr.contains('B3State.degraded'), false);
 
-    expect(find.textContaining('points de vigilance'), findsOneWidget); // Texte naturel correct
+    expect(find.textContaining('points de vigilance'), findsOneWidget);
 
     expect(find.text('CUISINER'), findsOneWidget);
     expect(find.text('SE CHAUFFER'), findsOneWidget);
 
-    // 7. Ouvrir un détail
     await tester.ensureVisible(find.text('Comprendre').first);
     await tester.tap(find.text('Comprendre').first);
     await tester.pumpAndSettle();
 
-    // Vérifier l'écran de détail
     expect(find.text('Pourquoi ?'), findsOneWidget);
     expect(find.text('Ce que cela signifie'), findsOneWidget);
     
-    // Revenir
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     
     expect(find.text('Bilan de résilience'), findsOneWidget);
     
-    // reset
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
   });

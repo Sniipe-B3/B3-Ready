@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
+import '../../../data/app_knowledge_dataset.dart';
 import '../../../app/theme/theme.dart';
 import 'vulnerability_detail_screen.dart';
 
@@ -31,13 +32,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
   Future<void> _runAnalysis() async {
     final householdConfig =
         widget.diagnosticState.toHouseholdConfig(widget.questions);
-    final graph = DataMapper.buildGraph(b3KnowledgeBase, householdConfig);
-    final scenario = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
+    final graph = DataMapper.buildGraph(appKnowledgeBase, householdConfig);
+    final scenario = DataMapper.parseScenario(appKnowledgeBase, 'panne_elec');
 
     final engine = B3Engine();
     _simulationResult = engine.runSimulation(graph, scenario);
 
-    _recommendations = RecommendationEngine(b3KnowledgeBase)
+    _recommendations = RecommendationEngine(appKnowledgeBase)
         .generate(_simulationResult, householdConfig, scenario);
 
     await Future.delayed(const Duration(milliseconds: 800));
