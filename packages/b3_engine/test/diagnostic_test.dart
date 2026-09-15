@@ -63,7 +63,7 @@ void main() {
     final newState = DiagnosticState();
     newState.fromJson(jsonSave);
 
-    expect(newState.answers['q_cook_main'], 'opt_plaque');
+    expect(newState.answers['q_cook_main'], ['opt_plaque']);
   });
 
   test('Test F: Deux utilisateurs produisent deux graphes différents', () {

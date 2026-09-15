@@ -92,7 +92,7 @@ void main() {
 
     // JOUR 2 : B3 pose la question, on répond "Lampe batterie"
     state.answerQuestion('q_light_main', 'opt_lamp_bat');
-    state.answers['fake'] = '1';
+    state.answers['fake'] = ['1'];
     config = state.toHouseholdConfig(questions);
     graph = DataMapper.buildGraph(b3KnowledgeBase, config);
     result = B3Engine().runSimulation(graph, scenario);

@@ -1,6 +1,11 @@
 import 'models.dart';
 import 'data_mapper.dart';
 
+enum QuestionType {
+  singleChoice,
+  multipleChoice,
+}
+
 class FactRule {
   final String
       type; // 'add_asset', 'add_resource_duration', 'assess_capability', 'override_capability'
@@ -72,7 +77,7 @@ class QuestionCondition {
 class DiagnosticQuestion {
   final String id;
   final String text;
-  final String type;
+  final QuestionType type;
   final List<QuestionOption> options;
   final QuestionCondition? condition;
 
@@ -91,10 +96,16 @@ class DiagnosticQuestion {
     var cond = json['condition'] != null
         ? QuestionCondition.fromJson(json['condition'])
         : null;
+        
+    final typeStr = json['type'] as String? ?? 'single_choice';
+    final type = typeStr == 'multiple_choice' 
+        ? QuestionType.multipleChoice 
+        : QuestionType.singleChoice;
+
     return DiagnosticQuestion(
       id: json['id'],
       text: json['text'],
-      type: json['type'],
+      type: type,
       options: opts,
       condition: cond,
     );
@@ -102,17 +113,33 @@ class DiagnosticQuestion {
 }
 
 class DiagnosticState {
-  final Map<String, String> answers = {};
+  final Map<String, List<String>> answers = {};
 
+  // Conserver cette méthode pour la compatibilité avec les questions singleChoice
   void answerQuestion(String questionId, String optionId) {
-    answers[questionId] = optionId;
+    answers[questionId] = [optionId];
+  }
+  
+  // Nouvelle méthode pour le support des questions à choix multiples
+  void answerMultiple(String questionId, List<String> optionIds) {
+    // Si la liste est vide (l'utilisateur a tout désélectionné ou n'a rien choisi),
+    // on l'enregistre quand même pour marquer la question comme "répondue"
+    answers[questionId] = List.from(optionIds);
   }
 
   Map<String, dynamic> toJson() => {'answers': answers};
+  
   void fromJson(Map<String, dynamic> json) {
     final map = json['answers'] as Map<String, dynamic>?;
     if (map != null) {
-      map.forEach((k, v) => answers[k] = v.toString());
+      map.forEach((k, v) {
+        if (v is List) {
+          answers[k] = v.cast<String>().toList();
+        } else if (v is String) {
+          // Backward compatibility pour les anciens JSON sauvegardés avec l'ancienne signature
+          answers[k] = [v];
+        }
+      });
     }
   }
 
@@ -130,28 +157,31 @@ class DiagnosticState {
           .firstWhere((q) => q?.id == entry.key, orElse: () => null);
       if (q == null) continue;
 
-      final opt = q.options
-          .cast<QuestionOption?>()
-          .firstWhere((o) => o?.id == entry.value, orElse: () => null);
-      if (opt == null) continue;
+      // Pour chaque option sélectionnée dans cette question
+      for (var optionId in entry.value) {
+        final opt = q.options
+            .cast<QuestionOption?>()
+            .firstWhere((o) => o?.id == optionId, orElse: () => null);
+        if (opt == null) continue;
 
-      for (var fact in opt.facts) {
-        if (fact.type == 'add_resource') {
-          ownedResources.add(fact.value);
-        } else if (fact.type == 'assess_resource') {
-          assessedResources.add(fact.value);
-        } else if (fact.type == 'add_asset') {
-          ownedAssets.add(fact.value);
-        } else if (fact.type == 'add_resource_duration' &&
-            fact.duration != null) {
-          resourceDurations[fact.value] = Duration(hours: fact.duration!);
-        } else if (fact.type == 'assess_capability') {
-          assessedCapabilities.add(fact.value);
-        } else if (fact.type == 'override_capability' && fact.state != null) {
-          if (fact.state == 'unknown')
-            capabilityOverrides[fact.value] = B3State.unknown;
-          if (fact.state == 'failed')
-            capabilityOverrides[fact.value] = B3State.failed;
+        for (var fact in opt.facts) {
+          if (fact.type == 'add_resource') {
+            ownedResources.add(fact.value);
+          } else if (fact.type == 'assess_resource') {
+            assessedResources.add(fact.value);
+          } else if (fact.type == 'add_asset') {
+            ownedAssets.add(fact.value);
+          } else if (fact.type == 'add_resource_duration' &&
+              fact.duration != null) {
+            resourceDurations[fact.value] = Duration(hours: fact.duration!);
+          } else if (fact.type == 'assess_capability') {
+            assessedCapabilities.add(fact.value);
+          } else if (fact.type == 'override_capability' && fact.state != null) {
+            if (fact.state == 'unknown')
+              capabilityOverrides[fact.value] = B3State.unknown;
+            if (fact.state == 'failed')
+              capabilityOverrides[fact.value] = B3State.failed;
+          }
         }
       }
     }
@@ -175,10 +205,15 @@ class DiagnosticEngine {
   DiagnosticQuestion? getNextQuestion(DiagnosticState state) {
     for (var q in questions) {
       if (state.answers.containsKey(q.id)) continue;
+      
       if (q.condition != null) {
         final cond = q.condition!;
-        final previousAnswer = state.answers[cond.dependsOnQuestionId];
-        if (previousAnswer != cond.hasAnswerId) continue;
+        final previousAnswers = state.answers[cond.dependsOnQuestionId];
+        
+        // Si la question parente n'a pas été répondue, ou ne contient pas l'option requise
+        if (previousAnswers == null || !previousAnswers.contains(cond.hasAnswerId)) {
+          continue;
+        }
       }
       return q;
     }
