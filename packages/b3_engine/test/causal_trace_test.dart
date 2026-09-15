@@ -1,10 +1,9 @@
 import 'package:test/test.dart';
 import 'package:b3_engine/b3_engine.dart';
 
-
 void main() {
   final scenarioElec = DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec');
-      DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
+  DataMapper.parseScenario(b3KnowledgeBase, 'panne_elec_gaz');
 
   test('TEST A & B — CAUSALITÉ DIRECTE ET INDIRECTE', () {
     final household = HouseholdConfig(

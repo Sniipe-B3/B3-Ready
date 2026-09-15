@@ -166,23 +166,24 @@ class SimulationResult {
       final trace = traces[current];
       if (trace == null || trace.steps.isEmpty) return;
 
-      final last = trace.steps.last;
-
-      if (last.type == ReasonType.scenarioOverride ||
-          last.type == ReasonType.initialOverride ||
-          last.type == ReasonType.resourceExhausted ||
-          last.type == ReasonType.noDependencies) {
-        causes.add(current);
-      } else if (last.type == ReasonType.evaluatedChildren &&
-          last.dependencyStates != null) {
-        last.dependencyStates!.forEach((depId, state) {
-          if (state == B3State.failed ||
-              state == B3State.degraded ||
-              state == B3State.unknown ||
-              state == B3State.notAssessed) {
-            walk(depId);
-          }
-        });
+      for (var step in trace.steps) {
+        if (step.type == ReasonType.scenarioOverride ||
+            step.type == ReasonType.initialOverride ||
+            step.type == ReasonType.resourceExhausted ||
+            step.type == ReasonType.noDependencies ||
+            step.type == ReasonType.cycleDetected) {
+          causes.add(current);
+        } else if (step.type == ReasonType.evaluatedChildren &&
+            step.dependencyStates != null) {
+          step.dependencyStates!.forEach((depId, state) {
+            if (state == B3State.failed ||
+                state == B3State.degraded ||
+                state == B3State.unknown ||
+                state == B3State.notAssessed) {
+              walk(depId);
+            }
+          });
+        }
       }
     }
 
