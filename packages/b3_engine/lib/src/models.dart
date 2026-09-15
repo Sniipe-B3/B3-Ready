@@ -60,36 +60,66 @@ class Scenario {
   Scenario({required this.name, required this.duration, required this.systemOverrides});
 }
 
+enum ReasonType {
+  scenarioOverride,
+  initialOverride,
+  resourceExhausted,
+  resourceSufficient,
+  noDependencies,
+  evaluatedChildren,
+  cycleDetected,
+}
+
 class TraceStep {
   final B3Node node;
   final B3State state;
-  final String reason;
+  final ReasonType type;
+  final String description;
+  final Map<String, B3State>? dependencyStates;
+  final Scenario? scenario;
 
-  TraceStep(this.node, this.state, this.reason);
+  TraceStep({
+    required this.node,
+    required this.state,
+    required this.type,
+    required this.description,
+    this.dependencyStates,
+    this.scenario,
+  });
   
   @override
-  String toString() => '${node.name} [$state] ($reason)';
+  String toString() {
+    var deps = dependencyStates != null ? ' deps:$dependencyStates' : '';
+    return '${node.name} [$state] (${type.name}: $description)$deps';
+  }
 }
 
 class ReasoningTrace {
   final List<TraceStep> steps = [];
   
-  void add(B3Node node, B3State state, String reason) {
-    steps.add(TraceStep(node, state, reason));
+  void add(TraceStep step) {
+    steps.add(step);
   }
 }
 
 class Vulnerability {
   final Capability capability;
-  final B3State state;
+  final B3State state; // failed or degraded
   
   Vulnerability(this.capability, this.state);
+}
+
+class Uncertainty {
+  final Capability capability;
+  
+  Uncertainty(this.capability);
 }
 
 class SimulationResult {
   final Map<String, B3State> nodeStates;
   final Map<String, ReasoningTrace> traces;
   final List<Vulnerability> vulnerabilities;
+  final List<Uncertainty> uncertainties;
 
-  SimulationResult(this.nodeStates, this.traces, this.vulnerabilities);
+  SimulationResult(this.nodeStates, this.traces, this.vulnerabilities, this.uncertainties);
 }
