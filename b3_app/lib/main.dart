@@ -51,8 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
     
     setState(() {
       _status = "Moteur B3 connecté !\\n"
-          "\${result.uncertainties.length} incertitudes trouvées\\n"
-          "\${result.vulnerabilities.length} vulnérabilités trouvées";
+          "${result.uncertainties.length} incertitudes trouvées\\n"
+          "${result.vulnerabilities.length} vulnérabilités trouvées";
     });
   }
 
