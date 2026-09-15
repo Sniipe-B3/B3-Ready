@@ -7,7 +7,7 @@ const String b3DiagnosticQuestionsJson = '''
     "options": [
       {"id": "opt_plaque", "text": "Plaque électrique", "facts": [{"type": "add_asset", "value": "plaque_elec"}]},
       {"id": "opt_gaz", "text": "Gazinière", "facts": [{"type": "add_asset", "value": "rechaud_gaz"}]},
-      {"id": "opt_unk", "text": "Je ne sais pas", "facts": []}
+      {"id": "opt_unk", "text": "Je ne sais pas", "facts": [{"type": "add_asset", "value": "unknown_cuisiner"}]}
     ]
   },
   {

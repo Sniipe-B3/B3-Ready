@@ -1,6 +1,8 @@
 const String b3KnowledgeBase = '''
 {
   "systems": [
+    {"id": "unk_sys", "name": "Système Inconnu"},
+
     {"id": "elec", "name": "Électricité"},
     {"id": "eau", "name": "Eau du réseau"},
     {"id": "internet", "name": "Internet"},
@@ -12,6 +14,7 @@ const String b3KnowledgeBase = '''
     {"id": "batterie", "name": "Batterie rechargeable"}
   ],
   "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},
     {"id": "plaque_elec", "name": "Plaque électrique", "requires": ["elec"]},
     {"id": "four_elec", "name": "Four électrique", "requires": ["elec"]},
     {"id": "rechaud_gaz", "name": "Réchaud gaz", "requires": ["gaz"]},
@@ -26,12 +29,18 @@ const String b3KnowledgeBase = '''
     {"id": "frigo", "name": "Réfrigérateur", "requires": ["elec"]}
   ],
   "capabilities": [
-    {"id": "cuisiner", "name": "Cuisiner", "assets": ["plaque_elec", "four_elec", "rechaud_gaz", "rechaud_bois"]},
-    {"id": "eclairage", "name": "S'éclairer", "assets": ["lampe_secteur", "lampe_batterie"]},
-    {"id": "chauffer", "name": "Chauffer", "assets": ["radiateur_elec", "poele_bois"]},
-    {"id": "boire", "name": "Boire", "assets": ["robinet"]},
-    {"id": "communiquer", "name": "Communiquer", "assets": ["telephone_mobile", "voip"]},
-    {"id": "conserver", "name": "Conserver les aliments", "assets": ["frigo"]}
+    {"id": "cuisiner", "name": "Cuisiner", "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},"plaque_elec", "four_elec", "rechaud_gaz", "rechaud_bois"]},
+    {"id": "eclairage", "name": "S'éclairer", "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},"lampe_secteur", "lampe_batterie"]},
+    {"id": "chauffer", "name": "Chauffer", "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},"radiateur_elec", "poele_bois"]},
+    {"id": "boire", "name": "Boire", "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},"robinet"]},
+    {"id": "communiquer", "name": "Communiquer", "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},"telephone_mobile", "voip"]},
+    {"id": "conserver", "name": "Conserver les aliments", "assets": [
+    {"id": "unknown_cuisiner", "name": "Moyen inconnu", "requires": ["unk_sys"]},"frigo"]}
   ],
   "scenarios": [
     {"id": "panne_elec", "name": "Panne électrique", "duration": 48, "overrides": {"elec": "failed"}},
