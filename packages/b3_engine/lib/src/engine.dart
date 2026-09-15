@@ -90,7 +90,13 @@ class B3Engine {
 
       // 4. Evaluate children
       if (node.children.isEmpty) {
-        states[node.id] = baseState;
+                if (node.rule == EvaluationRule.any) {
+           states[node.id] = evaluateAny([]); // qui retourne failed
+           baseState = states[node.id]!;
+        } else {
+           states[node.id] = baseState;
+        }
+    
         if (node.duration == null) {
             traces[node.id]!.add(TraceStep(
               node: node,
