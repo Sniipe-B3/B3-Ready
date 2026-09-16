@@ -149,17 +149,29 @@ class RecommendationEngine {
                   causeNodeIds: {causeId},
                 ));
                 specificRecGenerated = true;
-              } else if (state == B3State.unknown ||
-                  state == B3State.notAssessed) {
+              } else if (state == B3State.unknown) {
                 recommendations.add(Recommendation(
                   id: 'rec_ver_${assetId}_$causeId',
                   type: RecommendationType.verify,
                   priority: priority,
                   capabilityId: capId,
                   title: 'Vérifier la disponibilité : $resName',
-                  description:
-                      'B3 ne sait pas si vous possédez suffisamment de cette ressource pour faire fonctionner votre équipement.',
-                  reason: 'Prérequis inconnu.',
+                  description: 'Vous ne connaissez pas encore la quantité disponible.',
+                  reason: 'Prérequis incertain.',
+                  targetAssetId: assetId,
+                  targetResourceId: causeId,
+                  causeNodeIds: {causeId},
+                ));
+                specificRecGenerated = true;
+              } else if (state == B3State.notAssessed) {
+                recommendations.add(Recommendation(
+                  id: 'rec_ver_${assetId}_$causeId',
+                  type: RecommendationType.verify,
+                  priority: priority,
+                  capabilityId: capId,
+                  title: 'Vérifier la disponibilité : $resName',
+                  description: 'Cette information n\'a pas encore été vérifiée.',
+                  reason: 'Prérequis non évalué.',
                   targetAssetId: assetId,
                   targetResourceId: causeId,
                   causeNodeIds: {causeId},
@@ -212,13 +224,17 @@ class RecommendationEngine {
 
       // Si c'est une incertitude et qu'aucune recommandation spécifique n'a été générée, on ajoute la générique
       if ((capState == B3State.unknown || capState == B3State.notAssessed) && !specificRecGenerated) {
+        String desc = capState == B3State.unknown 
+            ? 'Vous ne connaissez pas encore la quantité disponible.' 
+            : 'Cette information n\'a pas encore été vérifiée.';
+            
         recommendations.add(Recommendation(
           id: 'rec_verify_$capId',
           type: RecommendationType.verify,
           priority: RecommendationPriority.high,
           capabilityId: capId,
           title: 'Évaluer la capacité ${cap.name}',
-          description: 'Poursuivez le diagnostic pour lever cette incertitude.',
+          description: desc,
           reason: 'Information manquante ou incertaine (${capState.name}).',
           causeNodeIds: causeNodeIds,
         ));

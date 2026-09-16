@@ -140,4 +140,26 @@ void main() {
       expect(recs1[i].id, recs2[i].id);
     }
   });
+
+  test('TEST 11 — Label Humain Anti-Jargon', () {
+    final customBase = '''{
+      "capabilities": [{"id": "cap1", "name": "Capacité 1", "type": "ALL", "assets": ["a1", "a2"]}],
+      "assets": [
+        {"id": "a1", "name": "A1", "requires": ["sys_custom"]},
+        {"id": "a2", "name": "A2", "requires": []}
+      ],
+      "resources": [],
+      "systems": [{"id": "sys_custom", "name": "Réseau secondaire"}],
+      "scenarios": [{"id": "s1", "name": "S1", "overrides": {"sys_custom": "failed"}, "description": ""}]
+    }''';
+
+    final household = HouseholdConfig(ownedAssets: ['a1'], assessedCapabilities: {'cap1'});
+    final scenario = DataMapper.parseScenario(customBase, 's1');
+    final result = B3Engine().runSimulation(DataMapper.buildGraph(customBase, household), scenario);
+    final recs = RecommendationEngine(customBase).generate(result, household, scenario);
+
+    final rec = recs.firstWhere((r) => r.type == RecommendationType.createAlternative);
+    expect(rec.reason.contains('Réseau secondaire'), true);
+    expect(rec.reason.contains('sys_custom'), false);
+  });
 }

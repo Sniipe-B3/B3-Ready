@@ -2,36 +2,51 @@ import 'package:test/test.dart';
 import 'package:b3_engine/b3_engine.dart';
 
 void main() {
-  test('BUG DEMO: RecommendationEngine does not generate specific verify for UNKNOWN resources', () {
-    final kb = '''{
-      "capabilities": [{"id": "capA", "name": "Cap A", "assets": ["assetB"]}],
-      "assets": [{"id": "assetB", "name": "Asset B", "requires": ["resC"]}],
-      "resources": [{"id": "resC", "name": "Res C"}],
-      "scenarios": [{"id": "s", "name": "S", "duration": 24, "overrides": {}}]
-    }''';
+  const b3KnowledgeBase = '''{
+    "capabilities": [{"id": "cap1", "name": "Cap1", "type": "ALL", "systems": [], "assets": ["asset1"]}],
+    "assets": [{"id": "asset1", "name": "Asset1", "type": "INDEPENDENT", "dependencies": [], "requires": ["resC"]}],
+    "resources": [{"id": "resC", "name": "ResC"}],
+    "systems": [],
+    "scenarios": [{"id": "s", "name": "S", "impactedSystems": [], "description": ""}]
+  }''';
 
-    final config = HouseholdConfig(
-      ownedAssets: ['assetB'],
+  final scenario = DataMapper.parseScenario(b3KnowledgeBase, 's');
+  
+  test('TEST ENGINE 1 — UNKNOWN réel', () {
+    final household = HouseholdConfig(
+      ownedAssets: ['asset1'],
       ownedResources: ['resC'],
-      // assessedResources is empty -> resC is NOT_ASSESSED
+      unknownResources: {'resC'},
+      assessedCapabilities: {'cap1'},
     );
+    final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
+    final engine = B3Engine();
+    final result = engine.runSimulation(graph, scenario);
+    
+    expect(result.nodeStates['resC'], B3State.unknown);
+    
+    final recs = RecommendationEngine(b3KnowledgeBase).generate(result, household, scenario);
+    
+    final specificVerify = recs.firstWhere((r) => r.type == RecommendationType.verify && r.targetResourceId == 'resC', orElse: () => throw Exception('No specific verify found'));
+    expect(specificVerify.description, 'Vous ne connaissez pas encore la quantité disponible.');
+  });
 
-    final graph = DataMapper.buildGraph(kb, config);
-    final scenario = DataMapper.parseScenario(kb, 's');
-    final result = B3Engine().runSimulation(graph, scenario);
+  test('TEST ENGINE 2 — NOT_ASSESSED réel', () {
+    final household = HouseholdConfig(
+      ownedAssets: ['asset1'],
+      ownedResources: ['resC'],
+      unknownResources: {},
+      assessedCapabilities: {'cap1'},
+    );
+    final graph = DataMapper.buildGraph(b3KnowledgeBase, household);
+    final engine = B3Engine();
+    final result = engine.runSimulation(graph, scenario);
     
-    // Capability is NOT_ASSESSED/UNKNOWN
-    expect(result.uncertainties.length, 1);
+    expect(result.nodeStates['resC'], B3State.notAssessed);
     
-    final engine = RecommendationEngine(kb);
-    final recs = engine.generate(result, config, scenario);
+    final recs = RecommendationEngine(b3KnowledgeBase).generate(result, household, scenario);
     
-    // We expect a specific 'verify' recommendation for resC (id: rec_ver_assetB_resC)
-    // But currently, it only generates a generic 'rec_verify_capA'
-    final hasSpecificVerify = recs.any((r) => r.id == 'rec_ver_assetB_resC');
-    print('Specific verify found: \$hasSpecificVerify');
-    
-    // If the bug exists, this will fail
-    expect(hasSpecificVerify, true);
+    final specificVerify = recs.firstWhere((r) => r.type == RecommendationType.verify && r.targetResourceId == 'resC', orElse: () => throw Exception('No specific verify found'));
+    expect(specificVerify.description, 'Cette information n\'a pas encore été vérifiée.');
   });
 }
