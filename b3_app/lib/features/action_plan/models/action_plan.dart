@@ -16,6 +16,8 @@ class ActionPlanItem {
   final ActionPriority priority;
   final Set<String> capabilityIds;
   final Set<String> causeNodeIds;
+  final String? targetAssetId;
+  final String? targetResourceId;
 
   ActionPlanItem({
     required this.id,
@@ -26,6 +28,8 @@ class ActionPlanItem {
     required this.priority,
     required this.capabilityIds,
     this.causeNodeIds = const {},
+    this.targetAssetId,
+    this.targetResourceId,
   });
 }
 

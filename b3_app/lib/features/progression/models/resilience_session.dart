@@ -1,0 +1,138 @@
+import 'package:flutter/foundation.dart';
+import 'package:b3_engine/b3_engine.dart';
+import '../../action_plan/action_plan_builder.dart';
+import '../../action_plan/models/action_plan.dart';
+import 'household_update.dart';
+import 'progression_result.dart';
+
+class ResilienceSession extends ChangeNotifier {
+  final String knowledgeJson;
+  final String scenarioId;
+
+  HouseholdConfig _config;
+  late Scenario _scenario;
+  late List<B3Node> _graph;
+  late SimulationResult _simulationResult;
+  late List<Recommendation> _recommendations;
+  late ActionPlan _actionPlan;
+
+  final List<String> _completedActionIds = [];
+
+  HouseholdConfig get config => _config;
+  Scenario get scenario => _scenario;
+  List<B3Node> get graph => _graph;
+  SimulationResult get simulationResult => _simulationResult;
+  List<Recommendation> get recommendations => _recommendations;
+  ActionPlan get actionPlan => _actionPlan;
+  List<String> get completedActionIds => _completedActionIds;
+
+  ResilienceSession({
+    required this.knowledgeJson,
+    required this.scenarioId,
+    required HouseholdConfig initialConfig,
+  }) : _config = initialConfig {
+    _performInitialCalculation();
+  }
+
+  void _performInitialCalculation() {
+    _scenario = DataMapper.parseScenario(knowledgeJson, scenarioId);
+    _graph = DataMapper.buildGraph(knowledgeJson, _config);
+    _simulationResult = B3Engine().runSimulation(_graph, _scenario);
+    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult, _config, _scenario);
+    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations, _simulationResult);
+  }
+
+  ProgressionResult recalculate(HouseholdUpdate update) {
+    // 1. Snapshot BEFORE
+    final beforeConfig = _config.clone();
+    final beforeResult = _simulationResult;
+    final beforePlan = _actionPlan;
+
+    // 2. Apply Update
+    if (update is ActionCompletedUpdate) {
+      if (!_completedActionIds.contains(update.actionId)) {
+        _completedActionIds.add(update.actionId);
+      }
+      return ProgressionResult(
+        beforeConfig: beforeConfig,
+        afterConfig: beforeConfig,
+        beforeResult: beforeResult,
+        afterResult: beforeResult,
+        beforePlan: beforePlan,
+        afterPlan: beforePlan,
+        changedCapabilities: [],
+        hasStructuralChange: false,
+      );
+    }
+
+    final newConfig = _config.clone();
+
+    if (update is ResourceUpdate) {
+      final resId = update.resourceId;
+      if (update.isOwned != null) {
+        if (update.isOwned!) {
+          if (!newConfig.ownedResources.contains(resId)) newConfig.ownedResources.add(resId);
+        } else {
+          newConfig.ownedResources.remove(resId);
+        }
+      }
+      
+      newConfig.assessedResources.add(resId);
+      
+      if (update.isUnknown) {
+        newConfig.unknownResources.add(resId);
+        newConfig.resourceDurations.remove(resId);
+      } else {
+        newConfig.unknownResources.remove(resId);
+        if (update.duration != null) {
+          newConfig.resourceDurations[resId] = update.duration!;
+        } else if (update.isOwned == false) {
+           newConfig.resourceDurations.remove(resId);
+        }
+      }
+    } else if (update is AssetOwnershipUpdate) {
+      if (update.isOwned) {
+        if (!newConfig.ownedAssets.contains(update.assetId)) newConfig.ownedAssets.add(update.assetId);
+      } else {
+        newConfig.ownedAssets.remove(update.assetId);
+      }
+    }
+
+    _config = newConfig;
+
+    // 3. Recalculate
+    _graph = DataMapper.buildGraph(knowledgeJson, _config);
+    _simulationResult = B3Engine().runSimulation(_graph, _scenario);
+    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult, _config, _scenario);
+    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations, _simulationResult);
+
+    // 4. Compare BEFORE and AFTER
+    final changedCaps = <CapabilityChange>[];
+    for (var cap in _graph.whereType<Capability>()) {
+      final beforeState = beforeResult.nodeStates[cap.id] ?? B3State.notAssessed;
+      final afterState = _simulationResult.nodeStates[cap.id] ?? B3State.notAssessed;
+      if (beforeState != afterState) {
+        changedCaps.add(CapabilityChange(
+          capabilityId: cap.id,
+          capabilityName: cap.name,
+          beforeState: beforeState,
+          afterState: afterState,
+        ));
+      }
+    }
+
+    final progression = ProgressionResult(
+      beforeConfig: beforeConfig,
+      afterConfig: newConfig,
+      beforeResult: beforeResult,
+      afterResult: _simulationResult,
+      beforePlan: beforePlan,
+      afterPlan: _actionPlan,
+      changedCapabilities: changedCaps,
+      hasStructuralChange: true,
+    );
+
+    notifyListeners();
+    return progression;
+  }
+}

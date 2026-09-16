@@ -19,6 +19,18 @@ class HouseholdConfig {
     this.assessedCapabilities = const {},
     this.capabilityOverrides = const {},
   });
+
+  HouseholdConfig clone() {
+    return HouseholdConfig(
+      ownedAssets: List.from(ownedAssets),
+      ownedResources: List.from(ownedResources),
+      assessedResources: Set.from(assessedResources),
+      unknownResources: Set.from(unknownResources),
+      resourceDurations: Map.from(resourceDurations),
+      assessedCapabilities: Set.from(assessedCapabilities),
+      capabilityOverrides: Map.from(capabilityOverrides),
+    );
+  }
 }
 
 class DataMapper {

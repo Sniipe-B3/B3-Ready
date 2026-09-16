@@ -56,6 +56,8 @@ class ActionPlanBuilder {
         type: first.type,
         priority: highestPriority,
         capabilityIds: capabilityIds,
+        targetAssetId: first.targetAssetId,
+        targetResourceId: first.targetResourceId,
         causeNodeIds: causeNodeIds,
       ));
     }

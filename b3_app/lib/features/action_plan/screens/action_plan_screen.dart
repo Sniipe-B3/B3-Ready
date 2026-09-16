@@ -3,49 +3,50 @@ import 'package:b3_engine/b3_engine.dart';
 import '../models/action_plan.dart';
 import '../../../app/theme/theme.dart';
 import '../../dependency_map/screens/dependency_map_screen.dart';
+import '../../progression/models/resilience_session.dart';
+import '../../progression/screens/progression_screen.dart';
+import '../../progression/models/household_update.dart';
 
 class ActionPlanScreen extends StatelessWidget {
-  final ActionPlan plan;
-  final HouseholdConfig config;
-  final SimulationResult result;
-  final Scenario scenario;
-  final List<B3Node> graph;
+  final ResilienceSession session;
 
   const ActionPlanScreen({
     Key? key,
-    required this.plan,
-    required this.config,
-    required this.result,
-    required this.scenario,
-    required this.graph,
+    required this.session,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return AnimatedBuilder(
+      animation: session,
+      builder: (context, _) {
+        final plan = session.actionPlan;
+        final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mon plan d\'action'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${plan.items.length} actions prioritaires',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ...plan.items.map((item) => _buildActionCard(context, item, theme)),
-            ],
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Mon plan d\'action'),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${plan.items.length} actions prioritaires',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ...plan.items.map((item) => _buildActionCard(context, item, theme)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -123,31 +124,140 @@ class ActionPlanScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            if (item.capabilityIds.length == 1) // On affiche "Comprendre" seulement s'il y a 1 capa claire (plus simple)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DependencyMapScreen(
-                          capabilityId: item.capabilityIds.first,
-                          config: config,
-                          result: result,
-                          scenario: scenario,
-                          graph: graph,
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => _showUpdateDialog(context, item),
+                child: const Text('Mettre à jour ma situation'),
+              ),
+            ),
+            if (item.capabilityIds.length == 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DependencyMapScreen(
+                            capabilityId: item.capabilityIds.first,
+                            config: session.config,
+                            result: session.simulationResult,
+                            scenario: session.scenario,
+                            graph: session.graph,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const Text('Comprendre pourquoi'),
+                      );
+                    },
+                    child: const Text('Comprendre pourquoi'),
+                  ),
                 ),
               ),
           ],
         ),
       ),
     );
+  }
+
+  void _showUpdateDialog(BuildContext context, ActionPlanItem item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Qu\'avez-vous constaté ?', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              if (item.type == RecommendationType.verify || item.type == RecommendationType.organize || item.type == RecommendationType.acquire) ...[
+                ListTile(
+                  title: const Text('Je n\'en ai pas / Ce n\'est pas disponible'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _applyUpdate(context, item, false, null, false);
+                  },
+                ),
+                ListTile(
+                  title: const Text('Moins d\'une journée (< 24h)'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _applyUpdate(context, item, true, const Duration(hours: 12), false);
+                  },
+                ),
+                ListTile(
+                  title: const Text('Environ 1 à 2 jours (48h)'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _applyUpdate(context, item, true, const Duration(hours: 48), false);
+                  },
+                ),
+                ListTile(
+                  title: const Text('Plusieurs jours (> 72h)'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _applyUpdate(context, item, true, const Duration(hours: 72), false);
+                  },
+                ),
+              ],
+              if (item.type == RecommendationType.createAlternative || item.type == RecommendationType.invest) ...[
+                ListTile(
+                  title: const Text('J\'ai mis cette solution en place'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _applyAssetUpdate(context, item, true);
+                  },
+                ),
+              ],
+              if (item.type == RecommendationType.verify) ...[
+                ListTile(
+                  title: const Text('Je ne sais toujours pas'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _applyUpdate(context, item, null, null, true);
+                  },
+                ),
+              ],
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _applyUpdate(BuildContext context, ActionPlanItem item, bool? isOwned, Duration? duration, bool isUnknown) {
+    if (item.targetResourceId != null) {
+      final resId = item.targetResourceId!;
+      final result = session.recalculate(ResourceUpdate(
+        resourceId: resId,
+        isOwned: isOwned,
+        duration: duration,
+        isUnknown: isUnknown,
+      ));
+      
+      Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
+    } else {
+      final result = session.recalculate(ActionCompletedUpdate(actionId: item.id));
+      Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
+    }
+  }
+
+  void _applyAssetUpdate(BuildContext context, ActionPlanItem item, bool isOwned) {
+    if (item.targetAssetId != null) {
+      final assetId = item.targetAssetId!;
+      final result = session.recalculate(AssetOwnershipUpdate(assetId: assetId, isOwned: isOwned));
+      Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
+    }
   }
 
   String _getCapabilityName(String capabilityId) {
@@ -157,4 +267,3 @@ class ActionPlanScreen extends StatelessWidget {
     return capabilityId;
   }
 }
-

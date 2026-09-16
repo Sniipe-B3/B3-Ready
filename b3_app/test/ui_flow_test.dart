@@ -4,7 +4,7 @@ import 'package:b3_app/app/app.dart';
 
 void main() {
   testWidgets('Parcours complet: Home -> Diagnostic -> Results', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.physicalSize = const Size(1080, 5000);
     tester.view.devicePixelRatio = 3.0;
 
     await tester.pumpWidget(const B3App());
@@ -39,7 +39,7 @@ void main() {
 
     // 4. Question ressource bois (q_heat_bois_reserve - single_choice)
     expect(find.text("Disposez-vous d'une réserve de bois utilisable ?"), findsOneWidget);
-    await tester.tap(find.text('Oui, pour plusieurs jours')); // single choice
+    await tester.tap(find.text('Je ne sais pas')); // single choice
     await tester.pumpAndSettle();
 
     // 5. Question cuisine (q_cook_main - multiple_choice)
@@ -107,7 +107,7 @@ void main() {
     expect(planStr.contains('targetAssetId'), false);
     
     // Ouvre la Dependency Map depuis une action
-    await tester.tap(find.text("Comprendre pourquoi"));
+    await tester.tap(find.text("Comprendre pourquoi").first, warnIfMissed: false);
     await tester.pumpAndSettle();
     
     // Vérifications sur la Dependency Map
@@ -126,8 +126,28 @@ void main() {
     expect(mapStr.contains('eclairage'), false);
     expect(mapStr.contains('lampe_secteur'), false);
     
+    // Progression Loop MVP
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    
+    await tester.tap(find.text("Mettre à jour ma situation").last);
+    await tester.pumpAndSettle();
+    
+    expect(find.text("Qu'avez-vous constaté ?"), findsOneWidget);
+    await tester.tap(find.text("Plusieurs jours (> 72h)"));
+    await tester.pumpAndSettle();
+    
+    expect(find.text("Analyse mise à jour"), findsOneWidget);
+    expect(find.text("Votre résilience s'est améliorée !"), findsOneWidget);
+    
+    await tester.tap(find.text("Voir mon nouveau plan"));
+    await tester.pumpAndSettle();
+    
+    expect(find.text("À VÉRIFIER"), findsNothing);
+
     tester.view.resetPhysicalSize();
 
     tester.view.resetDevicePixelRatio();
   });
 }
+// APPEND
