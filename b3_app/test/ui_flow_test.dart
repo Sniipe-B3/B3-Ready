@@ -85,7 +85,36 @@ void main() {
 
     expect(find.text("S'ÉCLAIRER"), findsOneWidget);
 
+    // Ouvre le détail
+    await tester.tap(find.text("Comprendre"));
+    await tester.pumpAndSettle();
+    
+    // Vérifie qu'on est sur le détail
+    expect(find.text("Comprendre cette vulnérabilité"), findsOneWidget);
+    
+    // Ouvre la Dependency Map
+    await tester.tap(find.text("Comprendre cette vulnérabilité"));
+    await tester.pumpAndSettle();
+    
+    // Vérifications sur la Dependency Map
+    expect(find.text("Dépendances"), findsOneWidget);
+    expect(find.text("Panne électrique prolongée"), findsOneWidget);
+    expect(find.text("Pourquoi ?"), findsOneWidget);
+    
+    // Les labels lisibles et pas de jargon
+    expect(find.text("S'éclairer"), findsOneWidget); // Capability
+    expect(find.text("Lumière (secteur)"), findsOneWidget); // Asset
+    expect(find.text("Réseau électrique"), findsOneWidget); // Dependency
+    expect(find.text("Indisponible"), findsWidgets); // B3State traduit
+    
+    // Anti-jargon map
+    final mapStr = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
+    expect(mapStr.contains('elec'), false);
+    expect(mapStr.contains('eclairage'), false);
+    expect(mapStr.contains('lampe_secteur'), false);
+    
     tester.view.resetPhysicalSize();
+
     tester.view.resetDevicePixelRatio();
   });
 }

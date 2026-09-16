@@ -21,6 +21,8 @@ class ResultsScreen extends StatefulWidget {
 class _ResultsScreenState extends State<ResultsScreen> {
   bool _isLoading = true;
   late SimulationResult _simulationResult;
+  late HouseholdConfig _config;
+  late Scenario _scenario;
   late List<Recommendation> _recommendations;
 
   @override
@@ -30,16 +32,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> _runAnalysis() async {
-    final householdConfig =
+    _config =
         widget.diagnosticState.toHouseholdConfig(widget.questions);
-    final graph = DataMapper.buildGraph(appKnowledgeBase, householdConfig);
-    final scenario = DataMapper.parseScenario(appKnowledgeBase, 'panne_elec');
+    final graph = DataMapper.buildGraph(appKnowledgeBase, _config);
+    _scenario = DataMapper.parseScenario(appKnowledgeBase, 'panne_elec');
 
     final engine = B3Engine();
-    _simulationResult = engine.runSimulation(graph, scenario);
+    _simulationResult = engine.runSimulation(graph, _scenario);
 
     _recommendations = RecommendationEngine(appKnowledgeBase)
-        .generate(_simulationResult, householdConfig, scenario);
+        .generate(_simulationResult, _config, _scenario);
 
     await Future.delayed(const Duration(milliseconds: 800));
 
@@ -197,6 +199,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     MaterialPageRoute(
                       builder: (_) => VulnerabilityDetailScreen(
                         vulnerability: v,
+                        config: _config,
+                        result: _simulationResult,
+                        scenario: _scenario,
                         recommendations: recs,
                       ),
                     ),
