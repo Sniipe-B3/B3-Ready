@@ -4,51 +4,50 @@ import '../models/dependency_node.dart';
 
 class DependencyMapBuilder {
   final Map<String, dynamic> _kb;
+  final List<B3Node> _graph;
 
-  DependencyMapBuilder(String knowledgeBaseJson)
+  DependencyMapBuilder(String knowledgeBaseJson, this._graph)
       : _kb = jsonDecode(knowledgeBaseJson);
 
-  DependencyNode buildTree(String capabilityId, HouseholdConfig config, SimulationResult result) {
-    return _buildNode(capabilityId, config, result, {});
+  DependencyNode buildTree(String capabilityId, SimulationResult result) {
+    final capNode = _graph.firstWhere((n) => n.id == capabilityId, orElse: () => throw Exception('Capability not found in graph'));
+    return _buildNodeFromB3Node(capNode, result, {});
   }
 
-  DependencyNode _buildNode(String id, HouseholdConfig config, SimulationResult result, Set<String> visited) {
-    if (visited.contains(id)) {
-      final type = _getTypeOf(id);
-      final def = _getDefForType(type, id);
-      final label = _getLabel(def, id);
-      final state = result.nodeStates[id] ?? B3State.notAssessed;
-      return DependencyNode(id: id, label: label, type: type, state: state, children: []);
+  DependencyNode _buildNodeFromB3Node(B3Node b3Node, SimulationResult result, Set<String> visited) {
+    if (visited.contains(b3Node.id)) {
+      final type = _getB3NodeType(b3Node);
+      final def = _getDefForType(type, b3Node.id);
+      final label = _getLabel(def, b3Node.id);
+      final state = result.nodeStates[b3Node.id] ?? B3State.notAssessed;
+      return DependencyNode(id: b3Node.id, label: label, type: type, state: state, children: []);
     }
 
-    final newVisited = Set<String>.from(visited)..add(id);
-    final type = _getTypeOf(id);
-    final def = _getDefForType(type, id);
-    final label = _getLabel(def, id);
-    final state = result.nodeStates[id] ?? B3State.notAssessed;
+    final newVisited = Set<String>.from(visited)..add(b3Node.id);
+    final type = _getB3NodeType(b3Node);
+    final def = _getDefForType(type, b3Node.id);
+    final label = _getLabel(def, b3Node.id);
+    final state = result.nodeStates[b3Node.id] ?? B3State.notAssessed;
 
     List<DependencyNode> children = [];
-
-    if (type == MapNodeType.capability) {
-      final possibleAssets = List<String>.from(def['assets'] ?? []);
-      final ownedAssets = possibleAssets.where((a) => config.ownedAssets.contains(a)).toList();
-      for (var aId in ownedAssets) {
-        children.add(_buildNode(aId, config, result, newVisited));
-      }
-    } else {
-      final reqs = List<String>.from(def['requires'] ?? []);
-      for (var rId in reqs) {
-        children.add(_buildNode(rId, config, result, newVisited));
-      }
+    for (var childB3Node in b3Node.children) {
+      children.add(_buildNodeFromB3Node(childB3Node, result, newVisited));
     }
 
     return DependencyNode(
-      id: id,
+      id: b3Node.id,
       label: label,
       type: type,
       state: state,
       children: children,
     );
+  }
+
+  MapNodeType _getB3NodeType(B3Node node) {
+    if (node is Capability) return MapNodeType.capability;
+    if (node is Asset) return MapNodeType.asset;
+    if (node is System) return MapNodeType.system;
+    return MapNodeType.resource;
   }
 
   Map<String, dynamic> _getDefForType(MapNodeType type, String id) {
@@ -201,10 +200,5 @@ class DependencyMapBuilder {
     throw StateError("No human readable label found for entity $fallbackId. Raw ID is not allowed in UI.");
   }
 
-  MapNodeType _getTypeOf(String id) {
-    if ((_kb['capabilities'] as List?)?.any((e) => e['id'] == id) ?? false) return MapNodeType.capability;
-    if ((_kb['assets'] as List?)?.any((e) => e['id'] == id) ?? false) return MapNodeType.asset;
-    if ((_kb['systems'] as List?)?.any((e) => e['id'] == id) ?? false) return MapNodeType.system;
-    return MapNodeType.resource;
-  }
+// Removed _getTypeOf
 }

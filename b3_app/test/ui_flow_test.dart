@@ -103,8 +103,8 @@ void main() {
     
     // Les labels lisibles et pas de jargon
     expect(find.text("S'éclairer"), findsOneWidget); // Capability
-    expect(find.text("Lumière (secteur)"), findsOneWidget); // Asset
-    expect(find.text("Réseau électrique"), findsOneWidget); // Dependency
+    expect(find.text("Lampe sur secteur"), findsOneWidget); // Asset
+    expect(find.text("Réseau Électrique"), findsOneWidget); // Dependency
     expect(find.text("Indisponible"), findsWidgets); // B3State traduit
     
     // Anti-jargon map

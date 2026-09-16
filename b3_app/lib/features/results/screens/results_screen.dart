@@ -23,6 +23,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   late SimulationResult _simulationResult;
   late HouseholdConfig _config;
   late Scenario _scenario;
+  late List<B3Node> _graph;
   late List<Recommendation> _recommendations;
 
   @override
@@ -34,11 +35,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
   Future<void> _runAnalysis() async {
     _config =
         widget.diagnosticState.toHouseholdConfig(widget.questions);
-    final graph = DataMapper.buildGraph(appKnowledgeBase, _config);
+    _graph = DataMapper.buildGraph(appKnowledgeBase, _config);
     _scenario = DataMapper.parseScenario(appKnowledgeBase, 'panne_elec');
 
     final engine = B3Engine();
-    _simulationResult = engine.runSimulation(graph, _scenario);
+    _simulationResult = engine.runSimulation(_graph, _scenario);
 
     _recommendations = RecommendationEngine(appKnowledgeBase)
         .generate(_simulationResult, _config, _scenario);
@@ -202,6 +203,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         config: _config,
                         result: _simulationResult,
                         scenario: _scenario,
+                        graph: _graph,
                         recommendations: recs,
                       ),
                     ),

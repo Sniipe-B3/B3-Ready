@@ -10,6 +10,7 @@ class DependencyMapScreen extends StatelessWidget {
   final HouseholdConfig config;
   final SimulationResult result;
   final Scenario scenario;
+  final List<B3Node> graph;
 
   const DependencyMapScreen({
     Key? key,
@@ -17,12 +18,13 @@ class DependencyMapScreen extends StatelessWidget {
     required this.config,
     required this.result,
     required this.scenario,
+    required this.graph,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final builder = DependencyMapBuilder(appKnowledgeBase);
-    final rootNode = builder.buildTree(capabilityId, config, result);
+    final builder = DependencyMapBuilder(appKnowledgeBase, graph);
+    final rootNode = builder.buildTree(capabilityId, result);
     final causePhrase = builder.getCausePhrase(rootNode);
 
     return Scaffold(
