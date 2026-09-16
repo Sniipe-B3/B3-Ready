@@ -163,4 +163,132 @@ void main() {
     expect(n1.state, n2.state);
     expect(n1.children.first.id, n2.children.first.id);
   });
+
+  test('TEST 2: Cascade profonde', () {
+    final syntheticKb = '''{
+      "capabilities": [{"id": "capA", "name": "Cap A", "assets": ["assetB"]}],
+      "assets": [{"id": "assetB", "name": "Asset B", "requires": ["sysC"]}],
+      "systems": [
+        {"id": "sysC", "name": "System C", "requires": ["sysD"]},
+        {"id": "sysD", "name": "System D", "requires": []}
+      ],
+      "scenarios": [
+        {"id": "failD", "name": "Fail D", "duration": 24, "overrides": {"sysD": "failed"}}
+      ]
+    }''';
+    final b = DependencyMapBuilder(syntheticKb);
+    final config = HouseholdConfig(ownedAssets: ['assetB']);
+    final graph = DataMapper.buildGraph(syntheticKb, config);
+    final res = engine.runSimulation(graph, DataMapper.parseScenario(syntheticKb, 'failD'));
+    
+    final node = b.buildTree('capA', config, res);
+    
+    expect(node.id, 'capA');
+    expect(node.state, B3State.failed);
+    expect(node.children.length, 1);
+    
+    final bNode = node.children.first;
+    expect(bNode.id, 'assetB');
+    expect(bNode.state, B3State.failed);
+    expect(bNode.children.length, 1);
+    
+    final cNode = bNode.children.first;
+    expect(cNode.id, 'sysC');
+    expect(cNode.state, B3State.failed);
+    expect(cNode.children.length, 1);
+    
+    final dNode = cNode.children.first;
+    expect(dNode.id, 'sysD');
+    expect(dNode.state, B3State.failed);
+    expect(dNode.children.isEmpty, true);
+  });
+
+  test('TEST 11: Cycle', () {
+    final syntheticKb = '''{
+      "capabilities": [{"id": "capA", "name": "Cap A", "assets": ["assetB"]}],
+      "assets": [{"id": "assetB", "name": "Asset B", "requires": ["sysC"]}],
+      "systems": [
+        {"id": "sysC", "name": "System C", "requires": ["sysD"]},
+        {"id": "sysD", "name": "System D", "requires": ["sysC"]}
+      ],
+      "scenarios": [
+        {"id": "test", "name": "Test", "duration": 24, "overrides": {}}
+      ]
+    }''';
+    final b = DependencyMapBuilder(syntheticKb);
+    final config = HouseholdConfig(ownedAssets: ['assetB']);
+    final graph = DataMapper.buildGraph(syntheticKb, config);
+    final res = engine.runSimulation(graph, DataMapper.parseScenario(syntheticKb, 'test'));
+    
+    // Should not throw or stack overflow
+    final node = b.buildTree('capA', config, res);
+    
+    final cNode = node.children.first.children.first;
+    expect(cNode.id, 'sysC');
+    final dNode = cNode.children.first;
+    expect(dNode.id, 'sysD');
+    // Cycle is broken here, sysC under sysD has no children
+    final cNodeCycle = dNode.children.first;
+    expect(cNodeCycle.id, 'sysC');
+    expect(cNodeCycle.children.isEmpty, true);
+  });
+
+  test('TEST 12: Multiples causes différentes', () {
+    final syntheticKb = '''{
+      "capabilities": [{"id": "capA", "name": "Cap A", "assets": ["assetB", "assetC"]}],
+      "assets": [
+        {"id": "assetB", "name": "Asset B", "requires": ["sysX"]},
+        {"id": "assetC", "name": "Asset C", "requires": ["sysY"]}
+      ],
+      "systems": [
+        {"id": "sysX", "name": "System X", "requires": []},
+        {"id": "sysY", "name": "System Y", "requires": []}
+      ],
+      "scenarios": [
+        {"id": "failXY", "name": "Fail XY", "duration": 24, "overrides": {"sysX": "failed", "sysY": "failed"}}
+      ]
+    }''';
+    final b = DependencyMapBuilder(syntheticKb);
+    final config = HouseholdConfig(ownedAssets: ['assetB', 'assetC']);
+    final graph = DataMapper.buildGraph(syntheticKb, config);
+    final res = engine.runSimulation(graph, DataMapper.parseScenario(syntheticKb, 'failXY'));
+    
+    final node = b.buildTree('capA', config, res);
+    final cause = b.getCausePhrase(node);
+    
+    expect(cause.contains("Vos solutions sont toutes indisponibles"), true);
+    expect(cause.contains("Asset B : system x indisponible"), true);
+    expect(cause.contains("Asset C : system y indisponible"), true);
+  });
+
+  test('TEST 13: Alternative réellement disponible', () {
+    final state = DiagnosticState()
+      ..answerMultiple('q_heat_main', ['opt_rad_elec', 'opt_poele_bois'])
+      ..answerQuestion('q_heat_bois_reserve', 'opt_bois_yes');
+      
+    final config = state.toHouseholdConfig(questions);
+    final graph = DataMapper.buildGraph(appKnowledgeBase, config);
+    final res = engine.runSimulation(graph, DataMapper.parseScenario(appKnowledgeBase, 'panne_elec'));
+    
+    final node = builder.buildTree('chauffer', config, res);
+    final cause = builder.getCausePhrase(node);
+    
+    expect(node.state, B3State.maintained);
+    // Because elec is failed but bois is maintained
+    expect(cause, "Une autre solution reste disponible malgré cette panne.");
+  });
+
+  test('TEST 14: Labels humains / Aucun ID technique', () {
+    final syntheticKb = '''{
+      "capabilities": [{"id": "capA", "name": "", "assets": ["assetB"]}],
+      "assets": [{"id": "assetB", "name": "", "requires": []}],
+      "scenarios": [{"id": "test", "name": "Test", "duration": 24, "overrides": {}}]
+    }''';
+    final b = DependencyMapBuilder(syntheticKb);
+    final config = HouseholdConfig(ownedAssets: ['assetB']);
+    final graph = DataMapper.buildGraph(syntheticKb, config);
+    final res = engine.runSimulation(graph, DataMapper.parseScenario(syntheticKb, 'test'));
+    
+    expect(() => b.buildTree('capA', config, res), throwsStateError);
+  });
 }

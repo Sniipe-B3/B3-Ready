@@ -9,88 +9,149 @@ class DependencyMapBuilder {
       : _kb = jsonDecode(knowledgeBaseJson);
 
   DependencyNode buildTree(String capabilityId, HouseholdConfig config, SimulationResult result) {
-    final capDef = _getDef('capabilities', capabilityId);
-    final capLabel = _getLabel(capDef, capabilityId);
-    final capState = result.nodeStates[capabilityId] ?? B3State.notAssessed;
+    return _buildNode(capabilityId, config, result, {});
+  }
 
-    final children = <DependencyNode>[];
-    
-    // Find assets that provide this capability AND are owned by user
-    final possibleAssets = List<String>.from(capDef['assets'] ?? []);
-    final ownedAssets = possibleAssets.where((a) => config.ownedAssets.contains(a)).toList();
+  DependencyNode _buildNode(String id, HouseholdConfig config, SimulationResult result, Set<String> visited) {
+    if (visited.contains(id)) {
+      final type = _getTypeOf(id);
+      final def = _getDefForType(type, id);
+      final label = _getLabel(def, id);
+      final state = result.nodeStates[id] ?? B3State.notAssessed;
+      return DependencyNode(id: id, label: label, type: type, state: state, children: []);
+    }
 
-    for (var assetId in ownedAssets) {
-      final assetDef = _getDef('assets', assetId);
-      final assetLabel = _getLabel(assetDef, assetId);
-      final assetState = result.nodeStates[assetId] ?? B3State.notAssessed;
-      
-      final assetChildren = <DependencyNode>[];
-      final reqs = List<String>.from(assetDef['requires'] ?? []);
-      
-      for (var reqId in reqs) {
-        final reqType = _getTypeOf(reqId);
-        final reqDef = _getDef(reqType == MapNodeType.system ? 'systems' : 'resources', reqId);
-        final reqLabel = _getLabel(reqDef, reqId);
-        final reqState = result.nodeStates[reqId] ?? B3State.notAssessed;
-        
-        assetChildren.add(DependencyNode(
-          id: reqId,
-          label: reqLabel,
-          type: reqType,
-          state: reqState,
-        ));
+    final newVisited = Set<String>.from(visited)..add(id);
+    final type = _getTypeOf(id);
+    final def = _getDefForType(type, id);
+    final label = _getLabel(def, id);
+    final state = result.nodeStates[id] ?? B3State.notAssessed;
+
+    List<DependencyNode> children = [];
+
+    if (type == MapNodeType.capability) {
+      final possibleAssets = List<String>.from(def['assets'] ?? []);
+      final ownedAssets = possibleAssets.where((a) => config.ownedAssets.contains(a)).toList();
+      for (var aId in ownedAssets) {
+        children.add(_buildNode(aId, config, result, newVisited));
       }
-
-      children.add(DependencyNode(
-        id: assetId,
-        label: assetLabel,
-        type: MapNodeType.asset,
-        state: assetState,
-        children: assetChildren,
-      ));
+    } else {
+      final reqs = List<String>.from(def['requires'] ?? []);
+      for (var rId in reqs) {
+        children.add(_buildNode(rId, config, result, newVisited));
+      }
     }
 
     return DependencyNode(
-      id: capabilityId,
-      label: capLabel,
-      type: MapNodeType.capability,
-      state: capState,
+      id: id,
+      label: label,
+      type: type,
+      state: state,
       children: children,
     );
   }
 
-  String getCausePhrase(DependencyNode rootNode) {
-    if (rootNode.state == B3State.maintained) {
-      if (rootNode.children.length > 1) {
-        return "Une alternative indépendante reste disponible.";
-      }
-      return "Votre solution principale reste disponible.";
+  Map<String, dynamic> _getDefForType(MapNodeType type, String id) {
+    switch (type) {
+      case MapNodeType.capability: return _getDef('capabilities', id);
+      case MapNodeType.asset: return _getDef('assets', id);
+      case MapNodeType.system: return _getDef('systems', id);
+      case MapNodeType.resource: return _getDef('resources', id);
     }
+  }
 
+  String getCausePhrase(DependencyNode rootNode) {
     if (rootNode.state == B3State.notAssessed) {
       return "Nous n'avons pas encore assez d'informations.";
     }
 
-    final failedDeps = <String>{};
-    for (var assetNode in rootNode.children) {
-      for (var depNode in assetNode.children) {
-        if (depNode.state == B3State.failed) {
-          failedDeps.add(depNode.label.toLowerCase());
+    if (rootNode.state == B3State.unknown) {
+      return "La situation est inconnue pour ce besoin.";
+    }
+
+    if (rootNode.state == B3State.maintained) {
+      bool hasFailedOrDegradedChildren = rootNode.children.any((c) => c.state == B3State.failed || c.state == B3State.degraded);
+      if (hasFailedOrDegradedChildren) {
+        return "Une autre solution reste disponible malgré cette panne.";
+      }
+      return "Votre solution principale reste disponible.";
+    }
+    
+    if (rootNode.state == B3State.degraded) {
+       return "Ce besoin est partiellement dégradé (ressource limitée).";
+    }
+
+    if (rootNode.state == B3State.failed) {
+      if (rootNode.children.isEmpty) return "Aucun équipement déclaré pour ce besoin.";
+
+      final causesByAsset = <String, Set<String>>{};
+      for (var assetNode in rootNode.children) {
+        if (assetNode.state == B3State.failed) {
+           final failedDeps = _findFailedDependencies(assetNode);
+           if (failedDeps.isNotEmpty) {
+             causesByAsset[assetNode.label] = failedDeps;
+           }
         }
       }
-    }
 
-    if (failedDeps.isEmpty) {
-      if (rootNode.children.isEmpty) return "Aucun équipement déclaré pour ce besoin.";
-      return "La situation est inconnue ou partiellement dégradée.";
-    }
+      if (causesByAsset.isEmpty) {
+        return "Indisponibilité confirmée (causes détaillées dans l'arbre).";
+      }
 
-    final depsStr = failedDeps.toList().join(" et ");
-    if (rootNode.children.length == 1) {
-      return "Votre solution dépend de : $depsStr, indisponible(s) ici.";
-    } else {
-      return "Vos ${rootNode.children.length} solutions dépendent de : $depsStr, indisponible(s) ici.";
+      if (rootNode.children.length == 1) {
+        final depsStr = causesByAsset.values.first.join(" et ");
+        return "Votre solution dépend de : $depsStr, indisponible(s) ici.";
+      } else {
+        final allCausesList = causesByAsset.values.toList();
+        bool sameCauses = true;
+        if (allCausesList.isNotEmpty) {
+          final firstCauses = allCausesList.first;
+          for (var causes in allCausesList) {
+            if (causes.length != firstCauses.length || !causes.containsAll(firstCauses)) {
+              sameCauses = false;
+              break;
+            }
+          }
+          if (sameCauses) {
+            return "Vos ${rootNode.children.length} solutions dépendent de : ${firstCauses.join(" et ")}, indisponible(s) ici.";
+          }
+        }
+
+        final buffer = StringBuffer("Vos solutions sont toutes indisponibles dans ce scénario.");
+        causesByAsset.forEach((asset, causes) {
+          buffer.write("\n• $asset : ${causes.join(" et ")} indisponible(s)");
+        });
+        return buffer.toString();
+      }
     }
+    return "État non pris en charge.";
+  }
+
+  Set<String> _findFailedDependencies(DependencyNode node, [Set<String>? visited]) {
+    visited ??= {};
+    if (visited.contains(node.id)) return {};
+    visited.add(node.id);
+
+    final failed = <String>{};
+    if (node.children.isEmpty) {
+        if (node.state == B3State.failed) {
+            failed.add(node.label.toLowerCase());
+        }
+        return failed;
+    }
+    
+    bool hasFailedChild = false;
+    for (var child in node.children) {
+      if (child.state == B3State.failed) {
+        hasFailedChild = true;
+        failed.addAll(_findFailedDependencies(child, visited));
+      }
+    }
+    
+    if (!hasFailedChild && node.state == B3State.failed) {
+       failed.add(node.label.toLowerCase());
+    }
+    return failed;
   }
 
   Map<String, dynamic> _getDef(String collection, String id) {
@@ -102,10 +163,11 @@ class DependencyMapBuilder {
   }
 
   String _getLabel(Map<String, dynamic> def, String fallbackId) {
-    // Dans notre knowledge_dataset, y'a-t-il un "name" ou "label"? 
-    // Généralement, il n'y a pas toujours un "name".
-    // Nous ajoutons une traduction manuelle pour un MVP clair et sans jargon,
-    // car le dataset technique a des IDs comme "lampe_secteur".
+    if (def.containsKey('name') && def['name'] != null && def['name'].toString().isNotEmpty) {
+      return def['name'];
+    }
+    
+    // minimal fallback if absolutely needed, but ideally rely on dataset
     final map = {
       'chauffer': 'Se chauffer',
       'cuisiner': 'Cuisiner',
@@ -131,12 +193,18 @@ class DependencyMapBuilder {
       'charbon': 'Charbon',
       'batterie': 'Piles / Batterie'
     };
-    return map[fallbackId] ?? def['name'] ?? fallbackId;
+    
+    if (map.containsKey(fallbackId)) {
+      return map[fallbackId]!;
+    }
+    
+    throw StateError("No human readable label found for entity $fallbackId. Raw ID is not allowed in UI.");
   }
 
   MapNodeType _getTypeOf(String id) {
-    final systems = _kb['systems'] as List?;
-    if (systems != null && systems.any((s) => s['id'] == id)) return MapNodeType.system;
+    if ((_kb['capabilities'] as List?)?.any((e) => e['id'] == id) ?? false) return MapNodeType.capability;
+    if ((_kb['assets'] as List?)?.any((e) => e['id'] == id) ?? false) return MapNodeType.asset;
+    if ((_kb['systems'] as List?)?.any((e) => e['id'] == id) ?? false) return MapNodeType.system;
     return MapNodeType.resource;
   }
 }

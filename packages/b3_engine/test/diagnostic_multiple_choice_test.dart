@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:b3_engine/src/diagnostic.dart';
-import 'package:b3_engine/src/data_mapper.dart'; // pour HouseholdConfig
+// Line removed // pour HouseholdConfig
 
 void main() {
   final jsonQuestions = '''
