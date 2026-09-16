@@ -1,41 +1,35 @@
 import 'package:b3_engine/b3_engine.dart';
 import '../../action_plan/models/action_plan.dart';
+import 'household_update.dart';
+
+enum ProgressionMeaning {
+  resilienceImproved,
+  favorableSituationConfirmed,
+  vulnerabilityConfirmed,
+  resilienceDegraded,
+  knowledgeImproved,
+  unchanged,
+}
 
 class CapabilityChange {
   final String capabilityId;
   final String capabilityName;
   final B3State beforeState;
   final B3State afterState;
+  final ProgressionMeaning meaning;
 
   CapabilityChange({
     required this.capabilityId,
     required this.capabilityName,
     required this.beforeState,
     required this.afterState,
+    required this.meaning,
   });
 
-  bool get hasImproved {
-    // Defines "improvement" as a genuine increase in resilience,
-    // not just UNKNOWN -> FAILED (which is knowledge, not resilience).
-    if (beforeState == B3State.failed && (afterState == B3State.maintained || afterState == B3State.degraded)) { return true; }
-    if (beforeState == B3State.degraded && afterState == B3State.maintained) { return true; }
-    if (beforeState == B3State.unknown && afterState == B3State.maintained) { return true; }
-    if (beforeState == B3State.notAssessed && afterState == B3State.maintained) { return true; }
-    return false;
-  }
-
-  bool get hasDegraded {
-    if (beforeState == B3State.maintained && afterState != B3State.maintained) { return true; }
-    if (beforeState == B3State.degraded && afterState == B3State.failed) { return true; }
-    if ((beforeState == B3State.unknown || beforeState == B3State.notAssessed) && afterState == B3State.failed) { return true; }
-    return false;
-  }
-
-  bool get hasBetterKnowledge {
-    if ((beforeState == B3State.unknown || beforeState == B3State.notAssessed) && 
-        (afterState != B3State.unknown && afterState != B3State.notAssessed)) { return true; }
-    return false;
-  }
+  bool get hasImproved => meaning == ProgressionMeaning.resilienceImproved;
+  bool get hasBetterKnowledge => meaning == ProgressionMeaning.knowledgeImproved || 
+                                 meaning == ProgressionMeaning.favorableSituationConfirmed || 
+                                 meaning == ProgressionMeaning.vulnerabilityConfirmed;
 }
 
 class ProgressionResult {
@@ -45,6 +39,7 @@ class ProgressionResult {
   final SimulationResult afterResult;
   final ActionPlan beforePlan;
   final ActionPlan afterPlan;
+  final UpdateNature updateNature;
   
   final List<CapabilityChange> changedCapabilities;
   final bool hasStructuralChange;
@@ -57,6 +52,7 @@ class ProgressionResult {
     required this.beforePlan,
     required this.afterPlan,
     required this.changedCapabilities,
+    required this.updateNature,
     this.hasStructuralChange = true,
   });
 }

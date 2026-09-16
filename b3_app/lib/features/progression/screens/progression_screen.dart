@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../models/progression_result.dart';
+import '../models/household_update.dart';
 import '../../../app/theme/theme.dart';
 
 class ProgressionScreen extends StatelessWidget {
   final ProgressionResult result;
 
   const ProgressionScreen({Key? key, required this.result}) : super(key: key);
+
+  String _getHeaderText() {
+    if (!result.hasStructuralChange) return 'Action enregistrée';
+    if (result.updateNature == UpdateNature.observation) {
+      if (result.changedCapabilities.any((c) => c.meaning == ProgressionMeaning.vulnerabilityConfirmed)) {
+        return 'Analyse précisée';
+      }
+      return 'Situation mieux connue';
+    } else {
+      if (result.changedCapabilities.any((c) => c.meaning == ProgressionMeaning.resilienceImproved)) {
+        return 'Amélioration enregistrée';
+      }
+      return 'Situation mise à jour';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +40,7 @@ class ProgressionScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Votre situation est maintenant mieux connue.',
+                _getHeaderText(),
                 style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
@@ -94,10 +110,16 @@ class ProgressionScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            if (change.hasImproved)
+            if (change.meaning == ProgressionMeaning.resilienceImproved)
               const Text('Votre résilience s\'est améliorée !', style: TextStyle(color: B3Theme.b3Green, fontWeight: FontWeight.bold))
-            else if (change.hasBetterKnowledge)
+            else if (change.meaning == ProgressionMeaning.favorableSituationConfirmed)
+              const Text('Cette capacité est maintenant confirmée disponible.', style: TextStyle(color: B3Theme.b3Green, fontWeight: FontWeight.bold))
+            else if (change.meaning == ProgressionMeaning.vulnerabilityConfirmed)
               const Text('La vulnérabilité est désormais confirmée.', style: TextStyle(color: B3Theme.b3Orange, fontWeight: FontWeight.bold))
+            else if (change.meaning == ProgressionMeaning.knowledgeImproved)
+              const Text('Votre situation est maintenant mieux connue.', style: TextStyle(color: B3Theme.b3Blue, fontWeight: FontWeight.bold))
+            else if (change.meaning == ProgressionMeaning.resilienceDegraded)
+              const Text('Votre capacité est réduite.', style: TextStyle(color: B3Theme.b3Orange, fontWeight: FontWeight.bold))
           ],
         ),
       ),

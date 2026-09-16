@@ -30,7 +30,7 @@ class ResilienceSession extends ChangeNotifier {
     required this.knowledgeJson,
     required this.scenarioId,
     required HouseholdConfig initialConfig,
-  }) : _config = initialConfig {
+  }) : _config = initialConfig.clone() {
     _performInitialCalculation();
   }
 
@@ -53,7 +53,7 @@ class ResilienceSession extends ChangeNotifier {
       if (!_completedActionIds.contains(update.actionId)) {
         _completedActionIds.add(update.actionId);
       }
-      return ProgressionResult(
+      final progression = ProgressionResult(
         beforeConfig: beforeConfig,
         afterConfig: beforeConfig,
         beforeResult: beforeResult,
@@ -61,8 +61,11 @@ class ResilienceSession extends ChangeNotifier {
         beforePlan: beforePlan,
         afterPlan: beforePlan,
         changedCapabilities: [],
+        updateNature: update.nature,
         hasStructuralChange: false,
       );
+      notifyListeners();
+      return progression;
     }
 
     final newConfig = _config.clone();
@@ -117,6 +120,7 @@ class ResilienceSession extends ChangeNotifier {
           capabilityName: cap.name,
           beforeState: beforeState,
           afterState: afterState,
+          meaning: _computeMeaning(beforeState, afterState, update.nature),
         ));
       }
     }
@@ -129,10 +133,34 @@ class ResilienceSession extends ChangeNotifier {
       beforePlan: beforePlan,
       afterPlan: _actionPlan,
       changedCapabilities: changedCaps,
+      updateNature: update.nature,
       hasStructuralChange: true,
     );
 
     notifyListeners();
     return progression;
+  }
+
+  ProgressionMeaning _computeMeaning(B3State before, B3State after, UpdateNature nature) {
+    bool wasUnknown = before == B3State.unknown || before == B3State.notAssessed;
+    bool isBetter = (before == B3State.failed && (after == B3State.maintained || after == B3State.degraded)) ||
+                    (before == B3State.degraded && after == B3State.maintained) ||
+                    (wasUnknown && (after == B3State.maintained || after == B3State.degraded));
+    bool isWorse = (before == B3State.maintained && after != B3State.maintained) ||
+                   (before == B3State.degraded && after == B3State.failed) ||
+                   (wasUnknown && after == B3State.failed);
+
+    if (nature == UpdateNature.observation) {
+      if (wasUnknown && isBetter) return ProgressionMeaning.favorableSituationConfirmed;
+      if (wasUnknown && isWorse) return ProgressionMeaning.vulnerabilityConfirmed;
+      if (!wasUnknown && isBetter) return ProgressionMeaning.favorableSituationConfirmed;
+      if (!wasUnknown && isWorse) return ProgressionMeaning.vulnerabilityConfirmed;
+      return ProgressionMeaning.knowledgeImproved;
+    } else if (nature == UpdateNature.intervention) {
+      if (isBetter) return ProgressionMeaning.resilienceImproved;
+      if (isWorse) return ProgressionMeaning.resilienceDegraded;
+    }
+    
+    return ProgressionMeaning.unchanged;
   }
 }

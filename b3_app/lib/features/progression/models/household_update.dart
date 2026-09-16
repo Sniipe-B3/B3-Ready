@@ -1,5 +1,12 @@
+enum UpdateNature {
+  observation,
+  intervention,
+  completion,
+}
+
 abstract class HouseholdUpdate {
-  const HouseholdUpdate();
+  final UpdateNature nature;
+  const HouseholdUpdate(this.nature);
 }
 
 class ResourceUpdate extends HouseholdUpdate {
@@ -13,7 +20,8 @@ class ResourceUpdate extends HouseholdUpdate {
     this.isOwned,
     this.duration,
     this.isUnknown = false,
-  });
+    required UpdateNature nature,
+  }) : super(nature);
 }
 
 class AssetOwnershipUpdate extends HouseholdUpdate {
@@ -23,7 +31,8 @@ class AssetOwnershipUpdate extends HouseholdUpdate {
   const AssetOwnershipUpdate({
     required this.assetId,
     required this.isOwned,
-  });
+    required UpdateNature nature,
+  }) : super(nature);
 }
 
 class ActionCompletedUpdate extends HouseholdUpdate {
@@ -31,5 +40,5 @@ class ActionCompletedUpdate extends HouseholdUpdate {
 
   const ActionCompletedUpdate({
     required this.actionId,
-  });
+  }) : super(UpdateNature.completion);
 }

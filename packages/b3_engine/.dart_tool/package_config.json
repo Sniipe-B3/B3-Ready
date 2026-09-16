@@ -291,8 +291,6 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.13.3",
-  "flutterRoot": "file:///tmp/flutter",
-  "flutterVersion": "3.47.4",
+  "generatorVersion": "3.13.4",
   "pubCache": "file:///home/codespace/.pub-cache"
 }

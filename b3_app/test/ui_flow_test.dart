@@ -107,7 +107,10 @@ void main() {
     expect(planStr.contains('targetAssetId'), false);
     
     // Ouvre la Dependency Map depuis une action
-    await tester.tap(find.text("Comprendre pourquoi").first, warnIfMissed: false);
+    final btnComprendre = find.text("Comprendre pourquoi").first;
+    await tester.ensureVisible(btnComprendre);
+    await tester.pumpAndSettle();
+    await tester.tap(btnComprendre);
     await tester.pumpAndSettle();
     
     // Vérifications sur la Dependency Map
@@ -133,12 +136,13 @@ void main() {
     await tester.tap(find.text("Mettre à jour ma situation").last);
     await tester.pumpAndSettle();
     
-    expect(find.text("Qu'avez-vous constaté ?"), findsOneWidget);
+    expect(find.text("Qu'avez-vous constaté ou réalisé ?"), findsOneWidget);
     await tester.tap(find.text("Plusieurs jours (> 72h)"));
     await tester.pumpAndSettle();
     
     expect(find.text("Analyse mise à jour"), findsOneWidget);
-    expect(find.text("Votre résilience s'est améliorée !"), findsOneWidget);
+    expect(find.text("Situation mieux connue"), findsOneWidget);
+    expect(find.text("Cette capacité est maintenant confirmée disponible."), findsOneWidget);
     
     await tester.tap(find.text("Voir mon nouveau plan"));
     await tester.pumpAndSettle();
@@ -150,4 +154,3 @@ void main() {
     tester.view.resetDevicePixelRatio();
   });
 }
-// APPEND

@@ -5,7 +5,7 @@ import '../../../app/theme/theme.dart';
 import '../../dependency_map/screens/dependency_map_screen.dart';
 import '../../progression/models/resilience_session.dart';
 import '../../progression/screens/progression_screen.dart';
-import '../../progression/models/household_update.dart';
+import '../../progression/utils/action_update_resolver.dart';
 
 class ActionPlanScreen extends StatelessWidget {
   final ResilienceSession session;
@@ -74,6 +74,38 @@ class ActionPlanScreen extends StatelessWidget {
     }
 
     String capabilityName = item.capabilityIds.map(_getCapabilityName).join(', ');
+    bool isCompleted = session.completedActionIds.contains(item.id);
+
+    if (isCompleted) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 24.0),
+        color: Colors.grey.shade100,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.check_circle, color: B3Theme.b3Green),
+                  const SizedBox(width: 8),
+                  Text('Terminé', style: TextStyle(color: B3Theme.b3Green, fontWeight: FontWeight.bold)),
+                ]
+              ),
+              const SizedBox(height: 16),
+              Text(
+                item.title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey,
+                ),
+              ),
+            ]
+          )
+        )
+      );
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 24.0),
@@ -177,9 +209,9 @@ class ActionPlanScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Qu\'avez-vous constaté ?', style: Theme.of(context).textTheme.titleLarge),
+              Text('Qu\'avez-vous constaté ou réalisé ?', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
-              if (item.type == RecommendationType.verify || item.type == RecommendationType.organize || item.type == RecommendationType.acquire) ...[
+              if (item.targetResourceId != null) ...[
                 ListTile(
                   title: const Text('Je n\'en ai pas / Ce n\'est pas disponible'),
                   onTap: () {
@@ -208,8 +240,15 @@ class ActionPlanScreen extends StatelessWidget {
                     _applyUpdate(context, item, true, const Duration(hours: 72), false);
                   },
                 ),
-              ],
-              if (item.type == RecommendationType.createAlternative || item.type == RecommendationType.invest) ...[
+                if (item.type == RecommendationType.verify)
+                  ListTile(
+                    title: const Text('Je ne sais toujours pas'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _applyUpdate(context, item, null, null, true);
+                    },
+                  ),
+              ] else if (item.targetAssetId != null) ...[
                 ListTile(
                   title: const Text('J\'ai mis cette solution en place'),
                   onTap: () {
@@ -217,13 +256,20 @@ class ActionPlanScreen extends StatelessWidget {
                     _applyAssetUpdate(context, item, true);
                   },
                 ),
-              ],
-              if (item.type == RecommendationType.verify) ...[
+                if (item.type == RecommendationType.verify)
+                  ListTile(
+                    title: const Text('Je ne l\'ai pas'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _applyAssetUpdate(context, item, false);
+                    },
+                  ),
+              ] else ...[
                 ListTile(
-                  title: const Text('Je ne sais toujours pas'),
+                  title: const Text('J\'ai terminé cette action'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _applyUpdate(context, item, null, null, true);
+                    _applyActionCompleted(context, item);
                   },
                 ),
               ],
@@ -236,28 +282,21 @@ class ActionPlanScreen extends StatelessWidget {
   }
 
   void _applyUpdate(BuildContext context, ActionPlanItem item, bool? isOwned, Duration? duration, bool isUnknown) {
-    if (item.targetResourceId != null) {
-      final resId = item.targetResourceId!;
-      final result = session.recalculate(ResourceUpdate(
-        resourceId: resId,
-        isOwned: isOwned,
-        duration: duration,
-        isUnknown: isUnknown,
-      ));
-      
-      Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
-    } else {
-      final result = session.recalculate(ActionCompletedUpdate(actionId: item.id));
-      Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
-    }
+    final update = ActionUpdateResolver.resolveResourceUpdate(item, isOwned, duration, isUnknown);
+    final result = session.recalculate(update);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
   }
 
   void _applyAssetUpdate(BuildContext context, ActionPlanItem item, bool isOwned) {
-    if (item.targetAssetId != null) {
-      final assetId = item.targetAssetId!;
-      final result = session.recalculate(AssetOwnershipUpdate(assetId: assetId, isOwned: isOwned));
-      Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
-    }
+    final update = ActionUpdateResolver.resolveAssetUpdate(item, isOwned);
+    final result = session.recalculate(update);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
+  }
+
+  void _applyActionCompleted(BuildContext context, ActionPlanItem item) {
+    final update = ActionUpdateResolver.resolveActionCompleted(item);
+    final result = session.recalculate(update);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
   }
 
   String _getCapabilityName(String capabilityId) {
