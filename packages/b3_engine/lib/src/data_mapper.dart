@@ -4,6 +4,7 @@ import 'models.dart';
 class HouseholdConfig {
   final List<String> ownedResources;
   final Set<String> assessedResources;
+  final Set<String> unknownResources;
   final List<String> ownedAssets;
   final Map<String, Duration> resourceDurations;
   final Set<String> assessedCapabilities;
@@ -13,6 +14,7 @@ class HouseholdConfig {
     required this.ownedAssets,
     this.ownedResources = const [],
     this.assessedResources = const {},
+    this.unknownResources = const {},
     this.resourceDurations = const {},
     this.assessedCapabilities = const {},
     this.capabilityOverrides = const {},
@@ -37,6 +39,9 @@ class DataMapper {
         Duration? dur = household.resourceDurations[id];
         B3State? override;
 
+        if (household.unknownResources.contains(id)) {
+          override = B3State.unknown;
+        } else 
         if (!household.assessedResources.contains(id)) {
           // For tests that use manual config without resources, default them to Maintained if they possess the asset.
           // In real life, DiagnosticState populates this properly.

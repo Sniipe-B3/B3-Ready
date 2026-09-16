@@ -14,15 +14,47 @@ const String appDiagnosticQuestionsJson = '''
     ]
   },
   {
+    "id": "q_heat_redundancy",
+    "text": "En cas de coupure du système principal (ex. panne de réseau), avez-vous une autre façon de chauffer votre logement ?",
+    "type": "single_choice",
+    "metadata": {"purpose": "redundancy_check", "capability": "chauffer"},
+    "options": [
+      {"id": "opt_heat_alt_yes", "text": "Oui", "facts": []},
+      {"id": "opt_heat_alt_no", "text": "Non", "facts": []},
+      {"id": "opt_heat_alt_unk", "text": "Je ne sais pas", "facts": []}
+    ]
+  },
+  {
+    "id": "q_heat_alternative",
+    "text": "Quelle autre solution utilisez-vous ?",
+    "condition": {"dependsOn": "q_heat_redundancy", "hasAnswer": "opt_heat_alt_yes"},
+    "type": "multiple_choice",
+    "metadata": {"purpose": "alternative_discovery", "capability": "chauffer"},
+    "options": [
+      {"id": "opt_poele_bois", "text": "Poêle à bûches (autonome sans électricité)", "facts": [{"type": "add_asset", "value": "poele_bois"}]},
+      {"id": "opt_poele_granules", "text": "Poêle à granulés", "facts": [{"type": "add_asset", "value": "poele_granules"}]},
+      {"id": "opt_chaudiere_bois", "text": "Chaudière bois ou granulés", "facts": [{"type": "add_asset", "value": "chaudiere_bois"}]}
+    ]
+  },
+  {
     "id": "q_heat_bois_reserve",
     "text": "Disposez-vous d'une réserve de bois utilisable ?",
-    "condition": {"dependsOn": "q_heat_main", "hasAnswer": "opt_poele_bois"},
     "type": "single_choice",
     "options": [
       {"id": "opt_bois_yes", "text": "Oui, pour plusieurs jours", "facts": [{"type": "add_resource", "value": "bois"}, {"type": "assess_resource", "value": "bois"}, {"type": "add_resource_duration", "value": "bois", "duration": 72}]},
       {"id": "opt_bois_limit", "text": "Oui, mais peu (moins de 48h)", "facts": [{"type": "add_resource", "value": "bois"}, {"type": "assess_resource", "value": "bois"}, {"type": "add_resource_duration", "value": "bois", "duration": 24}]},
       {"id": "opt_bois_no", "text": "Non (ou insuffisante)", "facts": [{"type": "assess_resource", "value": "bois"}]},
-      {"id": "opt_bois_unk", "text": "Je ne sais pas", "facts": []}
+      {"id": "opt_bois_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "bois"}]}
+    ]
+  },
+  {
+    "id": "q_heat_granules_reserve",
+    "text": "Disposez-vous d'une réserve de granulés utilisable ?",
+    "type": "single_choice",
+    "options": [
+      {"id": "opt_gra_yes", "text": "Oui, pour plusieurs jours", "facts": [{"type": "add_resource", "value": "granules"}, {"type": "assess_resource", "value": "granules"}, {"type": "add_resource_duration", "value": "granules", "duration": 72}]},
+      {"id": "opt_gra_no", "text": "Non (ou insuffisante)", "facts": [{"type": "assess_resource", "value": "granules"}]},
+      {"id": "opt_gra_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "granules"}]}
     ]
   },
   {
@@ -38,25 +70,55 @@ const String appDiagnosticQuestionsJson = '''
     ]
   },
   {
+    "id": "q_cook_redundancy",
+    "text": "En cas de coupure (ex. électricité ou gaz de ville), avez-vous une autre façon de cuisiner (ex. réchaud) ?",
+    "type": "single_choice",
+    "metadata": {"purpose": "redundancy_check", "capability": "cuisiner"},
+    "options": [
+      {"id": "opt_cook_alt_yes", "text": "Oui", "facts": []},
+      {"id": "opt_cook_alt_no", "text": "Non", "facts": []},
+      {"id": "opt_cook_alt_unk", "text": "Je ne sais pas", "facts": []}
+    ]
+  },
+  {
+    "id": "q_cook_alternative",
+    "text": "Quelle autre solution utilisez-vous ?",
+    "condition": {"dependsOn": "q_cook_redundancy", "hasAnswer": "opt_cook_alt_yes"},
+    "type": "multiple_choice",
+    "metadata": {"purpose": "alternative_discovery", "capability": "cuisiner"},
+    "options": [
+      {"id": "opt_gaz_bouteille", "text": "Cuisinière ou réchaud sur bouteille de gaz", "facts": [{"type": "add_asset", "value": "rechaud_gaz"}]},
+      {"id": "opt_barbecue", "text": "Barbecue extérieur", "facts": [{"type": "add_asset", "value": "barbecue"}]}
+    ]
+  },
+  {
     "id": "q_cook_gaz_reserve",
     "text": "Avez-vous une bouteille de gaz de rechange utilisable (actuellement connectée ou en stock) ?",
-    "condition": {"dependsOn": "q_cook_main", "hasAnswer": "opt_gaz_bouteille"},
     "type": "single_choice",
     "options": [
       {"id": "opt_gaz_yes", "text": "Oui", "facts": [{"type": "add_resource", "value": "gaz_bouteille"}, {"type": "assess_resource", "value": "gaz_bouteille"}]},
       {"id": "opt_gaz_no", "text": "Non", "facts": [{"type": "assess_resource", "value": "gaz_bouteille"}]},
-      {"id": "opt_gaz_unk", "text": "Je ne sais pas", "facts": []}
+      {"id": "opt_gaz_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "gaz_bouteille"}]}
     ]
   },
   {
     "id": "q_cook_gaz_duration",
     "text": "Combien de temps environ pouvez-vous cuisiner avec cette réserve de gaz ?",
-    "condition": {"dependsOn": "q_cook_gaz_reserve", "hasAnswer": "opt_gaz_yes"},
     "type": "single_choice",
     "options": [
       {"id": "opt_gaz_short", "text": "Moins de 24h", "facts": [{"type": "add_resource_duration", "value": "gaz_bouteille", "duration": 12}]},
       {"id": "opt_gaz_long", "text": "Plusieurs jours", "facts": [{"type": "add_resource_duration", "value": "gaz_bouteille", "duration": 72}]},
       {"id": "opt_gaz_dur_unk", "text": "Je ne sais pas", "facts": []}
+    ]
+  },
+  {
+    "id": "q_cook_charbon_reserve",
+    "text": "Disposez-vous de charbon utilisable pour le barbecue ?",
+    "type": "single_choice",
+    "options": [
+      {"id": "opt_charbon_yes", "text": "Oui", "facts": [{"type": "add_resource", "value": "charbon"}, {"type": "assess_resource", "value": "charbon"}, {"type": "add_resource_duration", "value": "charbon", "duration": 48}]},
+      {"id": "opt_charbon_no", "text": "Non", "facts": [{"type": "assess_resource", "value": "charbon"}]},
+      {"id": "opt_charbon_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "charbon"}]}
     ]
   },
   {
@@ -71,12 +133,11 @@ const String appDiagnosticQuestionsJson = '''
   {
     "id": "q_light_bat_reserve",
     "text": "Vos lampes de secours sont-elles actuellement fonctionnelles et disposent-elles de piles/batteries de rechange ?",
-    "condition": {"dependsOn": "q_light_main", "hasAnswer": "opt_lampe_bat"},
     "type": "single_choice",
     "options": [
       {"id": "opt_bat_yes", "text": "Oui, de quoi tenir plusieurs soirs", "facts": [{"type": "add_resource", "value": "batterie"}, {"type": "assess_resource", "value": "batterie"}, {"type": "add_resource_duration", "value": "batterie", "duration": 48}]},
       {"id": "opt_bat_no", "text": "Non, ou très peu", "facts": [{"type": "assess_resource", "value": "batterie"}, {"type": "add_resource_duration", "value": "batterie", "duration": 4}]},
-      {"id": "opt_bat_unk", "text": "Je ne sais pas", "facts": []}
+      {"id": "opt_bat_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "batterie"}]}
     ]
   }
 ]

@@ -80,6 +80,7 @@ class DiagnosticQuestion {
   final QuestionType type;
   final List<QuestionOption> options;
   final QuestionCondition? condition;
+  final Map<String, dynamic> metadata;
 
   DiagnosticQuestion({
     required this.id,
@@ -87,6 +88,7 @@ class DiagnosticQuestion {
     required this.type,
     required this.options,
     this.condition,
+    this.metadata = const {},
   });
 
   factory DiagnosticQuestion.fromJson(Map<String, dynamic> json) {
@@ -108,6 +110,7 @@ class DiagnosticQuestion {
       type: type,
       options: opts,
       condition: cond,
+      metadata: json['metadata'] ?? <String, dynamic>{},
     );
   }
 }
@@ -147,6 +150,7 @@ class DiagnosticState {
     final ownedAssets = <String>{};
     final ownedResources = <String>{};
     final assessedResources = <String>{};
+    final unknownResources = <String>{};
     final resourceDurations = <String, Duration>{};
     final assessedCapabilities = <String>{};
     final capabilityOverrides = <String, B3State>{};
@@ -169,6 +173,9 @@ class DiagnosticState {
             ownedResources.add(fact.value);
           } else if (fact.type == 'assess_resource') {
             assessedResources.add(fact.value);
+          } else if (fact.type == 'assess_resource_unknown') {
+            assessedResources.add(fact.value);
+            unknownResources.add(fact.value);
           } else if (fact.type == 'add_asset') {
             ownedAssets.add(fact.value);
           } else if (fact.type == 'add_resource_duration' &&
@@ -190,6 +197,7 @@ class DiagnosticState {
       ownedAssets: ownedAssets.toList(),
       ownedResources: ownedResources.toList(),
       assessedResources: assessedResources,
+      unknownResources: unknownResources,
       resourceDurations: resourceDurations,
       assessedCapabilities: assessedCapabilities,
       capabilityOverrides: capabilityOverrides,
