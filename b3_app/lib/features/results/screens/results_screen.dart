@@ -1,3 +1,4 @@
+import '../../../data/household_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../../../data/app_knowledge_dataset.dart';
@@ -7,13 +8,15 @@ import '../../../app/theme/theme.dart';
 import '../../progression/models/resilience_session.dart';
 
 class ResultsScreen extends StatefulWidget {
-  final DiagnosticState diagnosticState;
-  final List<DiagnosticQuestion> questions;
+  final DiagnosticState? diagnosticState;
+  final List<DiagnosticQuestion>? questions;
+  final ResilienceSession? session;
 
   const ResultsScreen({
     Key? key,
-    required this.diagnosticState,
-    required this.questions,
+    this.diagnosticState,
+    this.questions,
+    this.session,
   }) : super(key: key);
 
   @override
@@ -31,12 +34,18 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> _initSession() async {
-    final config = widget.diagnosticState.toHouseholdConfig(widget.questions);
-    _session = ResilienceSession(
-      knowledgeJson: appKnowledgeBase,
-      scenarioId: 'panne_elec',
-      initialConfig: config,
-    );
+    if (widget.session != null) {
+      _session = widget.session!;
+    } else {
+      final config = widget.diagnosticState!.toHouseholdConfig(widget.questions!);
+      _session = ResilienceSession(
+        knowledgeJson: appKnowledgeBase,
+        scenarioId: 'panne_elec',
+        initialConfig: config,
+        repository: SharedPrefsHouseholdRepository(),
+      );
+    }
+
 
     // Simulation artificielle d'un temps d'analyse
     await Future.delayed(const Duration(milliseconds: 800));

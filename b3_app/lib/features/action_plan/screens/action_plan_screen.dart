@@ -85,10 +85,10 @@ class ActionPlanScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.check_circle, color: B3Theme.b3Green),
-                  const SizedBox(width: 8),
+                  Icon(Icons.check_circle, color: B3Theme.b3Green),
+                  SizedBox(width: 8),
                   Text('Terminé', style: TextStyle(color: B3Theme.b3Green, fontWeight: FontWeight.bold)),
                 ]
               ),

@@ -1,3 +1,5 @@
+import '../../../data/household_repository.dart';
+import '../../../data/household_snapshot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../../action_plan/action_plan_builder.dart';
@@ -8,6 +10,7 @@ import 'progression_result.dart';
 class ResilienceSession extends ChangeNotifier {
   final String knowledgeJson;
   final String scenarioId;
+  final HouseholdRepository? repository;
 
   HouseholdConfig _config;
   late Scenario _scenario;
@@ -30,8 +33,27 @@ class ResilienceSession extends ChangeNotifier {
     required this.knowledgeJson,
     required this.scenarioId,
     required HouseholdConfig initialConfig,
+    List<String> initialCompletedActionIds = const [],
+    this.repository,
   }) : _config = initialConfig.clone() {
+    _completedActionIds.addAll(initialCompletedActionIds);
     _performInitialCalculation();
+  }
+
+  
+  Future<void> _autosave() async {
+    if (repository == null) return;
+    final snapshot = HouseholdSnapshot(
+      schemaVersion: 1,
+      config: _config.clone(),
+      scenarioId: scenarioId,
+      completedActionIds: List.from(_completedActionIds),
+    );
+    try {
+      await repository!.save(snapshot);
+    } catch (e) {
+      // Autosave failed, but we don't crash the session
+    }
   }
 
   void _performInitialCalculation() {
@@ -64,6 +86,7 @@ class ResilienceSession extends ChangeNotifier {
         updateNature: update.nature,
         hasStructuralChange: false,
       );
+      _autosave();
       notifyListeners();
       return progression;
     }
@@ -137,6 +160,7 @@ class ResilienceSession extends ChangeNotifier {
       hasStructuralChange: true,
     );
 
+    _autosave();
     notifyListeners();
     return progression;
   }
