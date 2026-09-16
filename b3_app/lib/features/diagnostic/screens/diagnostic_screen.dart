@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
+import '../engine/adaptive_diagnostic_engine.dart';
 import '../../results/screens/results_screen.dart';
 import '../../../data/app_diagnostic_dataset.dart';
 
@@ -12,7 +13,7 @@ class DiagnosticScreen extends StatefulWidget {
 }
 
 class _DiagnosticScreenState extends State<DiagnosticScreen> {
-  late final DiagnosticEngine _engine;
+  late final AdaptiveDiagnosticEngine _engine;
   late final List<DiagnosticQuestion> _allQuestions;
   
   DiagnosticState _currentState = DiagnosticState();
@@ -30,7 +31,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
     final questionsJson = jsonDecode(appDiagnosticQuestionsJson) as List;
     _allQuestions =
         questionsJson.map((q) => DiagnosticQuestion.fromJson(q)).toList();
-    _engine = DiagnosticEngine(_allQuestions);
+    _engine = AdaptiveDiagnosticEngine(_allQuestions);
 
     _currentQuestion = _engine.getNextQuestion(_currentState);
   }
