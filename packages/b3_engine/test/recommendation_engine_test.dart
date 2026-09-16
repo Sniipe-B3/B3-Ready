@@ -78,7 +78,7 @@ void main() {
 
     final rec = recs.firstWhere((r) => r.targetAssetId == 'rechaud_gaz');
 
-    expect(rec.reason.contains('elec'), true);
+    expect(rec.reason.contains('Électricité'), true);
     expect(rec.reason.contains('indépendante des systèmes affectés'), true);
   });
 

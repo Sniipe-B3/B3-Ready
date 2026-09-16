@@ -207,7 +207,7 @@ void main() {
     final rec = recs.firstWhere((r) => r.targetAssetId == 'rechaud_gaz');
 
     // L'explication contient la dépendance défaillante (elec)
-    expect(rec.reason.contains('elec'), true);
+    expect(rec.reason.contains('Électricité'), true);
     // L'explication met en avant l'indépendance de l'alternative
     expect(rec.reason.contains('indépendante des systèmes affectés'), true);
   });

@@ -59,35 +59,49 @@ class RecommendationEngine {
     final data = jsonDecode(knowledgeJson);
     final recommendations = <Recommendation>[];
 
-    // 1. Gérer les incertitudes (UNKNOWN / NOT_ASSESSED)
-    for (var unc in result.uncertainties) {
-      recommendations.add(Recommendation(
-        id: 'rec_verify_${unc.capability.id}',
-        type: RecommendationType.verify,
-        priority: RecommendationPriority.high,
-        capabilityId: unc.capability.id,
-        title: 'Évaluer la capacité ${unc.capability.name}',
-        description: 'Poursuivez le diagnostic pour lever cette incertitude.',
-        reason: 'Information manquante ou incertaine (${unc.state.name}).',
-        causeNodeIds: unc.causeNodeIds,
-      ));
-    }
+    // Combinaison des vulnérabilités et incertitudes pour analyser les causes internes (ressources)
+    final allIssues = [
+      ...result.vulnerabilities.map((v) => {'cap': v.capability, 'state': v.state, 'causes': v.causeNodeIds}),
+      ...result.uncertainties.map((u) => {'cap': u.capability, 'state': u.state, 'causes': u.causeNodeIds})
+    ];
 
-    // 2. Gérer les vulnérabilités (FAILED / DEGRADED)
-    for (var vuln in result.vulnerabilities) {
-      final capId = vuln.capability.id;
+    for (var issue in allIssues) {
+      final cap = issue['cap'] as Capability;
+      final capState = issue['state'] as B3State;
+      final causeNodeIds = issue['causes'] as Set<String>;
+      final capId = cap.id;
       final capData =
           (data['capabilities'] as List).firstWhere((c) => c['id'] == capId);
       final capAssets = List<String>.from(capData['assets'] ?? []);
 
-      final priority = vuln.state == B3State.failed
+      final priority = capState == B3State.failed
           ? RecommendationPriority.high
-          : RecommendationPriority.medium;
+          : (capState == B3State.degraded ? RecommendationPriority.medium : RecommendationPriority.high);
 
-      final failedDeps = vuln.causeNodeIds.toList();
-      String reasonPrefix = failedDeps.isNotEmpty
-          ? 'Cause identifiée : ${failedDeps.join(", ")}. '
+      final failedDeps = causeNodeIds.toList();
+      
+      String getHumanName(String id) {
+        String? search(String listName) {
+          final list = data[listName] as List?;
+          if (list != null) {
+            for (var item in list) {
+              if (item is Map && item['id'] == id) {
+                return item['name'] as String?;
+              }
+            }
+          }
+          return null;
+        }
+        
+        return search('capabilities') ?? search('assets') ?? search('resources') ?? search('systems') ?? id;
+      }
+      
+      final failedDepsNames = failedDeps.map(getHumanName).toList();
+      String reasonPrefix = failedDepsNames.isNotEmpty
+          ? 'Cause identifiée : ${failedDepsNames.join(", ")}. '
           : 'Aucune solution disponible. ';
+
+      bool specificRecGenerated = false;
 
       for (var assetId in capAssets) {
         final assetData =
@@ -119,6 +133,7 @@ class RecommendationEngine {
                   targetResourceId: causeId,
                   causeNodeIds: {causeId},
                 ));
+                specificRecGenerated = true;
               } else if (state == B3State.failed) {
                 recommendations.add(Recommendation(
                   id: 'rec_acq_${assetId}_$causeId',
@@ -133,6 +148,7 @@ class RecommendationEngine {
                   targetResourceId: causeId,
                   causeNodeIds: {causeId},
                 ));
+                specificRecGenerated = true;
               } else if (state == B3State.unknown ||
                   state == B3State.notAssessed) {
                 recommendations.add(Recommendation(
@@ -148,45 +164,64 @@ class RecommendationEngine {
                   targetResourceId: causeId,
                   causeNodeIds: {causeId},
                 ));
+                specificRecGenerated = true;
               }
             }
           }
         } else {
           // L'utilisateur ne le possède pas
-          bool survives = true;
-          bool requiresResource = false;
+          // Ne générer des recommandations de création d'alternative que si la capacité est en échec/dégradée
+          // Si la capacité est juste UNKNOWN, on ne propose pas d'acheter de nouveaux équipements
+          if (capState == B3State.failed || capState == B3State.degraded) {
+            bool survives = true;
+            bool requiresResource = false;
 
-          for (var req in requires) {
-            if (scenario.systemOverrides[req] == B3State.failed) {
-              survives = false;
-              break;
+            for (var req in requires) {
+              if (scenario.systemOverrides[req] == B3State.failed) {
+                survives = false;
+                break;
+              }
+              if ((data['resources'] as List?)?.any((r) => r['id'] == req) ??
+                  false) {
+                requiresResource = true;
+              }
             }
-            if ((data['resources'] as List?)?.any((r) => r['id'] == req) ??
-                false) {
-              requiresResource = true;
+
+            if (survives) {
+              String caveat = requiresResource
+                  ? ' (sous réserve que le combustible/ressource nécessaire soit disponible)'
+                  : '';
+
+              recommendations.add(Recommendation(
+                id: 'rec_alt_$assetId',
+                type: RecommendationType.createAlternative,
+                priority: priority,
+                capabilityId: capId,
+                title: 'Créer une alternative : ${assetData['name']}',
+                description:
+                    'Cette solution pourrait maintenir la capacité$caveat.',
+                reason: reasonPrefix +
+                    'Cette solution est indépendante des systèmes affectés.',
+                targetAssetId: assetId,
+                causeNodeIds: causeNodeIds,
+              ));
             }
-          }
-
-          if (survives) {
-            String caveat = requiresResource
-                ? ' (sous réserve que le combustible/ressource nécessaire soit disponible)'
-                : '';
-
-            recommendations.add(Recommendation(
-              id: 'rec_alt_$assetId',
-              type: RecommendationType.createAlternative,
-              priority: priority,
-              capabilityId: capId,
-              title: 'Créer une alternative : ${assetData['name']}',
-              description:
-                  'Cette solution pourrait maintenir la capacité$caveat.',
-              reason: reasonPrefix +
-                  'Cette solution est indépendante des systèmes affectés.',
-              targetAssetId: assetId,
-              causeNodeIds: vuln.causeNodeIds,
-            ));
           }
         }
+      }
+
+      // Si c'est une incertitude et qu'aucune recommandation spécifique n'a été générée, on ajoute la générique
+      if ((capState == B3State.unknown || capState == B3State.notAssessed) && !specificRecGenerated) {
+        recommendations.add(Recommendation(
+          id: 'rec_verify_$capId',
+          type: RecommendationType.verify,
+          priority: RecommendationPriority.high,
+          capabilityId: capId,
+          title: 'Évaluer la capacité ${cap.name}',
+          description: 'Poursuivez le diagnostic pour lever cette incertitude.',
+          reason: 'Information manquante ou incertaine (${capState.name}).',
+          causeNodeIds: causeNodeIds,
+        ));
       }
     }
 

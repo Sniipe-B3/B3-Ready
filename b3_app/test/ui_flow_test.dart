@@ -85,21 +85,34 @@ void main() {
 
     expect(find.text("S'ÉCLAIRER"), findsOneWidget);
 
-    // Ouvre le détail
-    await tester.tap(find.text("Comprendre"));
+    // Ouvre le plan d'action
+    final btnActionPlan = find.text("Voir mon plan d'action");
+    await tester.ensureVisible(btnActionPlan);
+    await tester.pumpAndSettle();
+    await tester.tap(btnActionPlan);
     await tester.pumpAndSettle();
     
-    // Vérifie qu'on est sur le détail
-    expect(find.text("Comprendre cette vulnérabilité"), findsOneWidget);
+    // Vérifie qu'on est sur le plan d'action
+    expect(find.text("Mon plan d'action"), findsWidgets);
+    expect(find.textContaining('actions prioritaires'), findsOneWidget);
     
-    // Ouvre la Dependency Map
-    await tester.tap(find.text("Comprendre cette vulnérabilité"));
+    // Vérifie les priorités traduites (pas d'enums)
+    expect(find.text('ESSENTIEL'), findsOneWidget);
+    
+    // Anti-jargon plan
+    final planStr = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
+    expect(planStr.contains('RecommendationType'), false);
+    expect(planStr.contains('ActionPriority'), false);
+    expect(planStr.contains('causeNodeIds'), false);
+    expect(planStr.contains('targetAssetId'), false);
+    
+    // Ouvre la Dependency Map depuis une action
+    await tester.tap(find.text("Comprendre pourquoi"));
     await tester.pumpAndSettle();
     
     // Vérifications sur la Dependency Map
     expect(find.text("Dépendances"), findsOneWidget);
     expect(find.text("Panne électrique prolongée"), findsOneWidget);
-    expect(find.text("Pourquoi ?"), findsOneWidget);
     
     // Les labels lisibles et pas de jargon
     expect(find.text("S'éclairer"), findsOneWidget); // Capability

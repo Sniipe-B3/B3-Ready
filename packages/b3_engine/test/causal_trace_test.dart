@@ -28,7 +28,7 @@ void main() {
     final rec = recs.firstWhere((r) => r.targetAssetId == 'rechaud_gaz');
 
     expect(rec.causeNodeIds.contains('elec'), true);
-    expect(rec.reason.contains('elec'), true);
+    expect(rec.reason.contains('Électricité'), true);
   });
 
   test('TEST E — ALTERNATIVE AVEC RESSOURCE UNKNOWN', () {
@@ -48,9 +48,9 @@ void main() {
     expect(unc.causeNodeIds.contains('gaz'), true);
 
     final recVer = recs.firstWhere((r) =>
-        r.capabilityId == 'cuisiner' && r.type == RecommendationType.verify);
+        r.capabilityId == 'cuisiner' && r.type == RecommendationType.verify && r.targetResourceId == 'gaz');
     expect(recVer.causeNodeIds.contains('gaz'), true);
-    expect(recVer.causeNodeIds.contains('elec'), true);
+    expect(recVer.causeNodeIds.contains('elec'), false);
   });
 
   test('TEST F & G — MULTI-SYSTEM / FAUSSE REDONDANCE', () {

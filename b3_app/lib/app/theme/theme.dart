@@ -7,6 +7,7 @@ class B3Theme {
   static const Color b3Green = Color(0xFF2E7D32);
   static const Color b3Orange = Color(0xFFE65100);
   static const Color b3Red = Color(0xFFC62828);
+  static const Color b3Blue = Color(0xFF1565C0);
   static const Color b3Gray = Color(0xFF78909C);
 
   static ThemeData get lightTheme {

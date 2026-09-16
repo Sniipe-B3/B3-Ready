@@ -3,6 +3,8 @@ import 'package:b3_engine/b3_engine.dart';
 import '../../../data/app_knowledge_dataset.dart';
 import '../../../app/theme/theme.dart';
 import 'vulnerability_detail_screen.dart';
+import '../../action_plan/action_plan_builder.dart';
+import '../../action_plan/screens/action_plan_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
   final DiagnosticState diagnosticState;
@@ -119,7 +121,57 @@ class _ResultsScreenState extends State<ResultsScreen> {
               ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de panne électrique")),
               ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, "Partiellement vulnérable (réserve limitée)")),
               
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
+              
+              Card(
+                color: B3Theme.b3Blue.withValues(alpha: 0.1),
+                margin: const EdgeInsets.only(bottom: 24.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mon plan d\'action',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: B3Theme.b3Blue,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Découvrez les actions prioritaires pour améliorer la résilience de votre foyer.',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: () {
+                            final builder = ActionPlanBuilder(appKnowledgeBase);
+                            final plan = builder.build(_recommendations, _simulationResult);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ActionPlanScreen(
+                                  plan: plan,
+                                  config: _config,
+                                  result: _simulationResult,
+                                  scenario: _scenario,
+                                  graph: _graph,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Voir mon plan d\'action'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
