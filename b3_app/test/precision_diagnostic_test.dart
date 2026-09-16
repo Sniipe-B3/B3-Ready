@@ -39,6 +39,7 @@ void main() {
     final graph = DataMapper.buildGraph(appKnowledgeBase, conf);
     final res = engine.runSimulation(graph, scenarioElec);
     
+    expect(res.nodeStates['gaz_bouteille'], B3State.notAssessed);
     expect(res.nodeStates['rechaud_gaz'], B3State.notAssessed);
     expect(res.nodeStates['cuisiner'], B3State.notAssessed);
   });
@@ -50,5 +51,52 @@ void main() {
     final res = engine.runSimulation(graph, scenarioElec);
     
     expect(res.nodeStates['chauffer'], B3State.notAssessed);
+  });
+
+  test('TEST A — ressource explicitement inconnue', () {
+    final state = DiagnosticState()
+      ..answerMultiple('q_heat_main', ['opt_poele_bois'])
+      ..answerQuestion('q_heat_bois_reserve', 'opt_bois_unk');
+      
+    final conf = state.toHouseholdConfig(questions);
+    final graph = DataMapper.buildGraph(appKnowledgeBase, conf);
+    final res = engine.runSimulation(graph, scenarioElec);
+    
+    expect(res.nodeStates['bois'], B3State.unknown);
+    expect(res.nodeStates['bois'] != B3State.notAssessed, true);
+    expect(res.nodeStates['bois'] != B3State.failed, true);
+  });
+
+  test('TEST B — ressource jamais évaluée', () {
+    final state = DiagnosticState()
+      ..answerMultiple('q_cook_main', ['opt_gaz_bouteille']);
+      
+    final conf = state.toHouseholdConfig(questions);
+    final graph = DataMapper.buildGraph(appKnowledgeBase, conf);
+    final res = engine.runSimulation(graph, scenarioElec);
+    
+    expect(res.nodeStates['gaz_bouteille'], B3State.notAssessed);
+  });
+
+  test('TEST C — ressource explicitement absente', () {
+    final state = DiagnosticState()
+      ..answerMultiple('q_heat_main', ['opt_poele_bois'])
+      ..answerQuestion('q_heat_bois_reserve', 'opt_bois_no');
+      
+    final conf = state.toHouseholdConfig(questions);
+    final graph = DataMapper.buildGraph(appKnowledgeBase, conf);
+    final res = engine.runSimulation(graph, scenarioElec);
+    
+    expect(res.nodeStates['bois'], B3State.failed);
+  });
+
+  test('TEST D — aucune invention par défaut', () {
+    final state = DiagnosticState(); // Vide
+    final conf = state.toHouseholdConfig(questions);
+    
+    expect(conf.ownedAssets.isEmpty, true);
+    expect(conf.ownedResources.isEmpty, true);
+    expect(conf.resourceDurations.isEmpty, true);
+    expect(conf.unknownResources.isEmpty, true);
   });
 }

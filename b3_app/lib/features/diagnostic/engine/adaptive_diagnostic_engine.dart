@@ -65,7 +65,7 @@ class AdaptiveDiagnosticEngine {
     }
 
     DiagnosticQuestion? bestQuestion;
-    int maxScore = -1;
+    int maxScore = 0;
 
     for (var q in questions) {
       if (state.answers.containsKey(q.id)) continue;
@@ -139,9 +139,6 @@ class AdaptiveDiagnosticEngine {
     }
     
     // SCORE 10: Fallback
-    if (maxScore == 0) {
-      maxScore = 10;
-    }
 
     return maxScore;
   }

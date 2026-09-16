@@ -70,13 +70,13 @@ void main() {
   test('TEST 5 — AUDIT DATASET (Toutes les ressources ont une question)', () {
     final kb = jsonDecode(appKnowledgeBase);
     final resources = <String>{};
-    for (var r in kb['resources']) resources.add(r['id']);
+    for (var r in kb['resources']) { resources.add(r['id']); }
     
     final assetsReqs = <String>{};
     for (var a in kb['assets']) {
       if (a['requires'] != null) {
         for (var req in a['requires']) {
-          if (resources.contains(req)) assetsReqs.add(req);
+          if (resources.contains(req)) { assetsReqs.add(req); }
         }
       }
     }
