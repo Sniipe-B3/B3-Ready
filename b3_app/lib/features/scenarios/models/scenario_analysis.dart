@@ -47,3 +47,4 @@ class ScenarioAnalysis {
     .where((e) => e.value == B3State.maintained)
     .length ?? 0;
 }
+

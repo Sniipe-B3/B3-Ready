@@ -72,7 +72,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Bilan de résilience'),
-              automaticallyImplyLeading: false,
             ),
             body: SafeArea(
               child: SingleChildScrollView(
@@ -123,7 +122,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Bilan de résilience'),
-            automaticallyImplyLeading: false,
           ),
           body: SafeArea(
             child: SingleChildScrollView(

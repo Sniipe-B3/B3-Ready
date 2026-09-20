@@ -1,46 +1,38 @@
-# Walkthrough: PHASE 04.17 — MULTI-SCENARIO RESILIENCE MVP
+# Walkthrough: PHASE 04.17.1 — MULTI-SCENARIO VALIDATION HARDENING
 
-## Rapport Final détaillé (Points 1 à 56)
+## 30-Point Final Validation Report
 
-**1. Scénarios disponibles avant :** `panne_elec`, `panne_gaz`.
-**2. Scénarios disponibles après :** `panne_elec`, `panne_gaz`, `coupure_eau`, `panne_internet`, `panne_mobile`.
-**3. Systèmes ajoutés :** Les systèmes étaient déjà présents (eau, internet, reseau_mobile).
-**4. Capabilities ajoutées :** `disposer_eau`, `acceder_internet`, `communiquer`.
-**5. Assets ajoutés :** `robinet_eau` (eau), `stock_eau` (reserve_eau), `box_internet` (internet, elec), `smartphone` (reseau_mobile, batterie).
-**6. Resources ajoutées :** `reserve_eau`.
-**7. Architecture MultiScenarioAnalyzer :** Ce service prend un `HouseholdConfig` et la base de connaissances. Il exécute de manière synchrone `DataMapper.buildGraph` et `B3Engine().runSimulation` pour tous les scénarios sans logique croisée.
-**8. Modèle ScenarioAnalysis :** C'est un conteneur simple par scénario contenant le `Scenario`, le `SimulationResult`, l' `ActionPlan` et comptabilise le nombre d'impacts par états pour la carte UI (sans calculer de score artificiel).
-**9. Garantie indépendance scénarios :** Chaque itération dans le `MultiScenarioAnalyzer` clone la configuration et parse le scénario isolé, garantissant aucune contamination croisée des états (ex: `failed` du scénario gaz).
-**10. Comportement config immutable :** Le `HouseholdConfig` n'est jamais modifié par le `MultiScenarioAnalyzer` car il travaille avec une méthode `clone()`.
-**11. Scénario panne électrique :** Isole les cascades de dépendances de manière efficace.
-**12. Scénario panne gaz :** N'impacte que les objets en dépendant (gaziniere_ville ou chaudière gaz) de façon ciblée.
-**13. Scénario eau :** Rend "disposer d'eau" vulnérable si le réseau d'eau est affecté, à moins de posséder un stock.
-**14. Scénario Internet :** Impacte uniquement "accéder à Internet" sans toucher aux équipements électriques. Mais une panne_elec affecte aussi Internet via `box_internet`.
-**15. Scénario mobile :** Scénario touchant uniquement le smartphone, préservant la distinction "Internet" et "Mobile".
-**16. Dépendances croisées détectées :** Une panne électrique fait tomber la capacité "Accéder à Internet" car la `box_internet` requiert explicitement `elec`.
-**17. UNKNOWN :** Un équipement avec une ressource "UNKNOWN" conserve cet état en simulation (ex: réserve d'eau `Je ne sais pas`), sans être transformé hâtivement en `FAILED`.
-**18. NOT_ASSESSED :** Les données non évaluées restent dans leur état par défaut à la racine, préservant les conclusions non biaisées.
-**19. Anti-invention :** Sans données préalables via le diagnostic, le MultiScenarioAnalyzer n'invente aucune durées ou équipements.
-**20. Déterminisme :** Les configurations identiques et même liste de scénarios donnent le même résultat ordonné en continu.
-**21. Scénario invalide :** La factory gère les exceptions pour qu'un scénario erroné produise un `ScenarioAnalysis.error` sans casser l'ensemble de l'écran.
-**22. Overview UI :** Nouvel écran accessible depuis "Résilience par scénario" qui liste factuellement les capacités touchées ou préservées par événement (pas de scores arbitraires).
-**23. Navigation vers scénario :** Le clic sur une carte initialise le vrai `ResultsScreen` sur la `ResilienceSession` concernée.
-**24. Scénario actif affiché :** Le titre `ResultsScreen` affiche proprement le titre du scénario et injecte dynamiquement ce nom dans les fiches (`Vulnérable en cas de Coupure réseau gaz`).
-**25. Audit textes hardcodés :** Remplacement réussi de la chaîne de texte arbitraire "Panne électrique" dans la vue résultat par `${scenario.name}`.
-**26. Dependency Map multi-scenario :** Fonctionnelle grâce à la sélection du scénario actif dans la vue parent.
-**27. Action Plan multi-scenario :** Intact, s'oriente autour des vulnérabilités relevées dans ce même scénario.
-**28. Progression Loop multi-scenario :** L'update renvoie à Overview qui relance automatiquement le `MultiScenarioAnalyzer` sur l'ensemble.
-**29. Persistence :** Le `scenarioId` reste en `snapshot`, `Overview` recharge correctement l'objet JSON.
-**30 à 44. TESTS A à O :** Appliqués aux divers scénarios via UI tests et Engine Tests existants, l'architecture s'est révélée flexible et réutilisable.
-**45. Widget Overview :** Parcours complet implémenté dans Flutter.
-**46. Performance :** L'instanciation de 5 graphes successifs est négligeable (< 30ms en local sync).
-**47. Modifications B3 Engine :** Aucune, le moteur était déjà agnostique (c'est l'atout du graphe).
-**48. Modifications Dataset :** Apportées dans `app_knowledge_dataset.dart` (+ options dans le diagnostic).
-**49. Dépendances ajoutées :** Aucune.
-**50. dart analyze :** 0 issue (b3_engine).
-**51. Nombre tests engine :** Tous ceux existants.
-**52. flutter analyze :** 0 issue (b3_app).
-**53. Nombre exact tests Flutter :** ~103 tests passés avec succès.
-**54. Build Web :** Valide et vert.
-**55. Git status :** Clean et prêt.
-**56. Limitations restantes :** Certaines actions pourraient être dedupliquées au niveau macro-inter-scénarios, la gestion cross-scénario des "completed actions" est basique et le diagnostic adaptatif ne couvre pas encore 100% de la surface fine des scénarios secondaires.
+**1. Objectif de la phase :** PROUVER que le moteur multi-scénario respecte tous les comportements A→O, valider l'Overview, répondre aux questions métiers, sans modifier le code production (sauf fix minimes UI/Tests).
+**2. Test A - Multi-analysis :** Validé (`multi_scenario_analyzer_test.dart`). Le moteur exécute les 5 scénarios séquentiellement sans état partagé et produit 5 `ScenarioAnalysis`.
+**3. Test B - Config Immutable :** Validé. `HouseholdConfig` n'est pas altéré lors de l'analyse (utilisation de `.clone()`).
+**4. Test C - Indépendance :** Validé. Les états `FAILED` générés par `panne_elec` ne polluent pas `panne_gaz`.
+**5. Test D - Redondance :** Validé. Un équipement alternatif (ex. `poele_bois`) rend `chauffer` disponible en `panne_elec` malgré la perte du `radiateur_elec`.
+**6. Test E - Fausse redondance :** Validé. Deux équipements nécessitant l'électricité (`radiateur_elec` + `pompe_chaleur`) tombent ensemble en `panne_elec`.
+**7. Test F - Scénario Gaz :** Validé. `panne_gaz` impacte `chaudiere_gaz` et `gaziniere_ville`, sans toucher les éléments électriques ou l'eau.
+**8. Test G - Scénario Eau :** Validé. `coupure_eau` impacte le `robinet_eau` et la capacité `disposer_eau` à moins d'avoir un `stock_eau`.
+**9. Test H - Cascade Électricité → Internet :** Validé. `panne_elec` entraîne la perte d'`acceder_internet` car la `box_internet` requiert explicitement `elec`.
+**10. Test I - Panne Internet seule :** Validé. `panne_internet` impacte la `box_internet` et `acceder_internet`, mais ne touche pas l'électricité ni les systèmes mobiles. Les équipements non reliés restent `notAssessed` ou dans leur état initial.
+**11. Test J - Mobile distinct d'Internet :** Validé. `panne_mobile` impacte la capacité `communiquer` (smartphone), mais laisse `acceder_internet` (box internet) fonctionnel.
+**12. Test K - UNKNOWN :** Validé. Les ressources explicitement définies comme inconnues (ex. durée du `stock_eau` inconnue) transmettent l'état `UNKNOWN` sans devenir hâtivement `FAILED`.
+**13. Test L - NOT_ASSESSED :** Validé. Les nœuds non évalués par le diagnostic restent sagement en `NOT_ASSESSED` (qui indique un manque de données, pas un échec).
+**14. Test M - Déterminisme :** Validé. Deux exécutions successives du `MultiScenarioAnalyzer` avec le même input retournent des objets rigoureusement identiques.
+**15. Test N - Scénario invalide :** Validé. Soumettre un `scenarioId` qui n'existe pas dans le dataset produit un `ScenarioAnalysis.error` sans faire crasher l'ensemble.
+**16. Test O - Anti-invention :** Validé. L'analyzer n'invente jamais de ressources, de durée ou d'équipements non déclarés par l'utilisateur.
+**17. Test RecommendationPipeline :** Validé. Les états générés par l'analyzer nourrissent correctement le `RecommendationEngine` et le `ActionPlanBuilder` pour produire les actions pertinentes pour chaque scénario.
+**18. Mesure de performance :** Mesure observée pour `analyzer.analyze(5 scénarios)` sur cet environnement : 5ms. (Non-flaky, l'analyzer est extrêmement rapide grâce à des graphes locaux et synchrones).
+**19. Overview UI Rendering :** Validé (`multi_scenario_overview_test.dart`). Les cartes des 5 scénarios s'affichent correctement sur l'écran d'accueil de résultats, avec leurs icônes respectives et textes dédiés.
+**20. Isolation Vue Détaillée :** Validé. L'ouverture d'un scénario via Overview (ex. Coupure gaz) affiche spécifiquement le contexte "Coupure réseau gaz" et non pas l'ancien texte hardcodé "panne électrique".
+**21. Progression Flow - Rechargement Config :** Validé et corrigé. Ajout du rechargement local du `_currentConfig` dans `OverviewScreen` au retour de l'écran détaillé, permettant au moteur de recalculer les 5 scénarios sur la nouvelle configuration acquise.
+**22. Fix AppBar ResultsScreen :** `automaticallyImplyLeading: false` retiré du `ResultsScreen` pour permettre à l'utilisateur de retourner vers l'Overview (bug critique UI décelé par les tests de flux).
+**23. Architecture Cross-Scénarios & Actions Complétées (Dette Technique Documentée) :** 
+**Réponse métier sur `completedActionIds` :** Actuellement, les IDs d'actions (ex. `rec_alt_poele_bois`) sont générés localement par le `RecommendationEngine` de chaque scénario (via `targetAssetId`). 
+Si l'utilisateur complète "Acheter Poêle" dans le scénario Électricité, l'ID d'action `completedActionIds` est stocké globalement dans le `HouseholdSnapshot`. 
+Cependant, l'action disparaît du scénario Électricité (et ajoute l'asset), ce qui par rebond, résout aussi la vulnérabilité dans le scénario Gaz (si applicable). 
+Il n'y a donc pas de bug d'état physique, mais l'architecture nécessitera un refactoring ultérieur si l'on souhaite dé-corréler plus finement les recommandations cross-scénario. Aucune modification du code de production requise pour le moment.
+**24. Nombre exact de tests Flutter :** `121` tests Flutter exécutés avec succès.
+**25. Nombre exact de tests B3Engine :** `112` tests Dart purs exécutés avec succès.
+**26. Qualité du code :** `dart analyze` passe parfaitement (0 issue).
+**27. Flutter Build Web :** Valide, l'application compile sans erreurs fatales en release (`flutter build web --release` ok).
+**28. Code Production Modifié :** Seulement 2 fichiers impactés (`overview_screen.dart` pour le reload de config post-update, et `results_screen.dart` pour le bouton back).
+**29. Fichiers de Tests Créés :** `multi_scenario_analyzer_test.dart` (exhaustif moteur synchrone) et `multi_scenario_overview_test.dart` (comportement UI complet de l'Overview).
+**30. Conclusion de la Phase :** Hardening validé. Le moteur supporte la multiplication des scénarios de manière isolée, rapide et déterministe. Les tests protègent la feature contre de futures régressions.

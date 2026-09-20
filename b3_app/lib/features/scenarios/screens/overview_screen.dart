@@ -28,10 +28,14 @@ class OverviewScreen extends StatefulWidget {
 class _OverviewScreenState extends State<OverviewScreen> {
   late List<ScenarioAnalysis> _analyses;
   bool _isLoading = true;
+  late HouseholdConfig _currentConfig;
+  late List<String> _currentCompletedActionIds;
 
   @override
   void initState() {
     super.initState();
+    _currentConfig = widget.config;
+    _currentCompletedActionIds = widget.completedActionIds;
     _runAnalysis();
   }
 
@@ -42,7 +46,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final scenarioIds = scenariosData.map((s) => s['id'] as String).toList();
     
     // We can do this sync, it's fast enough for MVP
-    final analyses = analyzer.analyze(widget.config, scenarioIds);
+    final analyses = analyzer.analyze(_currentConfig, scenarioIds);
     
     if (mounted) {
       setState(() {
@@ -52,46 +56,35 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
   }
 
-  void _openScenario(ScenarioAnalysis analysis) {
+  Future<void> _openScenario(ScenarioAnalysis analysis) async {
     if (!analysis.isAvailable) return;
 
     final session = ResilienceSession(
       knowledgeJson: appKnowledgeBase,
       scenarioId: analysis.scenarioId,
-      initialConfig: widget.config,
-      initialCompletedActionIds: widget.completedActionIds,
+      initialConfig: _currentConfig,
+      initialCompletedActionIds: _currentCompletedActionIds,
       repository: widget.repository ?? SharedPrefsHouseholdRepository(),
       isRestored: false, // treat as new session for this scenario, it will autosave
     );
 
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ResultsScreen(session: session),
       ),
-    ).then((_) {
-      // When returning from ResultsScreen, the config might have been modified 
-      // by progression loops.
-      // So we should ideally refresh. We can do that by getting the latest snapshot.
-      _refreshFromRepository();
-    });
-  }
+    );
 
-  Future<void> _refreshFromRepository() async {
+    // Refresh after returning
     final repo = widget.repository ?? SharedPrefsHouseholdRepository();
     final snapshot = await repo.load();
     if (snapshot != null && mounted) {
-      final analyzer = MultiScenarioAnalyzer(appKnowledgeBase);
-      final kb = jsonDecode(appKnowledgeBase);
-      final scenariosData = kb['scenarios'] as List<dynamic>;
-      final scenarioIds = scenariosData.map((s) => s['id'] as String).toList();
-      
-      final analyses = analyzer.analyze(snapshot.config, scenarioIds);
       setState(() {
-        _analyses = analyses;
-        // In a real app we'd also update the widget config state, but 
-        // since we only use config for the initial analysis this is fine for MVP.
+        _currentConfig = snapshot.config;
+        _currentCompletedActionIds = snapshot.completedActionIds;
+        _isLoading = true;
       });
+      await _runAnalysis();
     }
   }
 
