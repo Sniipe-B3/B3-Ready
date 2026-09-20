@@ -98,7 +98,7 @@ void main() {
       initialConfig: config,
     );
     
-    expect(session.simulationResult.nodeStates['bois'], B3State.notAssessed);
+    expect(session.simulationResult!.nodeStates['bois'], B3State.notAssessed);
     
     session.recalculate(const ResourceUpdate(
       resourceId: 'bois',
@@ -106,7 +106,7 @@ void main() {
       nature: UpdateNature.observation,
     ));
     
-    expect(session.simulationResult.nodeStates['bois'], B3State.unknown);
+    expect(session.simulationResult!.nodeStates['bois'], B3State.unknown);
   });
 
   test('TEST D — ajout asset', () {
@@ -120,11 +120,11 @@ void main() {
       initialConfig: config,
     );
     
-    expect(session.simulationResult.nodeStates['chauffer'], B3State.failed);
+    expect(session.simulationResult!.nodeStates['chauffer'], B3State.failed);
     
     final result = session.recalculate(const AssetOwnershipUpdate(assetId: 'poele_bois', isOwned: true, nature: UpdateNature.intervention));
     
-    expect(session.simulationResult.nodeStates['poele_bois'], B3State.notAssessed);
+    expect(session.simulationResult!.nodeStates['poele_bois'], B3State.notAssessed);
     expect(result.changedCapabilities.first.afterState, B3State.notAssessed);
     expect(result.changedCapabilities.first.meaning, ProgressionMeaning.unchanged);
   });
@@ -166,7 +166,7 @@ void main() {
       initialConfig: config,
     );
     
-    expect(session.simulationResult.nodeStates['chauffer'], B3State.degraded);
+    expect(session.simulationResult!.nodeStates['chauffer'], B3State.degraded);
     
     final result = session.recalculate(const ResourceUpdate(
       resourceId: 'bois',
@@ -177,7 +177,7 @@ void main() {
     ));
     
     expect(result.changedCapabilities.first.meaning, ProgressionMeaning.resilienceImproved);
-    expect(session.simulationResult.nodeStates['chauffer'], B3State.maintained);
+    expect(session.simulationResult!.nodeStates['chauffer'], B3State.maintained);
   });
 
   test('TEST G — Action Plan recalculé', () {
@@ -193,7 +193,7 @@ void main() {
       initialConfig: config,
     );
     
-    expect(session.actionPlan.items.any((i) => i.type == RecommendationType.verify), true);
+    expect(session.actionPlan!.items.any((i) => i.type == RecommendationType.verify), true);
     
     session.recalculate(const ResourceUpdate(
       resourceId: 'bois',
@@ -203,7 +203,7 @@ void main() {
       nature: UpdateNature.observation,
     ));
     
-    expect(session.actionPlan.items.any((i) => i.type == RecommendationType.verify), false);
+    expect(session.actionPlan!.items.any((i) => i.type == RecommendationType.verify), false);
   });
 
   test('TEST H — snapshot immutable', () {
@@ -310,8 +310,8 @@ void main() {
       nature: UpdateNature.observation,
     ));
     
-    expect(session.actionPlan.items.any((i) => i.type == RecommendationType.verify), false);
-    expect(session.actionPlan.items.any((i) => i.type == RecommendationType.acquire), true);
+    expect(session.actionPlan!.items.any((i) => i.type == RecommendationType.verify), false);
+    expect(session.actionPlan!.items.any((i) => i.type == RecommendationType.acquire), true);
   });
 
   test('TEST M — observation favorable ≠ amélioration physique', () {

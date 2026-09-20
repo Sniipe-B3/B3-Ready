@@ -5,6 +5,7 @@ import '../../results/screens/results_screen.dart';
 import '../../progression/models/resilience_session.dart';
 import '../../../data/household_repository.dart';
 import '../../../data/household_snapshot.dart';
+import '../../scenarios/screens/overview_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final HouseholdRepository? repository;
@@ -156,6 +157,28 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           child: const Text(
                             'Reprendre mon foyer',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonal(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => OverviewScreen(
+                                  config: _snapshot!.config,
+                                  completedActionIds: _snapshot!.completedActionIds,
+                                  repository: _repository,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Résilience par scénario',
                             style: TextStyle(fontSize: 18),
                           ),
                         ),

@@ -143,7 +143,7 @@ void main() {
     // Nothing should be queued on session2 init
     await session2.waitForPendingSave();
     
-    final state = session2.simulationResult.nodeStates['chauffer'];
+    final state = session2.simulationResult!.nodeStates['chauffer'];
     expect(state, B3State.maintained);
   });
 
@@ -221,7 +221,7 @@ void main() {
     );
 
     expect(session.scenarioError, isNotNull);
-    expect(session.scenario.name, 'Panne électrique'); // Fallback worked
+    expect(session.scenario!.name, 'Panne électrique'); // Fallback worked
     expect(session.simulationResult, isNotNull); // Doesn't crash
   });
 
@@ -291,7 +291,7 @@ void main() {
     );
     
     // session2 recalculates cleanly without derived data
-    expect(session2.simulationResult.nodeStates['chauffer'], B3State.maintained);
+    expect(session2.simulationResult!.nodeStates['chauffer'], B3State.maintained);
   });
 
   test('DOUBLE FALLBACK FAILURE', () async {

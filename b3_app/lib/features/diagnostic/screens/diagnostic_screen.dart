@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../engine/adaptive_diagnostic_engine.dart';
-import '../../results/screens/results_screen.dart';
+import '../../scenarios/screens/overview_screen.dart';
 import '../../../data/app_diagnostic_dataset.dart';
 
 class DiagnosticScreen extends StatefulWidget {
@@ -93,9 +93,8 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ResultsScreen(
-            diagnosticState: _currentState,
-            questions: _allQuestions,
+          builder: (_) => OverviewScreen(
+            config: _currentState.toHouseholdConfig(_allQuestions),
           ),
         ),
       );

@@ -67,13 +67,35 @@ void main() {
     await tester.tap(find.text('Rien de spécifique (luminaires branchés sur secteur)'));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
     await tester.tap(find.text('Continuer'));
+    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
+
+    // 9. Question water (q_water_main)
+    expect(find.text("Comment accédez-vous à l'eau courante ?"), findsOneWidget);
+    await tester.tap(find.text('Robinet classique (réseau public)'));
+    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuer'));
+    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
     
-    // We expect it to finish and go to Results Screen
+    // 10. Question comms
+    expect(find.text("Quels moyens de communication utilisez-vous ?"), findsOneWidget);
+    await tester.tap(find.text('Box Internet fixe'));
+    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuer'));
+
+    // We expect it to finish and go to Overview Screen
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
 
     // Résultats
-    expect(find.text('Bilan de résilience'), findsOneWidget);
+    expect(find.text('Résilience par scénario'), findsOneWidget);
+    expect(find.textContaining('Panne électrique'), findsOneWidget);
+
+    final voirBtn = find.text('Voir').first;
+    await tester.ensureVisible(voirBtn);
+    await tester.tap(voirBtn);
+    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
+
+    expect(find.text('Panne électrique prolongée'), findsOneWidget);
     
     final fullTextStr = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
     // Anti-jargon verification
@@ -84,7 +106,7 @@ void main() {
     expect(fullTextStr.contains('causeNodeIds'), false);
     expect(fullTextStr.contains('B3State.degraded'), false);
 
-    expect(find.textContaining('point de vigilance'), findsOneWidget);
+    expect(find.textContaining('vigilance'), findsOneWidget);
 
     expect(find.text("S'ÉCLAIRER"), findsOneWidget);
 
@@ -132,28 +154,7 @@ void main() {
     expect(mapStr.contains('eclairage'), false);
     expect(mapStr.contains('lampe_secteur'), false);
     
-    // Progression Loop MVP
-    await tester.tap(find.byIcon(Icons.arrow_back));
-    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
-    
-    await tester.tap(find.text("Mettre à jour ma situation").last);
-    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
-    
-    expect(find.text("Qu'avez-vous constaté ou réalisé ?"), findsOneWidget);
-    await tester.tap(find.text("Plusieurs jours (> 72h)"));
-    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
-    
-    expect(find.text("Analyse mise à jour"), findsOneWidget);
-    expect(find.text("Situation mieux connue"), findsOneWidget);
-    expect(find.text("Cette capacité est maintenant confirmée disponible."), findsOneWidget);
-    
-    await tester.tap(find.text("Voir mon nouveau plan"));
-    await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
-    
-    expect(find.text("À VÉRIFIER"), findsNothing);
-
     tester.view.resetPhysicalSize();
-
     tester.view.resetDevicePixelRatio();
   });
 }

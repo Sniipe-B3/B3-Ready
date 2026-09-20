@@ -139,6 +139,34 @@ const String appDiagnosticQuestionsJson = '''
       {"id": "opt_bat_no", "text": "Non, ou très peu", "facts": [{"type": "assess_resource", "value": "batterie"}, {"type": "add_resource_duration", "value": "batterie", "duration": 4}]},
       {"id": "opt_bat_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "batterie"}]}
     ]
+  },
+  {
+    "id": "q_water_main",
+    "text": "Comment accédez-vous à l'eau courante ?",
+    "type": "multiple_choice",
+    "options": [
+      {"id": "opt_robinet_eau", "text": "Robinet classique (réseau public)", "facts": [{"type": "assess_capability", "value": "disposer_eau"}, {"type": "add_asset", "value": "robinet_eau"}]},
+      {"id": "opt_stock_eau", "text": "J'ai un stock d'eau / cuve", "facts": [{"type": "assess_capability", "value": "disposer_eau"}, {"type": "add_asset", "value": "stock_eau"}]}
+    ]
+  },
+  {
+    "id": "q_water_reserve",
+    "text": "De quelle réserve d'eau disposez-vous (bouteilles, bidons...) ?",
+    "type": "single_choice",
+    "options": [
+      {"id": "opt_water_yes", "text": "Oui, pour plusieurs jours", "facts": [{"type": "add_resource", "value": "reserve_eau"}, {"type": "assess_resource", "value": "reserve_eau"}, {"type": "add_resource_duration", "value": "reserve_eau", "duration": 72}]},
+      {"id": "opt_water_no", "text": "Non, presque rien", "facts": [{"type": "assess_resource", "value": "reserve_eau"}]},
+      {"id": "opt_water_unk", "text": "Je ne sais pas", "facts": [{"type": "assess_resource_unknown", "value": "reserve_eau"}]}
+    ]
+  },
+  {
+    "id": "q_com_main",
+    "text": "Quels moyens de communication utilisez-vous ?",
+    "type": "multiple_choice",
+    "options": [
+      {"id": "opt_box_internet", "text": "Box Internet fixe", "facts": [{"type": "assess_capability", "value": "acceder_internet"}, {"type": "add_asset", "value": "box_internet"}]},
+      {"id": "opt_smartphone", "text": "Smartphone (réseau mobile)", "facts": [{"type": "assess_capability", "value": "communiquer"}, {"type": "add_asset", "value": "smartphone"}]}
+    ]
   }
 ]
 ''';

@@ -1,22 +1,19 @@
 import '../../../data/household_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
-import '../../../data/app_knowledge_dataset.dart';
+
 import '../../action_plan/screens/action_plan_screen.dart';
 import 'vulnerability_detail_screen.dart';
 import '../../../app/theme/theme.dart';
 import '../../progression/models/resilience_session.dart';
+import '../../scenarios/screens/overview_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
-  final DiagnosticState? diagnosticState;
-  final List<DiagnosticQuestion>? questions;
-  final ResilienceSession? session;
+  final ResilienceSession session;
 
   const ResultsScreen({
     Key? key,
-    this.diagnosticState,
-    this.questions,
-    this.session,
+    required this.session,
   }) : super(key: key);
 
   @override
@@ -34,19 +31,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> _initSession() async {
-    if (widget.session != null) {
-      _session = widget.session!;
-    } else {
-      final config = widget.diagnosticState!.toHouseholdConfig(widget.questions!);
-      _session = ResilienceSession(
-        knowledgeJson: appKnowledgeBase,
-        scenarioId: 'panne_elec',
-        initialConfig: config,
-        repository: SharedPrefsHouseholdRepository(),
-        isRestored: false,
-      );
-    }
-
+    _session = widget.session;
 
     // Simulation artificielle d'un temps d'analyse
     await Future.delayed(const Duration(milliseconds: 800));
@@ -106,8 +91,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         border: Border.all(color: Colors.red),
                       ),
                       child: Text(
-                        "Aucun scénario compatible n'est actuellement disponible.
-Votre foyer a été conservé.",
+                        "Aucun scénario compatible n'est actuellement disponible.\nVotre foyer a été conservé.",
                         style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red.shade900),
                       ),
                     ),
@@ -133,6 +117,8 @@ Votre foyer a été conservé.",
         final String vigilanceText = totalPoints > 1 
             ? "$totalPoints points de vigilance identifiés." 
             : "1 point de vigilance identifié.";
+            
+        final scenarioName = _session.scenario?.name ?? 'cette perturbation';
 
         return Scaffold(
           appBar: AppBar(
@@ -145,7 +131,7 @@ Votre foyer a été conservé.",
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Votre analyse', style: theme.textTheme.headlineLarge),
+                  Text(scenarioName, style: theme.textTheme.headlineLarge),
                   const SizedBox(height: 16),
                   if (_session.scenarioError != null) ...[
                     Container(
@@ -171,12 +157,12 @@ Votre foyer a été conservé.",
                     )
                   else
                     Text(
-                      "Votre foyer semble bien préparé pour ce scénario.",
+                      "Votre foyer semble bien préparé pour $scenarioName.",
                       style: theme.textTheme.titleLarge?.copyWith(color: B3Theme.b3Green),
                     ),
                   const SizedBox(height: 32),
                   
-                  ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de panne électrique")),
+                  ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de $scenarioName")),
                   ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, "Partiellement vulnérable (réserve limitée)")),
                   
                   const SizedBox(height: 32),
@@ -217,6 +203,25 @@ Votre foyer a été conservé.",
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
+                    child: FilledButton.tonal(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => OverviewScreen(
+                              config: _session.config,
+                              completedActionIds: _session.completedActionIds,
+                              repository: SharedPrefsHouseholdRepository(),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Résilience par scénario'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
                       child: const Text('Retour à l\'accueil'),
@@ -235,6 +240,9 @@ Votre foyer a été conservé.",
     if (capabilityId == 'cuisiner') return '🍳';
     if (capabilityId == 'chauffer') return '🌡️';
     if (capabilityId == 'eclairage') return '💡';
+    if (capabilityId == 'disposer_eau') return '🚰';
+    if (capabilityId == 'acceder_internet') return '💻';
+    if (capabilityId == 'communiquer') return '📞';
     return '🔧';
   }
 
@@ -242,6 +250,9 @@ Votre foyer a été conservé.",
     if (capabilityId == 'cuisiner') return 'CUISINER';
     if (capabilityId == 'chauffer') return 'SE CHAUFFER';
     if (capabilityId == 'eclairage') return 'S\'ÉCLAIRER';
+    if (capabilityId == 'disposer_eau') return 'DISPOSER D\'EAU';
+    if (capabilityId == 'acceder_internet') return 'ACCÉDER À INTERNET';
+    if (capabilityId == 'communiquer') return 'COMMUNIQUER';
     return capabilityId.toUpperCase();
   }
 
