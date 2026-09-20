@@ -35,10 +35,10 @@ class CapabilityChange {
 class ProgressionResult {
   final HouseholdConfig beforeConfig;
   final HouseholdConfig afterConfig;
-  final SimulationResult beforeResult;
-  final SimulationResult afterResult;
-  final ActionPlan beforePlan;
-  final ActionPlan afterPlan;
+  final SimulationResult? beforeResult;
+  final SimulationResult? afterResult;
+  final ActionPlan? beforePlan;
+  final ActionPlan? afterPlan;
   final UpdateNature updateNature;
   
   final List<CapabilityChange> changedCapabilities;

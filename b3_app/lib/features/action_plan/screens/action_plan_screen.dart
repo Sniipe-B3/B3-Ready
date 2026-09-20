@@ -21,6 +21,7 @@ class ActionPlanScreen extends StatelessWidget {
       animation: session,
       builder: (context, _) {
         final plan = session.actionPlan;
+        if (plan == null) return const Scaffold(body: Center(child: Text("Plan indisponible")));
         final theme = Theme.of(context);
 
         return Scaffold(
@@ -176,9 +177,9 @@ class ActionPlanScreen extends StatelessWidget {
                           builder: (_) => DependencyMapScreen(
                             capabilityId: item.capabilityIds.first,
                             config: session.config,
-                            result: session.simulationResult,
-                            scenario: session.scenario,
-                            graph: session.graph,
+                            result: session.simulationResult!,
+                            scenario: session.scenario!,
+                            graph: session.graph!,
                           ),
                         ),
                       );

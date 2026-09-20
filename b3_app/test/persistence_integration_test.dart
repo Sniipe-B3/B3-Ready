@@ -5,6 +5,21 @@ import 'package:b3_app/features/progression/models/resilience_session.dart';
 import 'package:b3_app/features/progression/models/household_update.dart';
 import 'package:b3_engine/b3_engine.dart';
 
+class RecoverableRepo implements HouseholdRepository {
+  bool failNext = true;
+  @override
+  Future<HouseholdSnapshot?> load() async => null;
+  @override
+  Future<void> save(HouseholdSnapshot snapshot) async {
+    if (failNext) {
+      failNext = false;
+      throw Exception('Fail');
+    }
+  }
+  @override
+  Future<void> clear() async {}
+}
+
 class FailingHouseholdRepository implements HouseholdRepository {
   @override
   Future<HouseholdSnapshot?> load() async => null;
@@ -277,5 +292,94 @@ void main() {
     
     // session2 recalculates cleanly without derived data
     expect(session2.simulationResult.nodeStates['chauffer'], B3State.maintained);
+  });
+
+  test('DOUBLE FALLBACK FAILURE', () async {
+    final repo = FakeHouseholdRepository();
+    final session = ResilienceSession(
+      knowledgeJson: '{"systems":[],"capabilities":[],"assets":[],"resources":[],"scenarios":[]}', // Both scenarios missing
+      scenarioId: 'ancien_scenario_supprime',
+      initialConfig: HouseholdConfig(ownedAssets: []),
+      repository: repo,
+      isRestored: true,
+    );
+
+    expect(session.scenarioUnavailable, isTrue);
+    expect(session.scenario, isNull);
+    expect(session.simulationResult, isNull);
+  });
+
+  test('isSaving logic', () async {
+    final repo = FakeHouseholdRepository(); // it's fast but we can see the synchronous part
+    final session = ResilienceSession(
+      knowledgeJson: knowledgeJson,
+      scenarioId: 'panne_elec',
+      initialConfig: HouseholdConfig(ownedAssets: []),
+      repository: repo,
+      isRestored: false,
+    );
+    
+    // initially wait for the first save
+    await session.waitForPendingSave();
+    expect(session.isSaving, isFalse);
+    expect(session.saveError, isNull);
+
+    // we trigger an update and immediately check isSaving
+    session.recalculate(const ActionCompletedUpdate(actionId: 'test_1'));
+    expect(session.isSaving, isTrue);
+    
+    await session.waitForPendingSave();
+    expect(session.isSaving, isFalse);
+  });
+
+  test('SAVE ERROR RECOVERY', () async {
+    final repo = RecoverableRepo();
+    final session = ResilienceSession(
+      knowledgeJson: knowledgeJson,
+      scenarioId: 'panne_elec',
+      initialConfig: HouseholdConfig(ownedAssets: []),
+      repository: repo,
+      isRestored: false,
+    );
+    
+    await session.waitForPendingSave();
+    expect(session.saveError, isNotNull); // Failed first time
+
+    session.recalculate(const ActionCompletedUpdate(actionId: 'test_1'));
+    await session.waitForPendingSave();
+    expect(session.saveError, isNull); // Succeeded second time
+  });
+
+  test('CORRECTIVE FALLBACK SAVE', () async {
+    final repo = FakeHouseholdRepository();
+    final config = HouseholdConfig(ownedAssets: []);
+    
+    // We create a session that forces a fallback during restore
+    final session = ResilienceSession(
+      knowledgeJson: knowledgeJson,
+      scenarioId: 'ancien_scenario_supprime',
+      initialConfig: config,
+      repository: repo,
+      isRestored: true, // Should not save automatically EXCEPT if it falls back successfully
+    );
+    
+    expect(session.scenarioError, isNotNull);
+    
+    // Wait for the corrective save
+    await session.waitForPendingSave();
+    
+    final snapshot = await repo.load();
+    expect(snapshot, isNotNull);
+    expect(snapshot!.scenarioId, 'panne_elec'); // It corrected itself!
+    
+    // Reload from the new snapshot
+    final session2 = ResilienceSession(
+      knowledgeJson: knowledgeJson,
+      scenarioId: snapshot.scenarioId,
+      initialConfig: snapshot.config,
+      repository: repo,
+      isRestored: true,
+    );
+    expect(session2.scenarioError, isNull); // No more error on reload
   });
 }

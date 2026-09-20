@@ -82,8 +82,52 @@ class _ResultsScreenState extends State<ResultsScreen> {
       animation: _session,
       builder: (context, _) {
         final theme = Theme.of(context);
-        final vulns = _session.simulationResult.vulnerabilities.where((v) => v.state == B3State.failed).toList();
-        final degraded = _session.simulationResult.vulnerabilities.where((v) => v.state == B3State.degraded).toList();
+        
+        if (_session.scenarioUnavailable) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Bilan de résilience'),
+              automaticallyImplyLeading: false,
+            ),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Votre analyse', style: theme.textTheme.headlineLarge),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red),
+                      ),
+                      child: Text(
+                        "Aucun scénario compatible n'est actuellement disponible.
+Votre foyer a été conservé.",
+                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red.shade900),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                        child: const Text('Retour à l\'accueil'),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        final vulns = _session.simulationResult!.vulnerabilities.where((v) => v.state == B3State.failed).toList();
+        final degraded = _session.simulationResult!.vulnerabilities.where((v) => v.state == B3State.degraded).toList();
         
         final totalPoints = vulns.length + degraded.length;
         final String vigilanceText = totalPoints > 1 
@@ -230,16 +274,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
               child: FilledButton.tonal(
                 style: FilledButton.styleFrom(backgroundColor: color.withValues(alpha: 0.1), foregroundColor: color),
                 onPressed: () {
-                  final recs = _session.recommendations.where((r) => r.capabilityId == capId).toList();
+                  final recs = _session.recommendations!.where((r) => r.capabilityId == capId).toList();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => VulnerabilityDetailScreen(
                         vulnerability: v,
                         config: _session.config,
-                        result: _session.simulationResult,
-                        scenario: _session.scenario,
-                        graph: _session.graph,
+                        result: _session.simulationResult!,
+                        scenario: _session.scenario!,
+                        graph: _session.graph!,
                         recommendations: recs,
                       ),
                     ),

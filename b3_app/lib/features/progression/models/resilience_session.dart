@@ -9,47 +9,53 @@ import 'progression_result.dart';
 
 class ResilienceSession extends ChangeNotifier {
   final String knowledgeJson;
-  final String scenarioId;
+  final String requestedScenarioId;
   final HouseholdRepository? repository;
   final bool isRestored;
 
   HouseholdConfig _config;
-  late Scenario _scenario;
-  late List<B3Node> _graph;
-  late SimulationResult _simulationResult;
-  late List<Recommendation> _recommendations;
-  late ActionPlan _actionPlan;
+  Scenario? _scenario;
+  List<B3Node>? _graph;
+  SimulationResult? _simulationResult;
+  List<Recommendation>? _recommendations;
+  ActionPlan? _actionPlan;
 
   final List<String> _completedActionIds = [];
 
   Object? _saveError;
   String? _scenarioError;
+  bool scenarioUnavailable = false;
   Future<void> _saveQueue = Future.value();
+  int _pendingSaveCount = 0;
+  late String _activeScenarioId;
 
   HouseholdConfig get config => _config;
-  Scenario get scenario => _scenario;
-  List<B3Node> get graph => _graph;
-  SimulationResult get simulationResult => _simulationResult;
-  List<Recommendation> get recommendations => _recommendations;
-  ActionPlan get actionPlan => _actionPlan;
+  Scenario? get scenario => _scenario;
+  List<B3Node>? get graph => _graph;
+  SimulationResult? get simulationResult => _simulationResult;
+  List<Recommendation>? get recommendations => _recommendations;
+  ActionPlan? get actionPlan => _actionPlan;
   List<String> get completedActionIds => _completedActionIds;
   
   Object? get saveError => _saveError;
   String? get scenarioError => _scenarioError;
-  bool get isSaving => _saveError == null; // Wait, actually it's easier to expose `pendingSave` status, but the instructions only ask for `Object? saveError` minimum. 
+  bool get isSaving => _pendingSaveCount > 0;
+  String get scenarioId => _activeScenarioId;
 
   Future<void> waitForPendingSave() => _saveQueue;
 
   ResilienceSession({
     required this.knowledgeJson,
-    required this.scenarioId,
+    required String scenarioId,
     required HouseholdConfig initialConfig,
     List<String> initialCompletedActionIds = const [],
     this.repository,
     this.isRestored = false,
-  }) : _config = initialConfig.clone() {
+  }) : requestedScenarioId = scenarioId, _config = initialConfig.clone() {
     _completedActionIds.addAll(initialCompletedActionIds);
     _performInitialCalculation();
+    
+    // We save initially if not restored, OR if we had to fallback to panne_elec during a restore
     if (!isRestored && repository != null) {
       _autosave();
     }
@@ -58,13 +64,15 @@ class ResilienceSession extends ChangeNotifier {
   void _autosave() {
     if (repository == null) return;
     
-    // We snapshot synchronously so the saved state matches the moment _autosave was called.
     final snapshot = HouseholdSnapshot(
       schemaVersion: 1,
       config: _config.clone(),
-      scenarioId: scenarioId,
+      scenarioId: _activeScenarioId,
       completedActionIds: List.from(_completedActionIds),
     );
+
+    _pendingSaveCount++;
+    notifyListeners();
 
     _saveQueue = _saveQueue.then((_) async {
       try {
@@ -72,38 +80,68 @@ class ResilienceSession extends ChangeNotifier {
         _saveError = null;
       } catch (e) {
         _saveError = e;
+      } finally {
+        _pendingSaveCount--;
+        notifyListeners();
       }
-      notifyListeners();
     });
   }
 
   void _performInitialCalculation() {
+    bool didFallback = false;
     try {
-      _scenario = DataMapper.parseScenario(knowledgeJson, scenarioId);
+      _scenario = DataMapper.parseScenario(knowledgeJson, requestedScenarioId);
+      _activeScenarioId = requestedScenarioId;
     } catch (e) {
       _scenarioError = "Votre ancien scénario n'est plus disponible. Votre foyer a été conservé.";
-      // Try fallback to 'panne_elec'
       try {
         _scenario = DataMapper.parseScenario(knowledgeJson, 'panne_elec');
+        _activeScenarioId = 'panne_elec';
+        didFallback = true;
       } catch (fallbackError) {
-        // Safe fallback if 'panne_elec' also doesn't exist
-        _scenario = Scenario(name: "Inconnu", duration: Duration.zero, systemOverrides: {});
+        scenarioUnavailable = true;
+        _scenario = null;
+        _activeScenarioId = 'panne_elec'; // Arbitrary fallback so snapshot keeps something
       }
     }
     
+    if (scenarioUnavailable) {
+      _graph = null;
+      _simulationResult = null;
+      _recommendations = null;
+      _actionPlan = null;
+      return;
+    }
+
     _graph = DataMapper.buildGraph(knowledgeJson, _config);
-    _simulationResult = B3Engine().runSimulation(_graph, _scenario);
-    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult, _config, _scenario);
-    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations, _simulationResult);
+    _simulationResult = B3Engine().runSimulation(_graph!, _scenario!);
+    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult!, _config, _scenario!);
+    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations!, _simulationResult!);
+    
+    if (isRestored && didFallback) {
+      _autosave();
+    }
   }
 
   ProgressionResult recalculate(HouseholdUpdate update) {
-    // 1. Snapshot BEFORE
-    final beforeConfig = _config.clone();
-    final beforeResult = _simulationResult;
-    final beforePlan = _actionPlan;
+    if (scenarioUnavailable) {
+      return ProgressionResult(
+        beforeConfig: _config.clone(),
+        afterConfig: _config.clone(),
+        beforeResult: null,
+        afterResult: null,
+        beforePlan: null,
+        afterPlan: null,
+        changedCapabilities: [],
+        updateNature: update.nature,
+        hasStructuralChange: false,
+      );
+    }
 
-    // 2. Apply Update
+    final beforeConfig = _config.clone();
+    final beforeResult = _simulationResult!;
+    final beforePlan = _actionPlan!;
+
     if (update is ActionCompletedUpdate) {
       if (!_completedActionIds.contains(update.actionId)) {
         _completedActionIds.add(update.actionId);
@@ -159,17 +197,15 @@ class ResilienceSession extends ChangeNotifier {
 
     _config = newConfig;
 
-    // 3. Recalculate
     _graph = DataMapper.buildGraph(knowledgeJson, _config);
-    _simulationResult = B3Engine().runSimulation(_graph, _scenario);
-    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult, _config, _scenario);
-    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations, _simulationResult);
+    _simulationResult = B3Engine().runSimulation(_graph!, _scenario!);
+    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult!, _config, _scenario!);
+    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations!, _simulationResult!);
 
-    // 4. Compare BEFORE and AFTER
     final changedCaps = <CapabilityChange>[];
-    for (var cap in _graph.whereType<Capability>()) {
+    for (var cap in _graph!.whereType<Capability>()) {
       final beforeState = beforeResult.nodeStates[cap.id] ?? B3State.notAssessed;
-      final afterState = _simulationResult.nodeStates[cap.id] ?? B3State.notAssessed;
+      final afterState = _simulationResult!.nodeStates[cap.id] ?? B3State.notAssessed;
       if (beforeState != afterState) {
         changedCaps.add(CapabilityChange(
           capabilityId: cap.id,
@@ -185,9 +221,9 @@ class ResilienceSession extends ChangeNotifier {
       beforeConfig: beforeConfig,
       afterConfig: newConfig,
       beforeResult: beforeResult,
-      afterResult: _simulationResult,
+      afterResult: _simulationResult!,
       beforePlan: beforePlan,
-      afterPlan: _actionPlan,
+      afterPlan: _actionPlan!,
       changedCapabilities: changedCaps,
       updateNature: update.nature,
       hasStructuralChange: true,
