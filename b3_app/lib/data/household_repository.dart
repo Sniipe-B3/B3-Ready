@@ -29,14 +29,9 @@ class SharedPrefsHouseholdRepository implements HouseholdRepository {
 
   @override
   Future<void> save(HouseholdSnapshot snapshot) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonStr = jsonEncode(snapshot.toJson());
-      await prefs.setString(_key, jsonStr);
-    } catch (e) {
-      // If saving fails (e.g., storage full), we just log/ignore for this MVP.
-      // The session in memory stays valid.
-    }
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = jsonEncode(snapshot.toJson());
+    await prefs.setString(_key, jsonStr);
   }
 
   @override

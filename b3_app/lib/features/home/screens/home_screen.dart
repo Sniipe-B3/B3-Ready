@@ -145,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               initialConfig: _snapshot!.config,
                               initialCompletedActionIds: _snapshot!.completedActionIds,
                               repository: _repository,
+                              isRestored: true,
                             );
                             if (!mounted) return;
                             Navigator.push(

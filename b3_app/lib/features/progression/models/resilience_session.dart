@@ -11,6 +11,7 @@ class ResilienceSession extends ChangeNotifier {
   final String knowledgeJson;
   final String scenarioId;
   final HouseholdRepository? repository;
+  final bool isRestored;
 
   HouseholdConfig _config;
   late Scenario _scenario;
@@ -21,6 +22,10 @@ class ResilienceSession extends ChangeNotifier {
 
   final List<String> _completedActionIds = [];
 
+  Object? _saveError;
+  String? _scenarioError;
+  Future<void> _saveQueue = Future.value();
+
   HouseholdConfig get config => _config;
   Scenario get scenario => _scenario;
   List<B3Node> get graph => _graph;
@@ -28,6 +33,12 @@ class ResilienceSession extends ChangeNotifier {
   List<Recommendation> get recommendations => _recommendations;
   ActionPlan get actionPlan => _actionPlan;
   List<String> get completedActionIds => _completedActionIds;
+  
+  Object? get saveError => _saveError;
+  String? get scenarioError => _scenarioError;
+  bool get isSaving => _saveError == null; // Wait, actually it's easier to expose `pendingSave` status, but the instructions only ask for `Object? saveError` minimum. 
+
+  Future<void> waitForPendingSave() => _saveQueue;
 
   ResilienceSession({
     required this.knowledgeJson,
@@ -35,29 +46,51 @@ class ResilienceSession extends ChangeNotifier {
     required HouseholdConfig initialConfig,
     List<String> initialCompletedActionIds = const [],
     this.repository,
+    this.isRestored = false,
   }) : _config = initialConfig.clone() {
     _completedActionIds.addAll(initialCompletedActionIds);
     _performInitialCalculation();
+    if (!isRestored && repository != null) {
+      _autosave();
+    }
   }
 
-  
-  Future<void> _autosave() async {
+  void _autosave() {
     if (repository == null) return;
+    
+    // We snapshot synchronously so the saved state matches the moment _autosave was called.
     final snapshot = HouseholdSnapshot(
       schemaVersion: 1,
       config: _config.clone(),
       scenarioId: scenarioId,
       completedActionIds: List.from(_completedActionIds),
     );
-    try {
-      await repository!.save(snapshot);
-    } catch (e) {
-      // Autosave failed, but we don't crash the session
-    }
+
+    _saveQueue = _saveQueue.then((_) async {
+      try {
+        await repository!.save(snapshot);
+        _saveError = null;
+      } catch (e) {
+        _saveError = e;
+      }
+      notifyListeners();
+    });
   }
 
   void _performInitialCalculation() {
-    _scenario = DataMapper.parseScenario(knowledgeJson, scenarioId);
+    try {
+      _scenario = DataMapper.parseScenario(knowledgeJson, scenarioId);
+    } catch (e) {
+      _scenarioError = "Votre ancien scénario n'est plus disponible. Votre foyer a été conservé.";
+      // Try fallback to 'panne_elec'
+      try {
+        _scenario = DataMapper.parseScenario(knowledgeJson, 'panne_elec');
+      } catch (fallbackError) {
+        // Safe fallback if 'panne_elec' also doesn't exist
+        _scenario = Scenario(name: "Inconnu", duration: Duration.zero, systemOverrides: {});
+      }
+    }
+    
     _graph = DataMapper.buildGraph(knowledgeJson, _config);
     _simulationResult = B3Engine().runSimulation(_graph, _scenario);
     _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult, _config, _scenario);

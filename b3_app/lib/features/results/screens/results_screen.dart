@@ -43,6 +43,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         scenarioId: 'panne_elec',
         initialConfig: config,
         repository: SharedPrefsHouseholdRepository(),
+        isRestored: false,
       );
     }
 
@@ -102,6 +103,21 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 children: [
                   Text('Votre analyse', style: theme.textTheme.headlineLarge),
                   const SizedBox(height: 16),
+                  if (_session.scenarioError != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange),
+                      ),
+                      child: Text(
+                        _session.scenarioError!,
+                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.orange.shade900),
+                      ),
+                    ),
+                  ],
                   if (totalPoints > 0)
                     Text(
                       vigilanceText,
