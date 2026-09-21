@@ -54,7 +54,7 @@ void main() {
     expect(find.text('Panne réseau mobile'), findsOneWidget);
 
     // Tap panne_gaz
-    final tapGaz = find.widgetWithText(Card, 'Coupure réseau gaz');
+    final tapGaz = find.text('Coupure réseau gaz');
     await tester.tap(tapGaz, warnIfMissed: false);
     await tester.pumpAndSettle();
 
@@ -74,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Ouvrir panne_elec
-    final tapElec = find.widgetWithText(Card, 'Panne électrique prolongée');
+    final tapElec = find.text('Panne électrique prolongée');
     await tester.tap(tapElec, warnIfMissed: false);
     await tester.pumpAndSettle();
 

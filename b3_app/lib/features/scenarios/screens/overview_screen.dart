@@ -8,6 +8,7 @@ import '../../progression/models/resilience_session.dart';
 import '../../results/screens/results_screen.dart';
 import '../models/scenario_analysis.dart';
 import '../services/multi_scenario_analyzer.dart';
+import 'global_overview_screen.dart';
 
 class OverviewScreen extends StatefulWidget {
   final HouseholdConfig config;
@@ -88,6 +89,19 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
   }
 
+  Future<void> _refreshFromRepository() async {
+    final repo = widget.repository ?? SharedPrefsHouseholdRepository();
+    final snapshot = await repo.load();
+    if (snapshot != null && mounted) {
+      setState(() {
+        _currentConfig = snapshot.config;
+        _currentCompletedActionIds = snapshot.completedActionIds;
+        _isLoading = true;
+      });
+      await _runAnalysis();
+    }
+  }
+
   String _getScenarioEmoji(String id) {
     if (id == 'panne_elec') return '⚡';
     if (id == 'panne_gaz') return '🔥';
@@ -116,6 +130,29 @@ class _OverviewScreenState extends State<OverviewScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Votre foyer face aux perturbations', style: theme.textTheme.headlineSmall),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final changed = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => GlobalOverviewScreen(
+                          analyses: _analyses,
+                          config: _currentConfig,
+                          completedActionIds: _currentCompletedActionIds,
+                          repository: widget.repository ?? SharedPrefsHouseholdRepository(),
+                        ),
+                      ),
+                    );
+                    if (changed == true) {
+                      _refreshFromRepository();
+                    }
+                  },
+                  child: const Text('Vue globale du foyer'),
+                ),
+              ),
               const SizedBox(height: 24),
               ..._analyses.map((analysis) => _buildScenarioCard(analysis, theme)),
             ],
