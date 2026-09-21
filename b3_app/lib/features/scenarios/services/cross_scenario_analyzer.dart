@@ -18,11 +18,18 @@ class CrossScenarioAnalyzer {
     final Map<String, CrossScenarioAction> actionsMap = {};
 
     final kb = jsonDecode(knowledgeJson);
-    final nodesData = kb['nodes'] as List<dynamic>? ?? [];
-
+    
+    // Check all collections for the id
     String getNodeName(String id) {
-      final node = nodesData.firstWhere((n) => n['id'] == id, orElse: () => null);
-      return node != null ? node['name'] as String : id;
+      final collections = ['systems', 'resources', 'assets', 'capabilities'];
+      for (var col in collections) {
+        final list = kb[col] as List<dynamic>? ?? [];
+        final node = list.firstWhere((n) => n['id'] == id, orElse: () => null);
+        if (node != null) {
+          return node['name'] as String;
+        }
+      }
+      return id; // fallback
     }
 
     for (var analysis in validAnalyses) {
@@ -42,8 +49,6 @@ class CrossScenarioAnalyzer {
           // Causes
           final causes = result.getRootCauses(cap.id);
           for (var causeId in causes) {
-            // We only care about root causes that are actual nodes (not scenario/initial overrides directly if they map to a node, 
-            // wait, getRootCauses returns node IDs).
             if (!dependencies.containsKey(causeId)) {
               dependencies[causeId] = CommonDependencyIssue(
                 causeNodeId: causeId,
@@ -63,7 +68,6 @@ class CrossScenarioAnalyzer {
       // Uncertainties (Resources and Assets)
       for (var entry in result.nodeStates.entries) {
         if (entry.value == B3State.unknown || entry.value == B3State.notAssessed) {
-          // We already handled capabilities above, but handling them again is fine as it's a Set map
           uncertaintyStates.putIfAbsent(entry.key, () => {})[scenarioId] = entry.value;
         }
       }
@@ -111,7 +115,9 @@ class CrossScenarioAnalyzer {
       }
     }
 
-    final recurringIssues = capabilityStates.entries.map((e) {
+    final recurringIssues = capabilityStates.entries
+      .where((e) => e.value.length >= 2) // Must be at least 2 scenarios
+      .map((e) {
       return RecurringCapabilityIssue(
         capabilityId: e.key,
         capabilityName: getNodeName(e.key),
@@ -119,9 +125,10 @@ class CrossScenarioAnalyzer {
       );
     }).toList();
 
-    // Filter dependencies to those that are common (affecting multiple capabilities or multiple scenarios) or just all?
-    // The prompt says "Quelles dépendances reviennent souvent ?". We can just show all and sort.
-    final commonDependencies = dependencies.values.toList();
+    // Filter dependencies: must affect multiple capabilities OR multiple scenarios
+    final commonDependencies = dependencies.values
+      .where((d) => d.scenarioIds.length >= 2 || d.capabilityIds.length >= 2)
+      .toList();
     commonDependencies.sort((a, b) {
       int sCmp = b.scenarioIds.length.compareTo(a.scenarioIds.length);
       if (sCmp != 0) return sCmp;

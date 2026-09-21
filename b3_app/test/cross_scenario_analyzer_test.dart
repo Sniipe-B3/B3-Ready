@@ -110,8 +110,7 @@ void main() {
       );
       
       final overview = analyzer.analyze([a1, a2]);
-      expect(overview.recurringIssues.length, 1);
-      expect(overview.recurringIssues.first.scenarioIds.length, 1);
+      expect(overview.recurringIssues.isEmpty, isTrue); // FAILED in 1, MAINTAINED in 1 => NOT recurring
     });
 
     test('TEST C - UNKNOWN SÉPARÉ', () {
@@ -131,8 +130,7 @@ void main() {
       );
       
       final overview = analyzer.analyze([a1, a2]);
-      expect(overview.recurringIssues.length, 1);
-      expect(overview.recurringIssues.first.scenarioIds.length, 1); // Only FAILED
+      expect(overview.recurringIssues.isEmpty, isTrue); // FAILED in 1, UNKNOWN in 1 => NOT recurring
       
       expect(overview.uncertainties.length, 1);
       expect(overview.uncertainties.first.nodeId, 'cuisiner');
@@ -140,7 +138,7 @@ void main() {
       expect(overview.uncertainties.first.unknownScenarioIds.first, 'panne_gaz');
     });
 
-    test('TEST D - COMMON DEPENDENCY', () {
+    test('TEST D - COMMON DEPENDENCY (Multiple Caps)', () {
       final a1 = _mockAnalysis(
         scenarioId: 'panne_elec',
         capStates: {'chauffer': B3State.failed, 'acceder_internet': B3State.failed},
@@ -157,6 +155,23 @@ void main() {
       expect(overview.commonDependencies.first.causeNodeId, 'elec');
       expect(overview.commonDependencies.first.capabilityIds.contains('chauffer'), isTrue);
       expect(overview.commonDependencies.first.capabilityIds.contains('acceder_internet'), isTrue);
+    });
+
+    test('TEST D2 - COMMON DEPENDENCY (Multiple Scenarios)', () {
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {});
+      
+      final overview = analyzer.analyze([a1, a2]);
+      expect(overview.commonDependencies.length, 1);
+      expect(overview.commonDependencies.first.causeNodeId, 'elec');
+      expect(overview.commonDependencies.first.scenarioIds.length, 2);
+    });
+
+    test('TEST D3 - NOT COMMON DEPENDENCY', () {
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {});
+      
+      final overview = analyzer.analyze([a1]);
+      expect(overview.commonDependencies.isEmpty, isTrue); // Only 1 capability in 1 scenario
     });
 
     test('TEST E - CAUSE COMMUNE != ACTION COMMUNE', () {
@@ -242,24 +257,84 @@ void main() {
       expect(unc.notAssessedScenarioIds, ['s2']);
     });
 
-    test('TEST 3 - ACTIONIDENTITY TARGETS NULL', () {
-      // Two actions without targetAssetId and targetResourceId but different capabilityIds
-      final i1 = ActionPlanItem(id: 'x1', title: 'Learn 1', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap1'}, causeNodeIds: {});
-      final i2 = ActionPlanItem(id: 'x2', title: 'Learn 2', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap2'}, causeNodeIds: {});
+    test('TEST 3 - ACTIONIDENTITY TARGETS NULL (Même type, même target, causes diff = MÊME ACTION)', () {
+      // Si deux recommandations ont même type, même capabilityId mais causes différentes, 
+      // elles génèrent la même action dans ActionPlanBuilder (c.f. audit).
+      // CrossScenarioAnalyzer doit donc les fusionner !
+      final i1 = ActionPlanItem(id: 'x1', title: 'Learn 1', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap1'}, causeNodeIds: {'cause1'});
+      final i2 = ActionPlanItem(id: 'x2', title: 'Learn 2', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap1'}, causeNodeIds: {'cause2'});
       
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1, i2], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {});
+      
+      final overview = analyzer.analyze([a1, a2]);
+      expect(overview.actions.length, 1); // Fusionnées car même type et même fallbackTarget (cap1)
+      expect(overview.actions.first.causeNodeIds, {'cause1', 'cause2'}); // Les causes sont agrégées
+    });
+
+    test('TEST K - INVALID ANALYSIS', () {
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cuisiner': B3State.failed}, causes: {}, items: [], otherStates: {});
+      final a2 = ScenarioAnalysis.error(scenarioId: 's2', scenarioName: 's2', error: 'boom');
+      final a3 = _mockAnalysis(scenarioId: 's3', capStates: {'cuisiner': B3State.failed}, causes: {}, items: [], otherStates: {});
+      
+      final overview = analyzer.analyze([a1, a2, a3]);
+      expect(overview.recurringIssues.length, 1); // S1 and S3
+      expect(overview.recurringIssues.first.scenarioIds.length, 2);
+    });
+
+    test('TEST L - ANTI-INVENTION', () {
+      // Only one action targetAssetId="radio"
+      final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'acceder_internet'}, causeNodeIds: {}, targetAssetId: 'radio');
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
       
       final overview = analyzer.analyze([a1]);
-      expect(overview.actions.length, 2); // They must not merge into LEARN_null
+      expect(overview.actions.length, 1);
+      expect(overview.actions.first.targetAssetId, 'radio');
+      // No poele_bois should exist
+      expect(overview.actions.any((a) => a.targetAssetId == 'poele_bois'), isFalse);
+    });
+
+    test('TEST I - DETERMINISME', () {
+      final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'acceder_internet'}, causeNodeIds: {}, targetAssetId: 'radio');
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {});
       
-      // Same action structually identical must merge
-      final i3 = ActionPlanItem(id: 'x3', title: 'Learn 1', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap1'}, causeNodeIds: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i3], otherStates: {});
-      
+      final overview1 = analyzer.analyze([a1, a2]);
       final overview2 = analyzer.analyze([a1, a2]);
-      expect(overview2.actions.length, 2); // cap1 merged, cap2 remains
-      final cap1Action = overview2.actions.firstWhere((a) => a.capabilityIds.contains('cap1'));
-      expect(cap1Action.scenarioIds.length, 2);
+      
+      expect(overview1.recurringIssues.length, overview2.recurringIssues.length);
+      expect(overview1.recurringIssues.first.capabilityId, overview2.recurringIssues.first.capabilityId);
+      
+      expect(overview1.actions.length, overview2.actions.length);
+      expect(overview1.actions.first.id, overview2.actions.first.id);
+    });
+
+    test('TEST J - IMMUTABILITE', () {
+      final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'acceder_internet'}, causeNodeIds: {}, targetAssetId: 'radio');
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {});
+      
+      final oldActionsLength = a1.actionPlan!.items.length;
+      final oldGraphLength = a1.graph!.length;
+      
+      analyzer.analyze([a1]);
+      
+      expect(a1.actionPlan!.items.length, oldActionsLength);
+      expect(a1.graph!.length, oldGraphLength);
+    });
+
+    test('TEST O - ORDRE GLOBAL DETERMINISTE', () {
+      // Actions with SAME priority, SAME type, SAME frequency, SAME capabilities length
+      final i1 = ActionPlanItem(id: 'B', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'c1'}, causeNodeIds: {}, targetAssetId: 'B_asset');
+      final i2 = ActionPlanItem(id: 'A', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'c1'}, causeNodeIds: {}, targetAssetId: 'A_asset');
+      final i3 = ActionPlanItem(id: 'C', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'c1'}, causeNodeIds: {}, targetAssetId: 'C_asset');
+      
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1, i2, i3], otherStates: {});
+      
+      final overview = analyzer.analyze([a1]);
+      
+      expect(overview.actions[0].targetAssetId, 'A_asset');
+      expect(overview.actions[1].targetAssetId, 'B_asset');
+      expect(overview.actions[2].targetAssetId, 'C_asset');
     });
   });
 }

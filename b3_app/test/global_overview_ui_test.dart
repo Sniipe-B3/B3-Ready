@@ -12,7 +12,7 @@ void main() {
   testWidgets('Global Overview End-to-End Test', (WidgetTester tester) async {
     final initialSnapshot = HouseholdSnapshot(
       config: HouseholdConfig(
-        ownedAssets: ['radiateur_elec', 'plaques_elec'],
+        ownedAssets: ['radiateur_elec', 'plaque_elec'],
         ownedResources: [],
         resourceDurations: {},
         assessedCapabilities: {'chauffer', 'cuisiner'},
@@ -42,20 +42,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Check sections exist
-    expect(find.text('Fragilités récurrentes'), findsOneWidget);
+    expect(find.text('Fragilités récurrentes'), findsNothing); // Aucune car vulnérable dans 1 seul scénario !
     expect(find.text('Dépendances communes'), findsOneWidget);
     expect(find.text('Actions utiles dans plusieurs scénarios'), findsOneWidget);
-
-    // Tap on capability (cuisiner)
-    final btnCuisiner = find.text('cuisiner');
-    expect(btnCuisiner, findsWidgets);
-    await tester.tap(btnCuisiner.first);
-    await tester.pumpAndSettle();
-    expect(find.text('Vulnérable'), findsWidgets);
     
-    // Close modal by tapping far away
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
+    // Noms humains (elec -> Réseau Électrique)
+    expect(find.text('elec'), findsNothing);
+    expect(find.text('cuisiner'), findsNothing);
+    expect(find.text('Réseau Électrique'), findsWidgets);
 
     final btnVoirAction = find.text("Voir l'action");
     expect(btnVoirAction, findsWidgets);
