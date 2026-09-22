@@ -13,7 +13,9 @@ const String appKnowledgeBase = '''
     {"id": "granules", "name": "Granulés de bois (pellets)"},
     {"id": "charbon", "name": "Charbon de bois"},
     {"id": "batterie", "name": "Batterie rechargeable"},
-    {"id": "reserve_eau", "name": "Réserve d'eau (bouteilles/cuve)"}
+    {"id": "reserve_eau", "name": "Réserve d'eau (bouteilles/cuve)"},
+    {"id": "stock_energie_portable", "name": "Stock d'énergie portable"},
+    {"id": "piles", "name": "Piles / Batterie amovible"}
   ],
   "assets": [
     {"id": "plaque_elec", "name": "Plaque électrique", "requires": ["elec"]},
@@ -38,7 +40,14 @@ const String appKnowledgeBase = '''
     {"id": "stock_eau", "name": "Stock d'eau", "requires": ["reserve_eau"]},
 
     {"id": "box_internet", "name": "Box Internet", "requires": ["internet", "elec"]},
-    {"id": "smartphone", "name": "Smartphone", "requires": ["reseau_mobile", "batterie"]}
+    {"id": "smartphone", "name": "Smartphone", "requires": ["reseau_mobile", "batterie"]},
+    {"id": "refrigerateur", "name": "Réfrigérateur", "requires": ["elec"]},
+    {"id": "congelateur", "name": "Congélateur", "requires": ["elec"]},
+    {"id": "batterie_externe", "name": "Batterie externe (Powerbank)", "requires": ["stock_energie_portable"]},
+    {"id": "station_energie_portable", "name": "Station d'énergie portable", "requires": ["stock_energie_portable"]},
+    {"id": "wc_chasse_eau", "name": "WC avec chasse d'eau", "requires": ["eau"]},
+    {"id": "tv_box", "name": "Télévision / Box", "requires": ["elec", "internet"]},
+    {"id": "radio_autonome", "name": "Radio autonome (piles / solaire / manivelle)", "requires": []}
   ],
   "capabilities": [
     {"id": "cuisiner", "name": "Cuisiner", "assets": ["plaque_elec", "four_elec", "gaziniere_ville", "gaziniere_bouteille", "rechaud_gaz", "cuisiniere_bois", "barbecue"]},
@@ -46,7 +55,11 @@ const String appKnowledgeBase = '''
     {"id": "chauffer", "name": "Chauffer le logement", "assets": ["radiateur_elec", "pompe_chaleur", "chaudiere_gaz", "chaudiere_bois", "poele_bois", "poele_granules"]},
     {"id": "disposer_eau", "name": "Disposer d'eau", "assets": ["robinet_eau", "stock_eau"]},
     {"id": "acceder_internet", "name": "Accéder à Internet", "assets": ["box_internet"]},
-    {"id": "communiquer", "name": "Communiquer", "assets": ["smartphone"]}
+    {"id": "communiquer", "name": "Communiquer", "assets": ["smartphone"]},
+    {"id": "conserver_aliments", "name": "Conserver les aliments", "assets": ["refrigerateur", "congelateur"]},
+    {"id": "recharger_appareils", "name": "Recharger les appareils essentiels", "assets": ["batterie_externe", "station_energie_portable"]},
+    {"id": "utiliser_sanitaires", "name": "Utiliser les sanitaires", "assets": ["wc_chasse_eau"]},
+    {"id": "recevoir_informations", "name": "Recevoir des informations importantes", "assets": ["smartphone", "tv_box", "radio_autonome"]}
   ],
   "scenarios": [
     {"id": "panne_elec", "name": "Panne électrique prolongée", "duration": 48, "overrides": {"elec": "failed"}},

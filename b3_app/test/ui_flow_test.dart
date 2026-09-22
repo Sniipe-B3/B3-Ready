@@ -81,8 +81,26 @@ void main() {
     await tester.tap(find.text('Box Internet fixe'));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
     await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
 
-    // We expect it to finish and go to Overview Screen
+    // Drain all remaining questions
+    while (find.text('Résilience par scénario').evaluate().isEmpty) {
+       if (find.text('Continuer').evaluate().isNotEmpty) {
+          await tester.tap(find.text('Continuer').first);
+       } else if (find.text('Oui').evaluate().isNotEmpty) {
+          await tester.tap(find.text('Oui').first);
+       } else if (find.textContaining('Non').evaluate().isNotEmpty) {
+          await tester.tap(find.textContaining('Non').first);
+       } else if (find.text('Je ne sais pas').evaluate().isNotEmpty) {
+          await tester.tap(find.text('Je ne sais pas').first);
+       } else {
+          break;
+       }
+       await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
+    }
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
 
@@ -122,7 +140,7 @@ void main() {
     expect(find.textContaining('actions prioritaires'), findsOneWidget);
     
     // Vérifie les priorités traduites (pas d'enums)
-    expect(find.text('ESSENTIEL'), findsOneWidget);
+    expect(find.text('ESSENTIEL'), findsWidgets);
     
     // Anti-jargon plan
     final planStr = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
