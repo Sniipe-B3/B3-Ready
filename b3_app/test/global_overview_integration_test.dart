@@ -159,11 +159,4 @@ void main() {
     // scenarioId ne doit PAS être "panne_elec", il doit être resté "original" car pas d'autosave intempestif.
     expect(snapshot!.scenarioId, 'original');
   });
-  test('TEST O - NO SCORE', () {
-    // Asserting model compliance with the no score requirement
-    final impact = DependencyImpact(causeNodeId: 'c', causeNodeName: 'c', affectedCapabilityIds: {}, affectedScenarioIds: {}, maintainedCapabilityIds: {}, vulnerableCapabilityIds: {}, uncertainCapabilityIds: {}, relatedActions: []);
-    final str = impact.toString();
-    expect(str.toLowerCase().contains('score'), isFalse);
-    expect(str.toLowerCase().contains('percentage'), isFalse);
-  });
 }

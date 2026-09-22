@@ -215,10 +215,17 @@ void main() {
       expect(impacts1.length, impacts2.length);
       expect(impacts1.first.causeNodeId, impacts2.first.causeNodeId);
       expect(impacts1.first.relatedActions.length, impacts2.first.relatedActions.length);
-      expect(impacts1.first.affectedCapabilityIds, impacts2.first.affectedCapabilityIds);
-      expect(impacts1.first.vulnerableCapabilityIds, impacts2.first.vulnerableCapabilityIds);
-      expect(impacts1.first.maintainedCapabilityIds, impacts2.first.maintainedCapabilityIds);
-      expect(impacts1.first.uncertainCapabilityIds, impacts2.first.uncertainCapabilityIds);
+      
+      // Verification de l'ordre exact et de l'identité des collections
+      expect(impacts1.first.affectedCapabilityIds.toList(), equals(impacts2.first.affectedCapabilityIds.toList()));
+      expect(impacts1.first.vulnerableCapabilityIds.toList(), equals(impacts2.first.vulnerableCapabilityIds.toList()));
+      expect(impacts1.first.maintainedCapabilityIds.toList(), equals(impacts2.first.maintainedCapabilityIds.toList()));
+      expect(impacts1.first.uncertainCapabilityIds.toList(), equals(impacts2.first.uncertainCapabilityIds.toList()));
+      expect(impacts1.first.affectedScenarioIds.toList(), equals(impacts2.first.affectedScenarioIds.toList()));
+      expect(
+        impacts1.first.relatedActions.map((a) => a.crossScenarioActionId).toList(),
+        equals(impacts2.first.relatedActions.map((a) => a.crossScenarioActionId).toList())
+      );
     });
 
     test('TEST J - IMMUTABILITÉ', () {
@@ -227,11 +234,19 @@ void main() {
         capStates: {'chauffer': B3State.failed, 'cuisiner': B3State.failed},
         causes: {'chauffer': ['elec'], 'cuisiner': ['elec']},
       );
+      final action1 = _mockAction('poele_bois', ['chauffer'], ['elec']);
       
       final initialCaps = Map.of(a1.simulationResult!.nodeStates);
-      analyzer.analyze([a1], []);
+      final initialActionCaps = Set.of(action1.capabilityIds);
+      final initialActionCauses = Set.of(action1.causeNodeIds);
+      final initialActionScenarios = Set.of(action1.scenarioIds);
+
+      analyzer.analyze([a1], [action1]);
       
-      expect(a1.simulationResult!.nodeStates, initialCaps);
+      expect(a1.simulationResult!.nodeStates, equals(initialCaps));
+      expect(action1.capabilityIds, equals(initialActionCaps));
+      expect(action1.causeNodeIds, equals(initialActionCauses));
+      expect(action1.scenarioIds, equals(initialActionScenarios));
     });
 
     test('TEST K - INVALID ANALYSIS', () {

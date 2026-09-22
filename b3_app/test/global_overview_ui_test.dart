@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import "package:b3_app/features/scenarios/models/dependency_impact.dart";
+import "package:b3_app/features/scenarios/models/global_household_overview.dart";
+import "package:b3_app/features/scenarios/screens/dependency_impact_card.dart";
 import 'package:b3_app/app/app.dart';
 import 'package:b3_engine/b3_engine.dart';
 import 'package:b3_app/data/household_snapshot.dart';
@@ -70,5 +73,38 @@ void main() {
 
     // It should pop back to OverviewScreen (since GlobalOverviewScreen also popped itself)
     expect(find.text('Votre foyer face aux perturbations'), findsOneWidget);
+  });
+  testWidgets("TEST O - NO SCORE UI", (WidgetTester tester) async {
+    final impact = DependencyImpact(
+      causeNodeId: 'reseau_gaz',
+      causeNodeName: 'Réseau Gaz de ville',
+      affectedCapabilityIds: {'chauffer'},
+      affectedScenarioIds: {'s1'},
+      maintainedCapabilityIds: {},
+      vulnerableCapabilityIds: {'chauffer'},
+      uncertainCapabilityIds: {},
+      relatedActions: [],
+    );
+    
+    final overview = GlobalHouseholdOverview(
+      recurringIssues: [],
+      dependencyImpacts: [impact],
+      actions: [],
+      uncertainties: [],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: DependencyImpactCard(
+          impact: impact,
+          overview: overview,
+          onDetailTap: () {},
+          getCapabilityName: (id) => 'Chauffer le logement',
+        ),
+      ),
+    ));
+    
+    // Audit explicite des mots-clés proscrits
+    expect(find.textContaining(RegExp(r'(score|80%|/100|niveau de résilience|%|percent)', caseSensitive: false)), findsNothing);
   });
 }
