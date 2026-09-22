@@ -15,7 +15,7 @@ void main() {
       analyzer = DependencyImpactAnalyzer(appKnowledgeBase);
     });
 
-    ScenarioAnalysis _mockAnalysis({
+    ScenarioAnalysis mockAnalysis({
       required String scenarioId,
       required Map<String, B3State> capStates,
       required Map<String, List<String>> causes,
@@ -71,7 +71,7 @@ void main() {
       );
     }
 
-    CrossScenarioAction _mockAction(String id, List<String> capIds, List<String> causeIds) {
+    CrossScenarioAction mockAction(String id, List<String> capIds, List<String> causeIds) {
       return CrossScenarioAction(
         id: id,
         title: id,
@@ -85,7 +85,7 @@ void main() {
     }
 
     test('TEST A - DEPENDENCY IMPACT BASIC', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'acceder_internet': B3State.failed},
         causes: {'chauffer': ['elec'], 'acceder_internet': ['elec']},
@@ -99,7 +99,7 @@ void main() {
     });
 
     test('TEST B - MAINTAINED NON VULNERABLE', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.maintained, 'acceder_internet': B3State.failed},
         causes: {'chauffer': ['elec'], 'acceder_internet': ['elec']},
@@ -113,14 +113,14 @@ void main() {
     });
 
     test('TEST C - UNKNOWN', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.unknown},
         causes: {'chauffer': ['elec']},
       );
       // Since it's only 1 capability in 1 scenario, it might be filtered out if it doesn't meet the >=2 threshold.
       // Let's add a second one.
-      final a2 = _mockAnalysis(
+      final a2 = mockAnalysis(
         scenarioId: 's2',
         capStates: {'chauffer': B3State.unknown},
         causes: {'chauffer': ['elec']},
@@ -133,12 +133,12 @@ void main() {
     });
 
     test('TEST D - ACTION RELATION', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'acceder_internet': B3State.failed},
         causes: {'chauffer': ['elec'], 'acceder_internet': ['elec']},
       );
-      final action = _mockAction('poele_bois', ['chauffer'], ['elec']);
+      final action = mockAction('poele_bois', ['chauffer'], ['elec']);
       
       final impacts = analyzer.analyze([a1], [action]);
       expect(impacts.first.relatedActions.length, 1);
@@ -147,12 +147,12 @@ void main() {
     });
 
     test('TEST E - PAS DE FAUX LIEN', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'cuisiner': B3State.failed, 'acceder_internet': B3State.failed},
         causes: {'cuisiner': ['elec'], 'acceder_internet': ['elec']},
       );
-      final action = _mockAction('rechaud_gaz', ['cuisiner'], ['elec']);
+      final action = mockAction('rechaud_gaz', ['cuisiner'], ['elec']);
       
       final impacts = analyzer.analyze([a1], [action]);
       expect(impacts.first.relatedActions.length, 1);
@@ -161,24 +161,24 @@ void main() {
     });
 
     test('TEST F - ACTION SANS CAUSE', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'acceder_internet': B3State.failed},
         causes: {'chauffer': ['elec'], 'acceder_internet': ['elec']},
       );
-      final action = _mockAction('random_action', ['chauffer'], []);
+      final action = mockAction('random_action', ['chauffer'], []);
       
       final impacts = analyzer.analyze([a1], [action]);
       expect(impacts.first.relatedActions.isEmpty, isTrue);
     });
 
     test('TEST G - PLUSIEURS SCÉNARIOS', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed},
         causes: {'chauffer': ['elec']},
       );
-      final a2 = _mockAnalysis(
+      final a2 = mockAnalysis(
         scenarioId: 's2',
         capStates: {'chauffer': B3State.failed},
         causes: {'chauffer': ['elec']},
@@ -188,26 +188,26 @@ void main() {
     });
 
     test('TEST H - PLUSIEURS ACTIONS', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'cuisiner': B3State.failed},
         causes: {'chauffer': ['elec'], 'cuisiner': ['elec']},
       );
-      final action1 = _mockAction('poele_bois', ['chauffer'], ['elec']);
-      final action2 = _mockAction('rechaud_gaz', ['cuisiner'], ['elec']);
+      final action1 = mockAction('poele_bois', ['chauffer'], ['elec']);
+      final action2 = mockAction('rechaud_gaz', ['cuisiner'], ['elec']);
       
       final impacts = analyzer.analyze([a1], [action1, action2]);
       expect(impacts.first.relatedActions.length, 2);
     });
 
     test('TEST I - DÉTERMINISME', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'cuisiner': B3State.failed},
         causes: {'chauffer': ['elec'], 'cuisiner': ['elec']},
       );
-      final action1 = _mockAction('poele_bois', ['chauffer'], ['elec']);
-      final action2 = _mockAction('rechaud_gaz', ['cuisiner'], ['elec']);
+      final action1 = mockAction('poele_bois', ['chauffer'], ['elec']);
+      final action2 = mockAction('rechaud_gaz', ['cuisiner'], ['elec']);
       
       final impacts1 = analyzer.analyze([a1], [action1, action2]);
       final impacts2 = analyzer.analyze([a1], [action1, action2]);
@@ -229,12 +229,12 @@ void main() {
     });
 
     test('TEST J - IMMUTABILITÉ', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'cuisiner': B3State.failed},
         causes: {'chauffer': ['elec'], 'cuisiner': ['elec']},
       );
-      final action1 = _mockAction('poele_bois', ['chauffer'], ['elec']);
+      final action1 = mockAction('poele_bois', ['chauffer'], ['elec']);
       
       final initialCaps = Map.of(a1.simulationResult!.nodeStates);
       final initialActionCaps = Set.of(action1.capabilityIds);
@@ -250,7 +250,7 @@ void main() {
     });
 
     test('TEST K - INVALID ANALYSIS', () {
-      final a1 = _mockAnalysis(
+      final a1 = mockAnalysis(
         scenarioId: 's1',
         capStates: {'chauffer': B3State.failed, 'cuisiner': B3State.failed},
         causes: {'chauffer': ['elec'], 'cuisiner': ['elec']},

@@ -14,8 +14,8 @@ const String appKnowledgeBase = '''
     {"id": "charbon", "name": "Charbon de bois"},
     {"id": "batterie", "name": "Batterie rechargeable"},
     {"id": "reserve_eau", "name": "Réserve d'eau (bouteilles/cuve)"},
-    {"id": "stock_energie_portable", "name": "Stock d'énergie portable"},
-    {"id": "piles", "name": "Piles / Batterie amovible"}
+    {"id": "charge_powerbank", "name": "Charge powerbank"},
+    {"id": "charge_station_energie", "name": "Charge station d'énergie"}
   ],
   "assets": [
     {"id": "plaque_elec", "name": "Plaque électrique", "requires": ["elec"]},
@@ -43,11 +43,11 @@ const String appKnowledgeBase = '''
     {"id": "smartphone", "name": "Smartphone", "requires": ["reseau_mobile", "batterie"]},
     {"id": "refrigerateur", "name": "Réfrigérateur", "requires": ["elec"]},
     {"id": "congelateur", "name": "Congélateur", "requires": ["elec"]},
-    {"id": "batterie_externe", "name": "Batterie externe (Powerbank)", "requires": ["stock_energie_portable"]},
-    {"id": "station_energie_portable", "name": "Station d'énergie portable", "requires": ["stock_energie_portable"]},
+    {"id": "batterie_externe", "name": "Batterie externe (Powerbank)", "requires": ["charge_powerbank"]},
+    {"id": "station_energie_portable", "name": "Station d'énergie portable", "requires": ["charge_station_energie"]},
     {"id": "wc_chasse_eau", "name": "WC avec chasse d'eau", "requires": ["eau"]},
     {"id": "tv_box", "name": "Télévision / Box", "requires": ["elec", "internet"]},
-    {"id": "radio_autonome", "name": "Radio autonome (piles / solaire / manivelle)", "requires": []}
+    {"id": "radio_manivelle_solaire", "name": "Radio autonome à manivelle / solaire", "requires": []}
   ],
   "capabilities": [
     {"id": "cuisiner", "name": "Cuisiner", "assets": ["plaque_elec", "four_elec", "gaziniere_ville", "gaziniere_bouteille", "rechaud_gaz", "cuisiniere_bois", "barbecue"]},
@@ -59,7 +59,7 @@ const String appKnowledgeBase = '''
     {"id": "conserver_aliments", "name": "Conserver les aliments", "assets": ["refrigerateur", "congelateur"]},
     {"id": "recharger_appareils", "name": "Recharger les appareils essentiels", "assets": ["batterie_externe", "station_energie_portable"]},
     {"id": "utiliser_sanitaires", "name": "Utiliser les sanitaires", "assets": ["wc_chasse_eau"]},
-    {"id": "recevoir_informations", "name": "Recevoir des informations importantes", "assets": ["smartphone", "tv_box", "radio_autonome"]}
+    {"id": "recevoir_informations", "name": "Recevoir des informations importantes", "assets": ["smartphone", "tv_box", "radio_manivelle_solaire"]}
   ],
   "scenarios": [
     {"id": "panne_elec", "name": "Panne électrique prolongée", "duration": 48, "overrides": {"elec": "failed"}},

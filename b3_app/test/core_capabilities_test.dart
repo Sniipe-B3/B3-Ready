@@ -17,7 +17,7 @@ void main() {
     
   });
 
-  HouseholdConfig _buildConfig({
+  HouseholdConfig buildConfig({
     List<String> assets = const [],
     List<String> resources = const [],
     Map<String, Duration> resourceDurations = const {},
@@ -37,7 +37,7 @@ void main() {
   }
 
   test('TEST A — REFRIGERATEUR', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['refrigerateur'],
       assessedCapabilities: {'conserver_aliments'},
     );
@@ -48,7 +48,7 @@ void main() {
   });
 
   test('TEST B — PAS D INVENTION RÉFRIGÉRATEUR', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: [],
       assessedCapabilities: {'conserver_aliments'},
     );
@@ -61,12 +61,12 @@ void main() {
   });
 
   test('TEST C — BATTERIE CONNUE', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['batterie_externe'],
-      resources: ['stock_energie_portable'],
-      resourceDurations: {'stock_energie_portable': Duration(hours: 72)},
+      resources: ['charge_powerbank'],
+      resourceDurations: {'charge_powerbank': const Duration(hours: 72)},
       assessedCapabilities: {'recharger_appareils'},
-      assessedResources: {'stock_energie_portable'},
+      assessedResources: {'charge_powerbank'},
     );
     final results = multiAnalyzer.analyze(config, ['panne_elec']);
     final res = results.first.simulationResult!;
@@ -74,10 +74,10 @@ void main() {
   });
 
   test('TEST D — BATTERIE UNKNOWN', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['batterie_externe'],
-      resources: ['stock_energie_portable'],
-      unknownResources: {'stock_energie_portable'},
+      resources: ['charge_powerbank'],
+      unknownResources: {'charge_powerbank'},
       assessedCapabilities: {'recharger_appareils'},
     );
     final results = multiAnalyzer.analyze(config, ['panne_elec']);
@@ -86,10 +86,10 @@ void main() {
   });
 
   test('TEST E — BATTERIE ABSENTE', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['batterie_externe'],
       resources: [],
-      assessedResources: {'stock_energie_portable'},
+      assessedResources: {'charge_powerbank'},
       assessedCapabilities: {'recharger_appareils'},
     );
     final results = multiAnalyzer.analyze(config, ['panne_elec']);
@@ -99,7 +99,7 @@ void main() {
   });
 
   test('TEST F — SANITAIRES', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['wc_chasse_eau'],
       assessedCapabilities: {'utiliser_sanitaires'},
     );
@@ -110,12 +110,12 @@ void main() {
   });
 
   test('TEST G — PAS DE CASCADE FAUSSE', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['wc_chasse_eau', 'refrigerateur', 'batterie_externe', 'plaque_elec'],
-      resources: ['stock_energie_portable'],
-      resourceDurations: {'stock_energie_portable': Duration(hours: 72)},
+      resources: ['charge_powerbank'],
+      resourceDurations: {'charge_powerbank': const Duration(hours: 72)},
       assessedCapabilities: {'utiliser_sanitaires', 'conserver_aliments', 'recharger_appareils', 'cuisiner'},
-      assessedResources: {'stock_energie_portable'},
+      assessedResources: {'charge_powerbank'},
     );
     final results = multiAnalyzer.analyze(config, ['coupure_eau']);
     final res = results.first.simulationResult!;
@@ -125,12 +125,12 @@ void main() {
   });
 
   test('TEST H — INFORMATION + INTERNET', () {
-    final config = _buildConfig(
-      assets: ['box_internet', 'radio_autonome'],
-      resources: ['stock_energie_portable'],
-      resourceDurations: {'stock_energie_portable': Duration(hours: 72)},
+    final config = buildConfig(
+      assets: ['box_internet', 'radio_manivelle_solaire'],
+      resources: ['charge_powerbank'],
+      resourceDurations: {'charge_powerbank': const Duration(hours: 72)},
       assessedCapabilities: {'acceder_internet', 'recevoir_informations'},
-      assessedResources: {'stock_energie_portable'},
+      assessedResources: {'charge_powerbank'},
     );
     final results = multiAnalyzer.analyze(config, ['panne_internet']);
     final res = results.first.simulationResult!;
@@ -139,7 +139,7 @@ void main() {
   });
 
   test('TEST I — INFORMATION SANS ALTERNATIVE', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['smartphone'],
       assessedCapabilities: {'recevoir_informations'},
     );
@@ -149,10 +149,10 @@ void main() {
   });
 
   test('TEST J — UNKNOWN INFO', () {
-    final config = _buildConfig(
-      assets: ['radio_autonome'],
-      resources: ['stock_energie_portable'],
-      unknownResources: {'stock_energie_portable'},
+    final config = buildConfig(
+      assets: ['radio_manivelle_solaire'],
+      resources: ['charge_powerbank'],
+      unknownResources: {'charge_powerbank'},
       assessedCapabilities: {'recevoir_informations'},
     );
     final results = multiAnalyzer.analyze(config, ['panne_elec']);
@@ -161,7 +161,7 @@ void main() {
   });
 
   test('TEST K — MULTI-SCENARIO', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['refrigerateur', 'wc_chasse_eau'],
       assessedCapabilities: {'conserver_aliments', 'utiliser_sanitaires'},
     );
@@ -175,7 +175,7 @@ void main() {
 
   test('TEST L — GLOBAL OVERVIEW', () {
     // If a capability is FAILED in >= 2 scenarios, CrossScenarioAnalyzer creates a RecurringCapabilityIssue
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['box_internet'],
       assessedCapabilities: {'acceder_internet'},
     );
@@ -186,12 +186,12 @@ void main() {
   });
 
   test('TEST M — DEPENDENCY IMPACT', () {
-    final config = _buildConfig(
+    final config = buildConfig(
       assets: ['refrigerateur', 'batterie_externe', 'plaque_elec'],
-      resources: ['stock_energie_portable'],
-      resourceDurations: {'stock_energie_portable': Duration(hours: 72)},
+      resources: ['charge_powerbank'],
+      resourceDurations: {'charge_powerbank': const Duration(hours: 72)},
       assessedCapabilities: {'conserver_aliments', 'recharger_appareils', 'cuisiner'},
-      assessedResources: {'stock_energie_portable'},
+      assessedResources: {'charge_powerbank'},
     );
     final results = multiAnalyzer.analyze(config, ['panne_elec', 'panne_gaz', 'coupure_eau', 'panne_internet', 'panne_mobile']);
     final overview = crossAnalyzer.analyze(results);
@@ -231,7 +231,7 @@ void main() {
     
     final config = state.toHouseholdConfig(questions);
     final nodes = DataMapper.buildGraph(appKnowledgeBase, config);
-    final bat = nodes.firstWhere((n) => n.id == 'stock_energie_portable');
+    final bat = nodes.firstWhere((n) => n.id == 'charge_powerbank');
     
     expect(bat.overriddenState, equals(B3State.unknown));
     
@@ -239,5 +239,72 @@ void main() {
     final san = nodes.firstWhere((n) => n.id == 'utiliser_sanitaires');
     expect((san as Capability).overriddenState, equals(B3State.notAssessed));
   });
-
+  test('TEST 7 — DIAGNOSTIC POWERBANK/STATION', () {
+    final questions = (jsonDecode(appDiagnosticQuestionsJson) as List).map((q) => DiagnosticQuestion.fromJson(q)).toList();
+    final state = DiagnosticState();
+    
+    // Possède powerbank + station
+    state.answerMultiple('q_charge_main', ['opt_powerbank', 'opt_powerstation']);
+    
+    // powerbank chargée
+    state.answerQuestion('q_charge_bat_status', 'opt_charge_yes');
+    
+    // station vide
+    state.answerQuestion('q_charge_station_status', 'opt_station_no');
+    
+    final config = state.toHouseholdConfig(questions);
+    
+    expect(config.ownedResources.contains('charge_powerbank'), isTrue);
+    expect(config.ownedResources.contains('charge_station_energie'), isFalse);
+    expect(config.assessedResources.contains('charge_powerbank'), isTrue);
+    expect(config.assessedResources.contains('charge_station_energie'), isTrue);
+    
+    // Aucune duration inventée
+    expect(config.resourceDurations, isEmpty);
+  });
+  
+  test('TEST 8 — UNKNOWN INDÉPENDANT', () {
+    final config = buildConfig(
+      assets: ['batterie_externe', 'station_energie_portable'],
+      resources: ['charge_station_energie'], // Seulement station est chargée/présente
+      unknownResources: {'charge_powerbank'}, // Powerbank est UNKNOWN
+      resourceDurations: {'charge_station_energie': const Duration(hours: 72)},
+      assessedCapabilities: {'recharger_appareils'},
+      assessedResources: {'charge_powerbank', 'charge_station_energie'},
+    );
+    final results = multiAnalyzer.analyze(config, ['panne_elec']);
+    final res = results.first.simulationResult!;
+    
+    // La capacité globale devrait être MAINTAINED grâce à la station, même si powerbank est unknown
+    // (Selon ANY rule: MAINTAINED wins over UNKNOWN)
+    expect(res.nodeStates['recharger_appareils'], B3State.maintained);
+    
+    // Verify specific asset states
+    expect(res.nodeStates['batterie_externe'], B3State.unknown);
+    expect(res.nodeStates['station_energie_portable'], B3State.maintained);
+  });
+  
+  test('TEST RADIO — MAINTIENT INFO DANS 3 SCENARIOS', () {
+    final config = buildConfig(
+      assets: ['radio_manivelle_solaire'],
+      resources: [], // Aucun besoin de ressources
+      assessedCapabilities: {'recevoir_informations'},
+    );
+    final scenarios = ['panne_elec', 'panne_internet', 'panne_mobile'];
+    final results = multiAnalyzer.analyze(config, scenarios);
+    
+    for (var r in results) {
+        expect(r.simulationResult!.nodeStates['recevoir_informations'], B3State.maintained);
+    }
+  });
+  
+  test('TEST RADIO — ANTI-INVENTION', () {
+    final questions = (jsonDecode(appDiagnosticQuestionsJson) as List).map((q) => DiagnosticQuestion.fromJson(q)).toList();
+    final state = DiagnosticState();
+    
+    // Ne répond pas à q_info_alt
+    final config = state.toHouseholdConfig(questions);
+    
+    expect(config.ownedAssets.contains('radio_manivelle_solaire'), isFalse);
+  });
 }

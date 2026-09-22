@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import 'package:flutter_test/flutter_test.dart';
 import 'package:b3_engine/b3_engine.dart';
 import 'package:b3_app/features/scenarios/services/multi_scenario_analyzer.dart';
@@ -330,7 +331,7 @@ void main() {
       stopwatch.stop();
 
       // final ms = stopwatch.elapsedMilliseconds;
-      print('Mesure observée : \$ms ms sur cet environnement');
+      debugPrint('Mesure observée : \$ms ms sur cet environnement');
       expect(true, true);
     });
   });

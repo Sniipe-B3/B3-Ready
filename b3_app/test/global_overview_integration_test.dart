@@ -1,4 +1,3 @@
-import 'package:b3_app/features/scenarios/models/dependency_impact.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -244,7 +244,7 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
           builder: (_) => ProgressionScreen(result: result),
         ),
       );
-      Navigator.pop(context, true); 
+      if (!mounted) return; Navigator.pop(context, true); 
     }
   }
 

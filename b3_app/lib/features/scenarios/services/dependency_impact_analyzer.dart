@@ -32,7 +32,7 @@ class DependencyImpactAnalyzer {
       void walk(B3Node node) {
         if (deps.contains(node.id)) return;
         deps.add(node.id);
-        for (var c in node.children) walk(c);
+        for (var c in node.children) { walk(c); }
       }
       walk(start);
       return deps;

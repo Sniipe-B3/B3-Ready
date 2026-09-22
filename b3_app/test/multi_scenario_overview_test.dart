@@ -89,7 +89,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final textsActionPlan = tester.allWidgets.whereType<Text>().map((t) => t.data).toList();
-    print('DEBUG ACTION PLAN TEXTS: ${textsActionPlan}');
+    debugPrint('DEBUG ACTION PLAN TEXTS: $textsActionPlan');
 
     final btnSolution = find.text("J'ai mis cette solution en place");
     await tester.ensureVisible(btnSolution);
@@ -113,7 +113,7 @@ void main() {
     final newSnapshotStr = prefs.getString('b3_household_snapshot');
     final newSnapshot = HouseholdSnapshot.fromJson(jsonDecode(newSnapshotStr!));
     
-    print('DEBUG OWNED ASSETS: ${newSnapshot.config.ownedAssets}');
+    debugPrint('DEBUG OWNED ASSETS: ${newSnapshot.config.ownedAssets}');
     expect(newSnapshot.config.ownedAssets.contains('poele_bois'), isTrue);
 
     tester.view.resetPhysicalSize();
