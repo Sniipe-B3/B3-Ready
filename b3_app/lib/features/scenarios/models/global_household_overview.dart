@@ -1,5 +1,6 @@
 import 'package:b3_engine/b3_engine.dart';
 import '../../action_plan/models/action_plan.dart';
+import 'dependency_impact.dart';
 
 class RecurringCapabilityIssue {
   final String capabilityId;
@@ -17,19 +18,7 @@ class RecurringCapabilityIssue {
   List<String> get degradedScenarioIds => statesByScenario.entries.where((e) => e.value == B3State.degraded).map((e) => e.key).toList();
 }
 
-class CommonDependencyIssue {
-  final String causeNodeId;
-  final String causeNodeName;
-  final Set<String> capabilityIds;
-  final Set<String> scenarioIds;
-
-  CommonDependencyIssue({
-    required this.causeNodeId,
-    required this.causeNodeName,
-    required this.capabilityIds,
-    required this.scenarioIds,
-  });
-}
+// CommonDependencyIssue removed
 
 class CrossScenarioAction {
   final String id;
@@ -82,13 +71,13 @@ class GlobalUncertainty {
 
 class GlobalHouseholdOverview {
   final List<RecurringCapabilityIssue> recurringIssues;
-  final List<CommonDependencyIssue> commonDependencies;
+  final List<DependencyImpact> dependencyImpacts;
   final List<CrossScenarioAction> actions;
   final List<GlobalUncertainty> uncertainties;
 
   GlobalHouseholdOverview({
     required this.recurringIssues,
-    required this.commonDependencies,
+    required this.dependencyImpacts,
     required this.actions,
     required this.uncertainties,
   });

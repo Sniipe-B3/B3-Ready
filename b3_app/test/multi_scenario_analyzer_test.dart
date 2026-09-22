@@ -329,7 +329,7 @@ void main() {
       analyzer.analyze(config, ['panne_elec', 'panne_gaz', 'coupure_eau', 'panne_internet', 'panne_mobile']);
       stopwatch.stop();
 
-      final ms = stopwatch.elapsedMilliseconds;
+      // final ms = stopwatch.elapsedMilliseconds;
       print('Mesure observée : \$ms ms sur cet environnement');
       expect(true, true);
     });

@@ -43,13 +43,13 @@ void main() {
 
     // Check sections exist
     expect(find.text('Fragilités récurrentes'), findsNothing); // Aucune car vulnérable dans 1 seul scénario !
-    expect(find.text('Dépendances communes'), findsOneWidget);
+    expect(find.text('Points de dépendance du foyer'), findsOneWidget);
     expect(find.text('Actions utiles dans plusieurs scénarios'), findsOneWidget);
     
     // Noms humains (elec -> Réseau Électrique)
     expect(find.text('elec'), findsNothing);
     expect(find.text('cuisiner'), findsNothing);
-    expect(find.text('Réseau Électrique'), findsWidgets);
+    expect(find.textContaining('Réseau Électrique'), findsWidgets);
 
     final btnVoirAction = find.text("Voir l'action");
     expect(btnVoirAction, findsWidgets);

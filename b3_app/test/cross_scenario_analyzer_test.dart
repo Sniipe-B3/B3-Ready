@@ -77,14 +77,14 @@ void main() {
         capStates: {'cuisiner': B3State.failed},
         causes: {},
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       final a2 = _mockAnalysis(
         scenarioId: 'panne_gaz',
         capStates: {'cuisiner': B3State.failed},
         causes: {},
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       
       final overview = analyzer.analyze([a1, a2]);
@@ -99,14 +99,14 @@ void main() {
         capStates: {'cuisiner': B3State.failed},
         causes: {},
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       final a2 = _mockAnalysis(
         scenarioId: 'panne_gaz',
         capStates: {'cuisiner': B3State.maintained}, // maintained is ignored in RecurringCapabilityIssue
         causes: {},
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       
       final overview = analyzer.analyze([a1, a2]);
@@ -119,14 +119,14 @@ void main() {
         capStates: {'cuisiner': B3State.failed},
         causes: {},
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       final a2 = _mockAnalysis(
         scenarioId: 'panne_gaz',
         capStates: {'cuisiner': B3State.unknown},
         causes: {},
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       
       final overview = analyzer.analyze([a1, a2]);
@@ -140,38 +140,41 @@ void main() {
 
     test('TEST D - COMMON DEPENDENCY (Multiple Caps)', () {
       final a1 = _mockAnalysis(
-        scenarioId: 'panne_elec',
-        capStates: {'chauffer': B3State.failed, 'acceder_internet': B3State.failed},
+        scenarioId: 's1',
+        capStates: {
+          'chauffer': B3State.failed,
+          'acceder_internet': B3State.failed,
+        },
         causes: {
           'chauffer': ['elec'],
           'acceder_internet': ['elec'],
         },
         items: [],
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       
       final overview = analyzer.analyze([a1]);
-      expect(overview.commonDependencies.length, 1);
-      expect(overview.commonDependencies.first.causeNodeId, 'elec');
-      expect(overview.commonDependencies.first.capabilityIds.contains('chauffer'), isTrue);
-      expect(overview.commonDependencies.first.capabilityIds.contains('acceder_internet'), isTrue);
+      expect(overview.dependencyImpacts.length, 1);
+      expect(overview.dependencyImpacts.first.causeNodeId, 'elec');
+      expect(overview.dependencyImpacts.first.affectedCapabilityIds.contains('chauffer'), isTrue);
+      expect(overview.dependencyImpacts.first.affectedCapabilityIds.contains('acceder_internet'), isTrue);
     });
 
     test('TEST D2 - COMMON DEPENDENCY (Multiple Scenarios)', () {
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {'elec': B3State.failed});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2]);
-      expect(overview.commonDependencies.length, 1);
-      expect(overview.commonDependencies.first.causeNodeId, 'elec');
-      expect(overview.commonDependencies.first.scenarioIds.length, 2);
+      expect(overview.dependencyImpacts.length, 1);
+      expect(overview.dependencyImpacts.first.causeNodeId, 'elec');
+      expect(overview.dependencyImpacts.first.affectedScenarioIds.length, 2);
     });
 
     test('TEST D3 - NOT COMMON DEPENDENCY', () {
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'chauffer': B3State.failed}, causes: {'chauffer': ['elec']}, items: [], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1]);
-      expect(overview.commonDependencies.isEmpty, isTrue); // Only 1 capability in 1 scenario
+      expect(overview.dependencyImpacts.isEmpty, isTrue); // Only 1 capability in 1 scenario
     });
 
     test('TEST E - CAUSE COMMUNE != ACTION COMMUNE', () {
@@ -184,10 +187,10 @@ void main() {
         capStates: {'chauffer': B3State.failed, 'acceder_internet': B3State.failed},
         causes: {'chauffer': ['elec'], 'acceder_internet': ['elec']},
         items: items,
-        otherStates: {},
+        otherStates: {'elec': B3State.failed},
       );
       final overview = analyzer.analyze([a1]);
-      expect(overview.commonDependencies.length, 1);
+      expect(overview.dependencyImpacts.length, 1);
       expect(overview.actions.length, 2); // 2 distinct actions despite common cause
     });
 
@@ -195,8 +198,8 @@ void main() {
       final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'chauffer'}, causeNodeIds: {'elec'}, targetAssetId: 'poele_bois');
       final i2 = ActionPlanItem(id: 'x2', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'chauffer'}, causeNodeIds: {'gaz'}, targetAssetId: 'poele_bois');
       
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {'elec': B3State.failed});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2]);
       expect(overview.actions.length, 1);
@@ -207,8 +210,8 @@ void main() {
       final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.verify, priority: ActionPriority.toVerify, capabilityIds: {'chauffer'}, causeNodeIds: {}, targetResourceId: 'bois');
       final i2 = ActionPlanItem(id: 'x2', title: '', description: '', reason: '', type: RecommendationType.acquire, priority: ActionPriority.improvement, capabilityIds: {'chauffer'}, causeNodeIds: {}, targetResourceId: 'bois');
       
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {'elec': B3State.failed});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2]);
       expect(overview.actions.length, 2); // Different types
@@ -218,8 +221,8 @@ void main() {
       final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'cuisiner'}, causeNodeIds: {}, targetAssetId: 'poele_bois');
       final i2 = ActionPlanItem(id: 'x2', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'cuisiner'}, causeNodeIds: {}, targetAssetId: 'rechaud_gaz');
       
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {'elec': B3State.failed});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2]);
       expect(overview.actions.length, 2); // Different targetAssetId
@@ -230,11 +233,11 @@ void main() {
       final i2 = ActionPlanItem(id: 'x2', title: '', description: '', reason: '', type: RecommendationType.verify, priority: ActionPriority.toVerify, capabilityIds: {'cuisiner'}, causeNodeIds: {}, targetAssetId: 'a2');
       
       // a1 in 1 scenario
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1, i2], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1, i2], otherStates: {'elec': B3State.failed});
       // a2 in 3 more scenarios
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {});
-      final a3 = _mockAnalysis(scenarioId: 's3', capStates: {}, causes: {}, items: [i2], otherStates: {});
-      final a4 = _mockAnalysis(scenarioId: 's4', capStates: {}, causes: {}, items: [i2], otherStates: {});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
+      final a3 = _mockAnalysis(scenarioId: 's3', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
+      final a4 = _mockAnalysis(scenarioId: 's4', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2, a3, a4]);
       expect(overview.actions.length, 2);
@@ -264,8 +267,8 @@ void main() {
       final i1 = ActionPlanItem(id: 'x1', title: 'Learn 1', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap1'}, causeNodeIds: {'cause1'});
       final i2 = ActionPlanItem(id: 'x2', title: 'Learn 2', description: '', reason: '', type: RecommendationType.learn, priority: ActionPriority.important, capabilityIds: {'cap1'}, causeNodeIds: {'cause2'});
       
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {'elec': B3State.failed});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {}, causes: {}, items: [i2], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2]);
       expect(overview.actions.length, 1); // Fusionnées car même type et même fallbackTarget (cap1)
@@ -273,9 +276,9 @@ void main() {
     });
 
     test('TEST K - INVALID ANALYSIS', () {
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cuisiner': B3State.failed}, causes: {}, items: [], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cuisiner': B3State.failed}, causes: {}, items: [], otherStates: {'elec': B3State.failed});
       final a2 = ScenarioAnalysis.error(scenarioId: 's2', scenarioName: 's2', error: 'boom');
-      final a3 = _mockAnalysis(scenarioId: 's3', capStates: {'cuisiner': B3State.failed}, causes: {}, items: [], otherStates: {});
+      final a3 = _mockAnalysis(scenarioId: 's3', capStates: {'cuisiner': B3State.failed}, causes: {}, items: [], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1, a2, a3]);
       expect(overview.recurringIssues.length, 1); // S1 and S3
@@ -285,7 +288,7 @@ void main() {
     test('TEST L - ANTI-INVENTION', () {
       // Only one action targetAssetId="radio"
       final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'acceder_internet'}, causeNodeIds: {}, targetAssetId: 'radio');
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1]);
       expect(overview.actions.length, 1);
@@ -296,8 +299,8 @@ void main() {
 
     test('TEST I - DETERMINISME', () {
       final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'acceder_internet'}, causeNodeIds: {}, targetAssetId: 'radio');
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {});
-      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {'elec': B3State.failed});
+      final a2 = _mockAnalysis(scenarioId: 's2', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {'elec': B3State.failed});
       
       final overview1 = analyzer.analyze([a1, a2]);
       final overview2 = analyzer.analyze([a1, a2]);
@@ -311,7 +314,7 @@ void main() {
 
     test('TEST J - IMMUTABILITE', () {
       final i1 = ActionPlanItem(id: 'x1', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'acceder_internet'}, causeNodeIds: {}, targetAssetId: 'radio');
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {'cap1': B3State.failed}, causes: {'cap1': ['elec']}, items: [i1], otherStates: {'elec': B3State.failed});
       
       final oldActionsLength = a1.actionPlan!.items.length;
       final oldGraphLength = a1.graph!.length;
@@ -328,7 +331,7 @@ void main() {
       final i2 = ActionPlanItem(id: 'A', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'c1'}, causeNodeIds: {}, targetAssetId: 'A_asset');
       final i3 = ActionPlanItem(id: 'C', title: '', description: '', reason: '', type: RecommendationType.createAlternative, priority: ActionPriority.essential, capabilityIds: {'c1'}, causeNodeIds: {}, targetAssetId: 'C_asset');
       
-      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1, i2, i3], otherStates: {});
+      final a1 = _mockAnalysis(scenarioId: 's1', capStates: {}, causes: {}, items: [i1, i2, i3], otherStates: {'elec': B3State.failed});
       
       final overview = analyzer.analyze([a1]);
       

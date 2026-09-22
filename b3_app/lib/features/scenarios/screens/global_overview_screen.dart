@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../../progression/models/resilience_session.dart';
@@ -10,6 +11,8 @@ import '../../../data/app_knowledge_dataset.dart';
 import '../models/scenario_analysis.dart';
 import '../models/global_household_overview.dart';
 import '../services/cross_scenario_analyzer.dart';
+import '../models/dependency_impact.dart';
+import 'dependency_impact_card.dart';
 
 class GlobalOverviewScreen extends StatefulWidget {
   final List<ScenarioAnalysis> analyses;
@@ -108,6 +111,94 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
     );
   }
 
+  String _getNodeName(String id) {
+    final kb = jsonDecode(appKnowledgeBase);
+    final collections = ['systems', 'resources', 'assets', 'capabilities'];
+    for (var col in collections) {
+      final list = kb[col] as List<dynamic>? ?? [];
+      final node = list.firstWhere((n) => n['id'] == id, orElse: () => null);
+      if (node != null) return node['name'] as String;
+    }
+    return id;
+  }
+
+  void _showDependencyDetails(DependencyImpact impact) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(impact.causeNodeName, style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  const Text('Scénarios concernés :', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ...impact.affectedScenarioIds.map((scenarioId) {
+                    // Find the capability states for this scenario
+                    final children = <Widget>[];
+                    for (var cap in impact.affectedCapabilityIds) {
+                      String capState = 'Inconnu';
+                      // We need to look up the state in the original analyses
+                      final analysis = widget.analyses.firstWhere((a) => a.scenarioId == scenarioId, orElse: () => widget.analyses.first);
+                      if (analysis.scenarioId == scenarioId && analysis.simulationResult != null) {
+                        final s = analysis.simulationResult!.nodeStates[cap];
+                        if (s != null) capState = _formatState(s);
+                      }
+                      children.add(Text('→ ${_getNodeName(cap)} : $capState'));
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(scenarioId),
+                          ...children,
+                        ],
+                      ),
+                    );
+                  }),
+                  
+                  const SizedBox(height: 16),
+                  const Text('Actions associées :', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  if (impact.relatedActions.isEmpty)
+                    const Text('Aucune action spécifique n\'est encore proposée pour cette dépendance.')
+                  else
+                    ...impact.relatedActions.map((ra) {
+                      final action = _overview.actions.firstWhere((a) => a.id == ra.crossScenarioActionId);
+                      final caps = ra.affectedCapabilityIds.map((c) => _getNodeName(c)).join(', ');
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(action.title),
+                            Text('→ agit sur $caps'),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _applyAction(action);
+                              },
+                              child: const Text('Voir l\'action'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _applyAction(CrossScenarioAction action) async {
     final scenarioId = action.scenarioIds.isNotEmpty ? action.scenarioIds.first : 'global';
     final reason = action.reasonsByScenario[scenarioId] ?? '';
@@ -188,14 +279,14 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
                 const SizedBox(height: 24),
               ],
 
-              if (_overview.commonDependencies.isNotEmpty) ...[
-                Text('Dépendances communes', style: theme.textTheme.titleMedium),
+              if (_overview.dependencyImpacts.isNotEmpty) ...[
+                Text('Points de dépendance du foyer', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
-                ..._overview.commonDependencies.map((dep) => Card(
-                  child: ListTile(
-                    title: Text(dep.causeNodeName),
-                    subtitle: Text('Impacte actuellement :\n${dep.capabilityIds.map((c) => '• $c').join('\n')}'),
-                  ),
+                ..._overview.dependencyImpacts.map((dep) => DependencyImpactCard(
+                  impact: dep,
+                  onDetailTap: () => _showDependencyDetails(dep),
+                  getCapabilityName: _getNodeName,
+                  overview: _overview,
                 )),
                 const SizedBox(height: 24),
               ],

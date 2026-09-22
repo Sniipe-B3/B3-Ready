@@ -3,6 +3,7 @@ import 'package:b3_engine/b3_engine.dart';
 import '../../action_plan/models/action_plan.dart';
 import '../models/scenario_analysis.dart';
 import '../models/global_household_overview.dart';
+import 'dependency_impact_analyzer.dart';
 
 class CrossScenarioAnalyzer {
   final String knowledgeJson;
@@ -14,7 +15,6 @@ class CrossScenarioAnalyzer {
 
     final Map<String, Map<String, B3State>> capabilityStates = {};
     final Map<String, Map<String, B3State>> uncertaintyStates = {};
-    final Map<String, CommonDependencyIssue> dependencies = {};
     final Map<String, CrossScenarioAction> actionsMap = {};
 
     final kb = jsonDecode(knowledgeJson);
@@ -47,19 +47,7 @@ class CrossScenarioAnalyzer {
           capabilityStates.putIfAbsent(cap.id, () => {})[scenarioId] = state;
 
           // Causes
-          final causes = result.getRootCauses(cap.id);
-          for (var causeId in causes) {
-            if (!dependencies.containsKey(causeId)) {
-              dependencies[causeId] = CommonDependencyIssue(
-                causeNodeId: causeId,
-                causeNodeName: getNodeName(causeId),
-                capabilityIds: {},
-                scenarioIds: {},
-              );
-            }
-            dependencies[causeId]!.capabilityIds.add(cap.id);
-            dependencies[causeId]!.scenarioIds.add(scenarioId);
-          }
+          // removed causes
         } else if (state == B3State.unknown || state == B3State.notAssessed) {
           uncertaintyStates.putIfAbsent(cap.id, () => {})[scenarioId] = state;
         }
@@ -125,16 +113,6 @@ class CrossScenarioAnalyzer {
       );
     }).toList();
 
-    // Filter dependencies: must affect multiple capabilities OR multiple scenarios
-    final commonDependencies = dependencies.values
-      .where((d) => d.scenarioIds.length >= 2 || d.capabilityIds.length >= 2)
-      .toList();
-    commonDependencies.sort((a, b) {
-      int sCmp = b.scenarioIds.length.compareTo(a.scenarioIds.length);
-      if (sCmp != 0) return sCmp;
-      return b.capabilityIds.length.compareTo(a.capabilityIds.length);
-    });
-
     final actions = actionsMap.values.toList();
     
     // Sort logic
@@ -195,9 +173,12 @@ class CrossScenarioAnalyzer {
        return a.capabilityName.compareTo(b.capabilityName);
     });
 
+    final dependencyImpactAnalyzer = DependencyImpactAnalyzer(knowledgeJson);
+    final dependencyImpacts = dependencyImpactAnalyzer.analyze(analyses, actions);
+
     return GlobalHouseholdOverview(
       recurringIssues: recurringIssues,
-      commonDependencies: commonDependencies,
+      dependencyImpacts: dependencyImpacts,
       actions: actions,
       uncertainties: uncertainties,
     );
