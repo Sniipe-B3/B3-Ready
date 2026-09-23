@@ -71,7 +71,7 @@ void main() {
 
     // 9. Question water (q_water_main)
     expect(find.text("Comment accédez-vous à l'eau courante ?"), findsOneWidget);
-    await tester.tap(find.text('Robinet classique (réseau public)'));
+    await tester.tap(find.text('Eau du réseau public'));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
     await tester.tap(find.text('Continuer'));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();

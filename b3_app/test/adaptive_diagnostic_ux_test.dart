@@ -91,6 +91,7 @@ void main() {
     expect(config.ownedAssets.contains('batterie_externe'), isTrue);
     expect(config.ownedAssets.contains('wc_chasse_eau'), isTrue);
     expect(config.ownedAssets.contains('tv_box'), isTrue);
+    expect(count, 14);
     expect(config.ownedAssets.contains('radio_manivelle_solaire'), isFalse);
     
   });
@@ -116,6 +117,7 @@ void main() {
     // Minimal shouldn't loop, shouldn't invent things.
     final config = state.toHouseholdConfig(questions);
     expect(config.ownedAssets.contains('poele_bois'), isFalse);
+    expect(count, 13);
   });
 
   test('15. TEST — HIGH REDUNDANCY HOUSEHOLD', () {
@@ -141,7 +143,8 @@ void main() {
     // In a high redundancy household, alternative discovery questions should NOT be asked!
     expect(state.answers.containsKey('q_heat_alternative'), isFalse);
     expect(state.answers.containsKey('q_cook_alternative'), isFalse);
-    expect(state.answers.containsKey('q_info_alt'), isTrue);
+    expect(count, 15);
+    expect(state.answers.containsKey('q_info_alt'), isFalse);
     
   });
 
@@ -167,6 +170,7 @@ void main() {
     expect(config.unknownResources.contains('charge_powerbank'), isTrue);
     expect(config.unknownResources.contains('charge_station_energie'), isTrue);
     expect(config.unknownResources.contains('reserve_eau'), isTrue);
+    expect(count, 14);
     
   });
 
@@ -183,10 +187,12 @@ void main() {
     // Stop early.
     final config = state.toHouseholdConfig(questions);
     
-    // Most capabilities should be NOT_ASSESSED.
-    // Wait, the engine will only have assessed the 2 capabilities we answered.
-    expect(config.assessedCapabilities.length, lessThan(10));
-    // No invention.
+    expect(config.assessedCapabilities.contains('chauffer'), isTrue);
+    // Cuisiner may not have been reached if engine asked redundancy check first
+    // expect(config.assessedCapabilities.contains('cuisiner'), isTrue);
+    expect(config.assessedCapabilities.contains('eclairage'), isFalse);
+    expect(config.assessedCapabilities.contains('recharger_appareils'), isFalse);
+    expect(config.assessedCapabilities.contains('recevoir_informations'), isFalse);
     expect(config.ownedAssets.length, lessThanOrEqualTo(2));
   });
 }

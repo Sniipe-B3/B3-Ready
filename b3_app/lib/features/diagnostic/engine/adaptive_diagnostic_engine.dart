@@ -50,16 +50,30 @@ class AdaptiveDiagnosticEngine {
       
       if (ownedForCap.isEmpty) continue; // Pas d'équipement géré pour le moment
       
-      bool allDependent = true;
+      bool needsRedundancy = false;
+      final assetSystems = <String, Set<String>>{};
       for (var a in ownedForCap) {
         final reqs = _assetReqs[a] ?? [];
-        if (!reqs.any((r) => _systemIds.contains(r))) {
-          allDependent = false;
-          break;
+        assetSystems[a] = reqs.where((r) => _systemIds.contains(r)).toSet();
+      }
+      
+      bool hasAutonomous = assetSystems.values.any((sys) => sys.isEmpty);
+      
+      if (!hasAutonomous) {
+        if (ownedForCap.length == 1) {
+          needsRedundancy = true;
+        } else {
+          Set<String> commonSystems = Set.from(assetSystems.values.first);
+          for (var sys in assetSystems.values.skip(1)) {
+            commonSystems = commonSystems.intersection(sys);
+          }
+          if (commonSystems.isNotEmpty) {
+            needsRedundancy = true;
+          }
         }
       }
       
-      if (allDependent) {
+      if (needsRedundancy) {
         needsRedundancyCheck.add(capId);
       }
     }
