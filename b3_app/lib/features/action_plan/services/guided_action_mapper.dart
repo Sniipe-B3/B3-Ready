@@ -24,17 +24,24 @@ class GuidedActionMapper {
 
   GuidedActionDetails map(ActionPlanItem item, String? scenarioId) {
     String title = item.title;
+    // Fix vague titles
+    if (title == 'Préparer une alternative' || title == 'Envisager une solution' || title == 'Améliorer votre résilience') {
+       title = 'Explorer une alternative de secours';
+    } else if (title == 'Organiser cette solution') {
+       title = 'Organiser et préparer ce matériel';
+    }
+    
     String ctaLabel = "Mettre à jour mon foyer";
     String why = item.reason;
     String todo = item.description;
     
     switch (item.type) {
       case RecommendationType.verify:
-        ctaLabel = "Vérifier maintenant";
+        ctaLabel = "Vérifier mon matériel";
         if (item.targetAssetId == 'stock_eau_potable') {
-           why = "B3 sait que vous avez une réserve, mais ne connaît pas son autonomie.";
+           why = "B3 a enregistré cette réserve, mais son autonomie réelle est inconnue.";
         } else {
-           why = "$why\nB3 sait que vous avez cette solution, mais ne connaît pas son état ou son autonomie (Information manquante).";
+           why = "$why\nCette solution est listée, mais son état ou son autonomie n'ont pas été vérifiés.";
         }
         break;
       case RecommendationType.useExisting:

@@ -48,7 +48,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Voir l'action recommandée").first);
+    await tester.tap(find.text("Voir comment faire").first);
     await tester.pumpAndSettle();
     final btnActionCta = find.byType(FilledButton).last;
     await tester.ensureVisible(btnActionCta);
@@ -85,7 +85,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Voir l'action recommandée").first);
+    await tester.tap(find.text("Voir comment faire").first);
     await tester.pumpAndSettle();
     final btnActionCta = find.byType(FilledButton).last;
     await tester.ensureVisible(btnActionCta);

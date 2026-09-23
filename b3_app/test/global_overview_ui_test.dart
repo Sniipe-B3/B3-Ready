@@ -38,10 +38,10 @@ void main() {
     await tester.pumpWidget(const B3App());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Résilience par scénario"), warnIfMissed: false);
+    await tester.tap(find.text("Vue globale du foyer").last, warnIfMissed: false);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Vue globale du foyer"), warnIfMissed: false);
+    await tester.tap(find.text("Vue globale du foyer").last, warnIfMissed: false);
     await tester.pumpAndSettle();
 
     // Check sections exist

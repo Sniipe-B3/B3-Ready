@@ -44,9 +44,9 @@ void main() {
     ));
     
     expect(find.text('Titre de l\'action'), findsOneWidget);
-    expect(find.text('Pourquoi cette action est proposée'), findsNWidgets(2));
+    expect(find.text('Pourquoi cette action est proposée'), findsOneWidget);
     expect(find.text('Capacité concernée : Eau'), findsOneWidget);
-    expect(find.text('Ce que vous pouvez faire'), findsNWidgets(2));
+    expect(find.text('Ce que vous pouvez faire'), findsOneWidget);
     expect(find.text('CTA Action'), findsOneWidget);
     expect(find.text('Comprendre pourquoi (Voir la dépendance)'), findsOneWidget);
   });

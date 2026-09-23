@@ -39,7 +39,7 @@ void main() {
     // On est sur l'écran d'accueil, avec une configuration déjà existante.
     expect(find.text('B3 Ready'), findsOneWidget);
     
-    final btnOverview = find.text('Résilience par scénario');
+    final btnOverview = find.text('Vue globale du foyer').last;
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -800));
     await tester.pumpAndSettle();
     
@@ -83,7 +83,7 @@ void main() {
     await tester.tap(btnPlan);
     await tester.pumpAndSettle();
 
-    final btnUpdate = find.text("Voir l'action recommandée").first;
+    final btnUpdate = find.text("Voir comment faire").first;
     await tester.ensureVisible(btnUpdate);
     await tester.tap(btnUpdate);
     await tester.pumpAndSettle();

@@ -29,7 +29,7 @@ void main() {
       
       expect(item.type, RecommendationType.verify);
       expect(details.why.contains('autonomie'), isTrue);
-      expect(details.ctaLabel, 'Vérifier maintenant');
+      expect(details.ctaLabel, 'Vérifier mon matériel');
     });
 
     test('TEST B - PAYMENT ALTERNATIVE', () {
@@ -178,7 +178,7 @@ void main() {
         null
       );
       
-      expect(mapType(RecommendationType.verify).ctaLabel, 'Vérifier maintenant');
+      expect(mapType(RecommendationType.verify).ctaLabel, 'Vérifier mon matériel');
       expect(mapType(RecommendationType.useExisting).ctaLabel, 'Configurer cette solution');
       expect(mapType(RecommendationType.organize).ctaLabel, 'Marquer comme organisé');
       expect(mapType(RecommendationType.learn).ctaLabel, 'Marquer comme appris');

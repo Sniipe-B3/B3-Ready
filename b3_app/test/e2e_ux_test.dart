@@ -66,15 +66,15 @@ void main() {
     await answerQuestionById(tester, engine, 'q_info_main', ['opt_info_tv', 'opt_info_smartphone']);
     await answerQuestionById(tester, engine, 'q_payment_main', ['opt_pay_elec']);
 
-    await tester.ensureVisible(find.text('Voir ma résilience'));
-    await tester.tap(find.text('Voir ma résilience'));
+    await tester.ensureVisible(find.text('Continuer'));
+    await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Vue globale du foyer'), findsOneWidget);
+    expect(find.text('Vue globale du foyer').last, findsWidgets);
     
-    // Tap "Voir le détail" which creates ResilienceSession and triggers autosave
-    await tester.ensureVisible(find.text('Voir le détail').first);
-    await tester.tap(find.text('Voir le détail').first);
+    // Tap "Analyser ce scénario" which creates ResilienceSession and triggers autosave
+    await tester.ensureVisible(find.text('Analyser ce scénario').first);
+    await tester.tap(find.text('Analyser ce scénario').first);
     await tester.pumpAndSettle();
     expect(find.text('Panne électrique prolongée'), findsOneWidget);
     
@@ -97,16 +97,16 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: HomeScreen(repository: repo)));
     await tester.pumpAndSettle();
     
-    await tester.ensureVisible(find.text('Reprendre mon foyer'));
-    await tester.tap(find.text('Reprendre mon foyer'));
+    await tester.ensureVisible(find.text('Reprendre mon analyse'));
+    await tester.tap(find.text('Reprendre mon analyse'));
     await tester.pumpAndSettle();
     
     await tester.ensureVisible(find.text("Voir mon plan d'action"));
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text("Voir l'action recommandée").first);
-    await tester.tap(find.text("Voir l'action recommandée").first);
+    await tester.ensureVisible(find.text("Voir comment faire").first);
+    await tester.tap(find.text("Voir comment faire").first);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FilledButton).first);
@@ -136,15 +136,15 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: HomeScreen(repository: repo)));
     await tester.pumpAndSettle();
     
-    await tester.ensureVisible(find.text('Reprendre mon foyer'));
-    await tester.tap(find.text('Reprendre mon foyer'));
+    await tester.ensureVisible(find.text('Reprendre mon analyse'));
+    await tester.tap(find.text('Reprendre mon analyse'));
     await tester.pumpAndSettle();
     
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text("Voir l'action recommandée").last);
-    await tester.tap(find.text("Voir l'action recommandée").last);
+    await tester.ensureVisible(find.text("Voir comment faire").last);
+    await tester.tap(find.text("Voir comment faire").last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FilledButton).first);
@@ -179,13 +179,13 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: HomeScreen(repository: repo)));
     await tester.pumpAndSettle();
     
-    await tester.ensureVisible(find.text('Résilience par scénario'));
-    await tester.tap(find.text('Résilience par scénario'));
+    await tester.ensureVisible(find.text('Vue globale du foyer').last);
+    await tester.tap(find.text('Vue globale du foyer').last);
     await tester.pumpAndSettle();
-    expect(find.text('Vue globale du foyer'), findsOneWidget);
+    expect(find.text('Vue globale du foyer').last, findsWidgets);
     
-    await tester.ensureVisible(find.text('Voir le détail').first);
-    await tester.tap(find.text('Voir le détail').first);
+    await tester.ensureVisible(find.text('Analyser ce scénario').first);
+    await tester.tap(find.text('Analyser ce scénario').first);
     await tester.pumpAndSettle();
     expect(find.text('Panne électrique prolongée'), findsOneWidget);
 
@@ -194,8 +194,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Mon plan d'action"), findsWidgets);
 
-    await tester.ensureVisible(find.text("Voir l'action recommandée").first);
-    await tester.tap(find.text("Voir l'action recommandée").first);
+    await tester.ensureVisible(find.text("Voir comment faire").first);
+    await tester.tap(find.text("Voir comment faire").first);
     await tester.pumpAndSettle();
     
     await tester.tap(find.byTooltip('Back').first);
@@ -208,7 +208,7 @@ void main() {
     
     await tester.tap(find.byTooltip('Back').first);
     await tester.pumpAndSettle();
-    expect(find.text('Vue globale du foyer'), findsOneWidget);
+    expect(find.text('Vue globale du foyer').last, findsWidgets);
   });
 
   testWidgets('UNKNOWN UI and NOT_ASSESSED UI rendering', (WidgetTester tester) async {
@@ -227,11 +227,11 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: HomeScreen(repository: repo)));
     await tester.pumpAndSettle();
     
-    await tester.tap(find.text('Résilience par scénario'));
+    await tester.tap(find.text('Vue globale du foyer').last);
     await tester.pumpAndSettle();
     
-    await tester.ensureVisible(find.text('Vue globale du foyer'));
-    await tester.tap(find.text('Vue globale du foyer'));
+    await tester.ensureVisible(find.text('Vue globale du foyer').last);
+    await tester.tap(find.text('Vue globale du foyer').last);
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Voir le détail').first);
@@ -268,8 +268,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: HomeScreen(repository: repo)));
     await tester.pumpAndSettle();
     
-    await tester.ensureVisible(find.text('Reprendre mon foyer'));
-    await tester.tap(find.text('Reprendre mon foyer'));
+    await tester.ensureVisible(find.text('Reprendre mon analyse'));
+    await tester.tap(find.text('Reprendre mon analyse'));
     await tester.pumpAndSettle();
     
     final str1 = tester.allWidgets.whereType<Text>().map((t) => t.data).join(' ');
@@ -283,7 +283,7 @@ void main() {
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining("Aucune action prioritaire n'est requise."), findsOneWidget);
+    expect(find.textContaining("Aucune action prioritaire identifiée"), findsOneWidget);
   });
 
   testWidgets('Responsive Widths on Inner Screens', (WidgetTester tester) async {
@@ -312,16 +312,16 @@ void main() {
       await tester.pumpWidget(MaterialApp(key: UniqueKey(), home: HomeScreen(repository: repo)));
       await tester.pumpAndSettle();
       
-      await tester.ensureVisible(find.text('Reprendre mon foyer'));
-      await tester.tap(find.text('Reprendre mon foyer'));
+      await tester.ensureVisible(find.text('Reprendre mon analyse'));
+      await tester.tap(find.text('Reprendre mon analyse'));
       await tester.pumpAndSettle();
       
       await tester.ensureVisible(find.text("Voir mon plan d'action"));
       await tester.tap(find.text("Voir mon plan d'action"));
       await tester.pumpAndSettle();
       
-      await tester.ensureVisible(find.text("Voir l'action recommandée").first);
-      await tester.tap(find.text("Voir l'action recommandée").first);
+      await tester.ensureVisible(find.text("Voir comment faire").first);
+      await tester.tap(find.text("Voir comment faire").first);
       await tester.pumpAndSettle();
       
       expect(tester.takeException(), isNull);

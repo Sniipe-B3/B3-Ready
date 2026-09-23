@@ -279,7 +279,7 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
                         children: [
                           Icon(Icons.shield_outlined, size: 48, color: theme.colorScheme.primary),
                           const SizedBox(height: 16),
-                          const Text("Aucune fragilité critique croisée n'a été détectée. Votre foyer présente une excellente résilience globale.", textAlign: TextAlign.center),
+                          const Text("Aucune fragilité critique croisée n'a été détectée à ce stade avec les informations actuelles.", textAlign: TextAlign.center),
                         ],
                       ),
                     ),

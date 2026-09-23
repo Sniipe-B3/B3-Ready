@@ -22,11 +22,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reprendre mon foyer'), findsOneWidget);
+    expect(find.text('Reprendre mon analyse'), findsOneWidget);
     expect(find.text('Commencer mon diagnostic'), findsNothing);
 
-    // Tap Reprendre mon foyer
-    final btn = find.text('Reprendre mon foyer');
+    // Tap Reprendre mon analyse
+    final btn = find.text('Reprendre mon analyse');
     await tester.ensureVisible(btn);
     await tester.pumpAndSettle();
     await tester.tap(btn);
@@ -68,7 +68,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Now it should be clear
-    expect(find.text('Reprendre mon foyer'), findsNothing);
+    expect(find.text('Reprendre mon analyse'), findsNothing);
     expect(find.text('Commencer mon diagnostic'), findsOneWidget);
   });
 }

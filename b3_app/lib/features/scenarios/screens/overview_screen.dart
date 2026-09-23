@@ -254,7 +254,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 alignment: Alignment.centerRight,
                 child: FilledButton.tonal(
                   onPressed: () => _openScenario(analysis),
-                  child: const Text('Voir le détail'),
+                  child: const Text('Analyser ce scénario'),
                 ),
               ),
             ],

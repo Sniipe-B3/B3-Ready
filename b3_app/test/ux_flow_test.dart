@@ -77,13 +77,13 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Verify "Reprendre mon foyer" is visible
-    expect(find.text('Reprendre mon foyer'), findsOneWidget);
+    // Verify "Reprendre mon analyse" is visible
+    expect(find.text('Reprendre mon analyse'), findsOneWidget);
     expect(find.text('Commencer mon diagnostic'), findsNothing);
 
     // Tap resume
-    await tester.ensureVisible(find.text('Reprendre mon foyer'));
-    await tester.tap(find.text('Reprendre mon foyer'));
+    await tester.ensureVisible(find.text('Reprendre mon analyse'));
+    await tester.tap(find.text('Reprendre mon analyse'));
     await tester.pumpAndSettle();
 
     // Should be on results/overview

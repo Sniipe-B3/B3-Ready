@@ -59,13 +59,13 @@ class GuidedActionScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _buildSection(theme, 'Pourquoi cette action est proposée', details.why),
+                  _buildSection(theme, 'Pourquoi', details.why),
                   const SizedBox(height: 24),
                   if (details.observed.isNotEmpty) ...[
                     _buildSection(theme, 'Ce que B3 a observé', details.observed),
                     const SizedBox(height: 24),
                   ],
-                  _buildSection(theme, 'Ce que vous pouvez faire', details.todo),
+                  _buildSection(theme, 'À faire', details.todo),
                   const SizedBox(height: 48),
                   
                   if (isCompleted)

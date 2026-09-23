@@ -69,7 +69,7 @@ class _ActionPlanScreenState extends State<ActionPlanScreen> {
                             children: [
                               Icon(Icons.check_circle_outline, size: 48, color: theme.colorScheme.primary),
                               const SizedBox(height: 16),
-                              const Text("Votre foyer est bien préparé pour ce scénario. Aucune action prioritaire n'est requise.", textAlign: TextAlign.center),
+                              const Text("Aucune action prioritaire identifiée pour ce scénario avec les informations actuelles.", textAlign: TextAlign.center),
                             ],
                           ),
                         ),
@@ -244,7 +244,7 @@ class _ActionPlanScreenState extends State<ActionPlanScreen> {
                     ),
                   );
                 },
-                child: const Text('Voir l\'action recommandée'),
+                child: const Text('Voir comment faire'),
               ),
             ),
           ],

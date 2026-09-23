@@ -65,35 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
 
-  Widget _buildFeatureRow(BuildContext context, IconData icon, String title, String desc) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
-                const SizedBox(height: 4),
-                Text(desc, style: Theme.of(context).textTheme.bodyMedium),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -128,13 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "Découvrez de quoi votre foyer dépend réellement, ce qui pourrait vous manquer en cas de perturbation et quelles améliorations auraient le plus d'impact.",
+                          "B3 identifie ce qui pourrait manquer à votre foyer si certains services deviennent indisponibles et vous indique quoi améliorer en priorité.",
                           style: theme.textTheme.bodyLarge,
                         ),
-                        const SizedBox(height: 48),
-                        _buildFeatureRow(context, Icons.analytics_outlined, "Analyser", "Comprendre les dépendances de votre foyer."),
-                        _buildFeatureRow(context, Icons.search_outlined, "Identifier", "Repérer les points vulnérables."),
-                        _buildFeatureRow(context, Icons.lightbulb_outline, "Agir", "Améliorer progressivement votre autonomie."),
                         const Spacer(),
                         const SizedBox(height: 32),
                         
@@ -159,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               },
                               child: const Text(
-                                'Reprendre mon foyer',
+                                'Reprendre mon analyse',
                                 style: TextStyle(fontSize: 18),
                               ),
                             ),
@@ -181,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               },
                               child: const Text(
-                                'Résilience par scénario',
+                                'Vue globale du foyer',
                                 style: TextStyle(fontSize: 18),
                               ),
                             ),

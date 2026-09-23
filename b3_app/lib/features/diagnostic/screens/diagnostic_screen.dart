@@ -133,9 +133,9 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
                   children: [
                     const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
                     const SizedBox(height: 24),
-                    Text("Votre diagnostic est prêt", style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
+                    Text("Situation enregistrée", style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
-                    Text("B3 a analysé les informations de votre foyer et identifié les points de vigilance.", style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+                    Text("Voyons maintenant ce qui resterait disponible si certains services tombaient.", style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
                     const SizedBox(height: 48),
                     SizedBox(
                       width: double.infinity,
@@ -150,7 +150,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
                             ),
                           );
                         },
-                        child: const Text('Voir ma résilience'),
+                        child: const Text('Continuer'),
                       ),
                     ),
                   ],

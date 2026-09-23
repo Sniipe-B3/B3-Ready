@@ -10,11 +10,11 @@ class UiStateHelper {
       case B3State.degraded:
         return 'Partiellement disponible';
       case B3State.unknown:
-        return 'À vérifier';
+        return 'À vérifier (info manquante)';
       case B3State.notAssessed:
         return 'Non évalué';
       case B3State.failed:
-        return 'Indisponible';
+        return 'Indisponible dans ce scénario';
     }
   }
 
