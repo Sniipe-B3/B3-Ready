@@ -106,7 +106,7 @@ void main() {
 
   test('TEST 6 & 7: Ressource NOT_ASSESSED / FAILED', () {
     // NOT ASSESSED
-    final state1 = DiagnosticState()..answerMultiple('q_cook_main', ['opt_gaz_bouteille']);
+    final state1 = DiagnosticState()..answerMultiple('q_cook_main', ['opt_gaziniere_bouteille']);
     final config1 = state1.toHouseholdConfig(questions);
     final g1 = DataMapper.buildGraph(appKnowledgeBase, config1);
     final res1 = engine.runSimulation(g1, DataMapper.parseScenario(appKnowledgeBase, 'panne_elec'));

@@ -47,7 +47,7 @@ void main() {
 
     // 5. Question cuisine (q_cook_main - multiple_choice)
     expect(find.text('De quels équipements disposez-vous pour cuisiner ?'), findsOneWidget);
-    await tester.tap(find.text('Cuisinière ou réchaud sur bouteille de gaz')); // Independent cooking
+    await tester.tap(find.text('Cuisinière sur bouteille de gaz')); // Independent cooking
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
     await tester.tap(find.text('Continuer'));
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();

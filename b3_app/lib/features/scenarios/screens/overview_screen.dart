@@ -108,6 +108,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     if (id == 'coupure_eau') return '💧';
     if (id == 'panne_internet') return '🌐';
     if (id == 'panne_mobile') return '📱';
+    if (id == 'panne_paiement') return '💳';
     return '⚠️';
   }
 

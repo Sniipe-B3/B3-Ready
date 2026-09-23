@@ -33,7 +33,7 @@ void main() {
 
   test('Cas 6 : Ressource jamais évaluée', () {
     final state = DiagnosticState()
-      ..answerMultiple('q_cook_main', ['opt_gaz_bouteille']);
+      ..answerMultiple('q_cook_main', ['opt_gaziniere_bouteille']);
       
     final conf = state.toHouseholdConfig(questions);
     final graph = DataMapper.buildGraph(appKnowledgeBase, conf);
@@ -69,7 +69,7 @@ void main() {
 
   test('TEST B — ressource jamais évaluée', () {
     final state = DiagnosticState()
-      ..answerMultiple('q_cook_main', ['opt_gaz_bouteille']);
+      ..answerMultiple('q_cook_main', ['opt_gaziniere_bouteille']);
       
     final conf = state.toHouseholdConfig(questions);
     final graph = DataMapper.buildGraph(appKnowledgeBase, conf);

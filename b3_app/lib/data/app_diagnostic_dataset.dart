@@ -7,7 +7,7 @@ const String appDiagnosticQuestionsJson = '''
     "options": [
       {
         "id": "opt_rad_elec",
-        "text": "Radiateurs \u00e9lectriques",
+        "text": "Radiateurs électriques",
         "facts": [
           {
             "type": "assess_capability",
@@ -21,7 +21,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_pac",
-        "text": "Pompe \u00e0 chaleur",
+        "text": "Pompe à chaleur",
         "facts": [
           {
             "type": "assess_capability",
@@ -35,7 +35,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_chaudiere_gaz",
-        "text": "Chaudi\u00e8re gaz",
+        "text": "Chaudière gaz",
         "facts": [
           {
             "type": "assess_capability",
@@ -49,7 +49,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_chaudiere_bois",
-        "text": "Chaudi\u00e8re bois ou granul\u00e9s",
+        "text": "Chaudière bois ou granulés",
         "facts": [
           {
             "type": "assess_capability",
@@ -63,7 +63,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_poele_granules",
-        "text": "Po\u00eale \u00e0 granul\u00e9s",
+        "text": "Poêle à granulés",
         "facts": [
           {
             "type": "assess_capability",
@@ -77,7 +77,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_poele_bois",
-        "text": "Po\u00eale \u00e0 b\u00fbches (autonome sans \u00e9lectricit\u00e9)",
+        "text": "Poêle à bûches (autonome sans électricité)",
         "facts": [
           {
             "type": "assess_capability",
@@ -91,7 +91,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_none_q_heat_main",
-        "text": "Aucun de ces \u00e9quipements",
+        "text": "Aucun de ces équipements",
         "facts": [
           {
             "type": "assess_capability",
@@ -103,7 +103,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_heat_redundancy",
-    "text": "En cas de coupure du syst\u00e8me principal (ex. panne de r\u00e9seau), avez-vous une autre fa\u00e7on de chauffer votre logement ?",
+    "text": "En cas de coupure du système principal (ex. panne de réseau), avez-vous une autre façon de chauffer votre logement ?",
     "type": "single_choice",
     "metadata": {
       "purpose": "redundancy_check",
@@ -142,7 +142,7 @@ const String appDiagnosticQuestionsJson = '''
     "options": [
       {
         "id": "opt_poele_bois",
-        "text": "Po\u00eale \u00e0 b\u00fbches (autonome sans \u00e9lectricit\u00e9)",
+        "text": "Poêle à bûches (autonome sans électricité)",
         "facts": [
           {
             "type": "add_asset",
@@ -152,7 +152,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_poele_granules",
-        "text": "Po\u00eale \u00e0 granul\u00e9s",
+        "text": "Poêle à granulés",
         "facts": [
           {
             "type": "add_asset",
@@ -162,7 +162,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_chaudiere_bois",
-        "text": "Chaudi\u00e8re bois ou granul\u00e9s",
+        "text": "Chaudière bois ou granulés",
         "facts": [
           {
             "type": "add_asset",
@@ -174,7 +174,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_heat_bois_reserve",
-    "text": "Disposez-vous d'une r\u00e9serve de bois utilisable ?",
+    "text": "Disposez-vous d'une réserve de bois utilisable ?",
     "type": "single_choice",
     "options": [
       {
@@ -239,7 +239,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_heat_granules_reserve",
-    "text": "Disposez-vous d'une r\u00e9serve de granul\u00e9s utilisable ?",
+    "text": "Disposez-vous d'une réserve de granulés utilisable ?",
     "type": "single_choice",
     "options": [
       {
@@ -285,12 +285,12 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_cook_main",
-    "text": "De quels \u00e9quipements disposez-vous pour cuisiner ?",
+    "text": "De quels équipements disposez-vous pour cuisiner ?",
     "type": "multiple_choice",
     "options": [
       {
         "id": "opt_plaque_elec",
-        "text": "Plaque \u00e9lectrique / induction",
+        "text": "Plaque électrique / induction",
         "facts": [
           {
             "type": "assess_capability",
@@ -304,7 +304,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_four_elec",
-        "text": "Four \u00e9lectrique",
+        "text": "Four électrique",
         "facts": [
           {
             "type": "assess_capability",
@@ -318,7 +318,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_gaz_ville",
-        "text": "Cuisini\u00e8re au gaz de ville",
+        "text": "Cuisinière au gaz de ville",
         "facts": [
           {
             "type": "assess_capability",
@@ -331,8 +331,22 @@ const String appDiagnosticQuestionsJson = '''
         ]
       },
       {
-        "id": "opt_gaz_bouteille",
-        "text": "Cuisini\u00e8re ou r\u00e9chaud sur bouteille de gaz",
+        "id": "opt_gaziniere_bouteille",
+        "text": "Cuisinière sur bouteille de gaz",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "cuisiner"
+          },
+          {
+            "type": "add_asset",
+            "value": "gaziniere_bouteille"
+          }
+        ]
+      },
+      {
+        "id": "opt_rechaud_gaz",
+        "text": "Réchaud gaz portable",
         "facts": [
           {
             "type": "assess_capability",
@@ -345,8 +359,22 @@ const String appDiagnosticQuestionsJson = '''
         ]
       },
       {
+        "id": "opt_cuisiniere_bois",
+        "text": "Cuisinière à bois",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "cuisiner"
+          },
+          {
+            "type": "add_asset",
+            "value": "cuisiniere_bois"
+          }
+        ]
+      },
+      {
         "id": "opt_barbecue",
-        "text": "Barbecue ext\u00e9rieur",
+        "text": "Barbecue extérieur",
         "facts": [
           {
             "type": "assess_capability",
@@ -360,7 +388,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_none_q_cook_main",
-        "text": "Aucun de ces \u00e9quipements",
+        "text": "Aucun de ces équipements",
         "facts": [
           {
             "type": "assess_capability",
@@ -372,7 +400,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_cook_redundancy",
-    "text": "En cas de coupure (ex. \u00e9lectricit\u00e9 ou gaz de ville), avez-vous une autre fa\u00e7on de cuisiner (ex. r\u00e9chaud) ?",
+    "text": "En cas de coupure (ex. électricité ou gaz de ville), avez-vous une autre façon de cuisiner (ex. réchaud) ?",
     "type": "single_choice",
     "metadata": {
       "purpose": "redundancy_check",
@@ -410,8 +438,18 @@ const String appDiagnosticQuestionsJson = '''
     },
     "options": [
       {
-        "id": "opt_gaz_bouteille",
-        "text": "Cuisini\u00e8re ou r\u00e9chaud sur bouteille de gaz",
+        "id": "opt_alt_gaziniere_bouteille",
+        "text": "Cuisinière sur bouteille de gaz",
+        "facts": [
+          {
+            "type": "add_asset",
+            "value": "gaziniere_bouteille"
+          }
+        ]
+      },
+      {
+        "id": "opt_alt_rechaud_gaz",
+        "text": "Réchaud gaz portable",
         "facts": [
           {
             "type": "add_asset",
@@ -420,8 +458,18 @@ const String appDiagnosticQuestionsJson = '''
         ]
       },
       {
-        "id": "opt_barbecue",
-        "text": "Barbecue ext\u00e9rieur",
+        "id": "opt_alt_cuisiniere_bois",
+        "text": "Cuisinière à bois",
+        "facts": [
+          {
+            "type": "add_asset",
+            "value": "cuisiniere_bois"
+          }
+        ]
+      },
+      {
+        "id": "opt_alt_barbecue",
+        "text": "Barbecue extérieur",
         "facts": [
           {
             "type": "add_asset",
@@ -433,7 +481,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_cook_gaz_reserve",
-    "text": "Avez-vous une bouteille de gaz de rechange utilisable (actuellement connect\u00e9e ou en stock) ?",
+    "text": "Avez-vous une bouteille de gaz de rechange utilisable (actuellement connectée ou en stock) ?",
     "type": "single_choice",
     "options": [
       {
@@ -474,7 +522,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_cook_gaz_duration",
-    "text": "Combien de temps environ pouvez-vous cuisiner avec cette r\u00e9serve de gaz ?",
+    "text": "Combien de temps environ pouvez-vous cuisiner avec cette réserve de gaz ?",
     "type": "single_choice",
     "options": [
       {
@@ -554,12 +602,12 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_light_main",
-    "text": "De quoi disposez-vous pour l'\u00e9clairage en cas de coupure \u00e9lectrique ?",
+    "text": "De quoi disposez-vous pour l'éclairage en cas de coupure électrique ?",
     "type": "multiple_choice",
     "options": [
       {
         "id": "opt_lampe_secteur",
-        "text": "Rien de sp\u00e9cifique (luminaires branch\u00e9s sur secteur)",
+        "text": "Rien de spécifique (luminaires branchés sur secteur)",
         "facts": [
           {
             "type": "assess_capability",
@@ -573,7 +621,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_lampe_bat",
-        "text": "Lampes torches ou de secours (\u00e0 piles ou batterie)",
+        "text": "Lampes torches ou de secours (à piles ou batterie)",
         "facts": [
           {
             "type": "assess_capability",
@@ -587,7 +635,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_none_q_light_main",
-        "text": "Aucun de ces \u00e9quipements",
+        "text": "Aucun de ces équipements",
         "facts": [
           {
             "type": "assess_capability",
@@ -623,7 +671,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_bat_no",
-        "text": "Non, ou tr\u00e8s peu",
+        "text": "Non, ou très peu",
         "facts": [
           {
             "type": "assess_resource",
@@ -650,12 +698,12 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_water_main",
-    "text": "Comment acc\u00e9dez-vous \u00e0 l'eau courante ?",
+    "text": "Comment accédez-vous à l'eau courante ?",
     "type": "multiple_choice",
     "options": [
       {
         "id": "opt_robinet_eau",
-        "text": "Eau du r\u00e9seau public",
+        "text": "Eau du réseau public",
         "facts": [
           {
             "type": "assess_capability",
@@ -664,6 +712,10 @@ const String appDiagnosticQuestionsJson = '''
           {
             "type": "add_asset",
             "value": "robinet_eau"
+          },
+          {
+            "type": "assess_capability",
+            "value": "boire_eau_potable"
           }
         ]
       },
@@ -695,7 +747,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_water_reserve",
-    "text": "De quelle r\u00e9serve d'eau disposez-vous (bouteilles, bidons...) ?",
+    "text": "De quelle réserve d'eau disposez-vous (bouteilles, bidons...) ?",
     "type": "single_choice",
     "options": [
       {
@@ -760,7 +812,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_smartphone",
-        "text": "Smartphone (r\u00e9seau mobile)",
+        "text": "Smartphone (réseau mobile)",
         "facts": [
           {
             "type": "assess_capability",
@@ -786,12 +838,12 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_food_storage",
-    "text": "Avez-vous des appareils de conservation des aliments n\u00e9cessitant de l'\u00e9lectricit\u00e9 ?",
+    "text": "Avez-vous des appareils de conservation des aliments nécessitant de l'électricité ?",
     "type": "multiple_choice",
     "options": [
       {
         "id": "opt_frigo",
-        "text": "Oui, un r\u00e9frig\u00e9rateur",
+        "text": "Oui, un réfrigérateur",
         "facts": [
           {
             "type": "assess_capability",
@@ -805,7 +857,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_congel",
-        "text": "Oui, un cong\u00e9lateur",
+        "text": "Oui, un congélateur",
         "facts": [
           {
             "type": "assess_capability",
@@ -819,7 +871,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_none_q_food_storage",
-        "text": "Aucun de ces \u00e9quipements",
+        "text": "Aucun de ces équipements",
         "facts": [
           {
             "type": "assess_capability",
@@ -831,7 +883,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_charge_main",
-    "text": "Disposez-vous d'une batterie externe (powerbank) ou d'une station d'\u00e9nergie portable ?",
+    "text": "Disposez-vous d'une batterie externe (powerbank) ou d'une station d'énergie portable ?",
     "type": "multiple_choice",
     "options": [
       {
@@ -850,7 +902,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_powerstation",
-        "text": "Oui, une station d'\u00e9nergie portable",
+        "text": "Oui, une station d'énergie portable",
         "facts": [
           {
             "type": "assess_capability",
@@ -864,7 +916,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_none_q_charge_main",
-        "text": "Aucun de ces \u00e9quipements",
+        "text": "Aucun de ces équipements",
         "facts": [
           {
             "type": "assess_capability",
@@ -876,7 +928,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_charge_bat_status",
-    "text": "Connaissez-vous l'autonomie ou l'\u00e9tat de charge actuel de ces batteries / stations ?",
+    "text": "Connaissez-vous l'autonomie ou l'état de charge actuel de ces batteries / stations ?",
     "condition": {
       "dependsOn": "q_charge_main",
       "hasAnswer": "opt_powerbank"
@@ -885,7 +937,7 @@ const String appDiagnosticQuestionsJson = '''
     "options": [
       {
         "id": "opt_charge_yes",
-        "text": "Oui, elles sont charg\u00e9es et pr\u00eates",
+        "text": "Oui, elles sont chargées et prêtes",
         "facts": [
           {
             "type": "add_resource",
@@ -921,7 +973,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_charge_station_status",
-    "text": "Connaissez-vous l'autonomie de votre station d'\u00e9nergie ?",
+    "text": "Connaissez-vous l'autonomie de votre station d'énergie ?",
     "condition": {
       "dependsOn": "q_charge_main",
       "hasAnswer": "opt_powerstation"
@@ -930,7 +982,7 @@ const String appDiagnosticQuestionsJson = '''
     "options": [
       {
         "id": "opt_station_yes",
-        "text": "Oui, elle est charg\u00e9e et pr\u00eate",
+        "text": "Oui, elle est chargée et prête",
         "facts": [
           {
             "type": "add_resource",
@@ -966,7 +1018,7 @@ const String appDiagnosticQuestionsJson = '''
   },
   {
     "id": "q_sanitary",
-    "text": "Vos toilettes (WC) utilisent-elles l'eau du r\u00e9seau pour la chasse d'eau ?",
+    "text": "Vos toilettes (WC) utilisent-elles l'eau du réseau pour la chasse d'eau ?",
     "type": "single_choice",
     "options": [
       {
@@ -985,7 +1037,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_wc_autre",
-        "text": "Non (ou pas concern\u00e9)",
+        "text": "Non (ou pas concerné)",
         "facts": [
           {
             "type": "assess_capability",
@@ -1002,7 +1054,7 @@ const String appDiagnosticQuestionsJson = '''
     "options": [
       {
         "id": "opt_info_tv",
-        "text": "T\u00e9l\u00e9vision / Box",
+        "text": "Télévision / Box",
         "facts": [
           {
             "type": "assess_capability",
@@ -1030,7 +1082,7 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_none_q_info_main",
-        "text": "Aucun de ces \u00e9quipements",
+        "text": "Aucun de ces équipements",
         "facts": [
           {
             "type": "assess_capability",
@@ -1046,7 +1098,7 @@ const String appDiagnosticQuestionsJson = '''
       "purpose": "alternative_discovery",
       "capability": "recevoir_informations"
     },
-    "text": "Avez-vous une radio autonome \u00e0 manivelle ou solaire pour recevoir les informations d'urgence ?",
+    "text": "Avez-vous une radio autonome à manivelle ou solaire pour recevoir les informations d'urgence ?",
     "type": "single_choice",
     "options": [
       {
@@ -1080,6 +1132,141 @@ const String appDiagnosticQuestionsJson = '''
           {
             "type": "assess_capability",
             "value": "recevoir_informations"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "q_payment_main",
+    "text": "Quels moyens pouvez-vous utiliser pour payer si le réseau de paiement électronique est indisponible ?",
+    "type": "multiple_choice",
+    "options": [
+      {
+        "id": "opt_pay_elec",
+        "text": "Uniquement paiement électronique (Carte, Smartphone)",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "effectuer_paiement_essentiel"
+          },
+          {
+            "type": "add_asset",
+            "value": "paiement_electronique"
+          }
+        ]
+      },
+      {
+        "id": "opt_pay_cash",
+        "text": "Espèces disponibles (Cash)",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "effectuer_paiement_essentiel"
+          },
+          {
+            "type": "add_asset",
+            "value": "especes_disponibles"
+          }
+        ]
+      },
+      {
+        "id": "opt_pay_none",
+        "text": "Aucun / Je ne sais pas",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "effectuer_paiement_essentiel"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "q_water_potable_main",
+    "text": "Avez-vous une réserve d'eau potable (ex: bouteilles d'eau) en cas de coupure du réseau ?",
+    "type": "single_choice",
+    "options": [
+      {
+        "id": "opt_water_potable_yes",
+        "text": "Oui",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "boire_eau_potable"
+          },
+          {
+            "type": "add_asset",
+            "value": "stock_eau_potable"
+          }
+        ]
+      },
+      {
+        "id": "opt_water_potable_no",
+        "text": "Non / Je ne sais pas",
+        "facts": [
+          {
+            "type": "assess_capability",
+            "value": "boire_eau_potable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "q_water_potable_status",
+    "text": "Connaissez-vous l'autonomie de votre réserve d'eau potable ?",
+    "condition": {
+      "dependsOn": "q_water_potable_main",
+      "hasAnswer": "opt_water_potable_yes"
+    },
+    "type": "single_choice",
+    "options": [
+      {
+        "id": "opt_potable_dur_yes",
+        "text": "Oui, de quoi tenir plusieurs jours",
+        "facts": [
+          {
+            "type": "add_resource",
+            "value": "reserve_eau_potable"
+          },
+          {
+            "type": "assess_resource",
+            "value": "reserve_eau_potable"
+          },
+          {
+            "type": "add_resource_duration",
+            "value": "reserve_eau_potable",
+            "duration": 72
+          }
+        ]
+      },
+      {
+        "id": "opt_potable_dur_short",
+        "text": "Oui, pour moins de 24h",
+        "facts": [
+          {
+            "type": "add_resource",
+            "value": "reserve_eau_potable"
+          },
+          {
+            "type": "assess_resource",
+            "value": "reserve_eau_potable"
+          },
+          {
+            "type": "add_resource_duration",
+            "value": "reserve_eau_potable",
+            "duration": 12
+          }
+        ]
+      },
+      {
+        "id": "opt_potable_dur_unk",
+        "text": "Je ne sais pas",
+        "facts": [
+          {
+            "type": "assess_resource_unknown",
+            "value": "reserve_eau_potable"
           }
         ]
       }
