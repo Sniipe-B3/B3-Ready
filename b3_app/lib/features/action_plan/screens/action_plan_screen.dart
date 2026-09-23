@@ -6,6 +6,9 @@ import '../../dependency_map/screens/dependency_map_screen.dart';
 import '../../progression/models/resilience_session.dart';
 import '../../progression/screens/progression_screen.dart';
 import '../../progression/utils/action_update_resolver.dart';
+import 'package:b3_app/data/app_knowledge_dataset.dart';
+import '../services/guided_action_mapper.dart';
+import './guided_action_screen.dart';
 
 class ActionPlanScreen extends StatelessWidget {
   final ResilienceSession session;
@@ -160,34 +163,48 @@ class ActionPlanScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => _showUpdateDialog(context, item),
-                child: const Text('Mettre à jour ma situation'),
+                onPressed: () {
+                  final mapper = GuidedActionMapper(appKnowledgeBase);
+                  final details = mapper.map(item, session.requestedScenarioId);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => GuidedActionScreen(
+                        details: details,
+                        session: session,
+                        onUpdate: () {
+                          
+                          if (item.type == RecommendationType.organize || 
+        item.type == RecommendationType.learn || 
+        item.type == RecommendationType.useExisting) {
+      _applyActionCompleted(context, item);
+    } else {
+      _showUpdateDialog(context, item);
+    }
+                        },
+                        onUnderstand: () {
+                           if (item.capabilityIds.isNotEmpty) {
+                             Navigator.push(
+                               context,
+                               MaterialPageRoute(
+                                 builder: (_) => DependencyMapScreen(
+                                   capabilityId: item.capabilityIds.first,
+                                   config: session.config,
+                                   result: session.simulationResult!,
+                                   scenario: session.scenario!,
+                                   graph: session.graph!,
+                                 ),
+                               ),
+                             );
+                           }
+                        },
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Voir l\'action recommandée'),
               ),
             ),
-            if (item.capabilityIds.length == 1)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DependencyMapScreen(
-                            capabilityId: item.capabilityIds.first,
-                            config: session.config,
-                            result: session.simulationResult!,
-                            scenario: session.scenario!,
-                            graph: session.graph!,
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('Comprendre pourquoi'),
-                  ),
-                ),
-              ),
           ],
         ),
       ),

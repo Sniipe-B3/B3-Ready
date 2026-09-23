@@ -48,7 +48,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Mettre à jour ma situation").first);
+    await tester.tap(find.text("Voir l'action recommandée").first);
+    await tester.pumpAndSettle();
+    final btnActionCta = find.byType(FilledButton).last;
+    await tester.ensureVisible(btnActionCta);
+    await tester.tap(btnActionCta);
     await tester.pumpAndSettle();
 
     expect(find.text("Qu'avez-vous constaté ou réalisé ?"), findsOneWidget);
@@ -81,14 +85,14 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Mettre à jour ma situation").first);
+    await tester.tap(find.text("Voir l'action recommandée").first);
+    await tester.pumpAndSettle();
+    final btnActionCta = find.byType(FilledButton).last;
+    await tester.ensureVisible(btnActionCta);
+    await tester.tap(btnActionCta);
     await tester.pumpAndSettle();
 
-    // Augmente l'autonomie à >72h
-    await tester.tap(find.text("Plusieurs jours (> 72h)"));
-    await tester.pumpAndSettle();
-
-    expect(find.text("Amélioration enregistrée"), findsOneWidget);
-    expect(find.text("Votre résilience s'est améliorée !"), findsOneWidget);
+    // Pas de dialog, c'est une completion directe pour ORGANIZE/USE_EXISTING
+    expect(session.completedActionIds.isNotEmpty, isTrue);
   });
 }

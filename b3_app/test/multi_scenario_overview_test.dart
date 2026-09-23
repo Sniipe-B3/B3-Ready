@@ -83,9 +83,15 @@ void main() {
     await tester.tap(btnPlan);
     await tester.pumpAndSettle();
 
-    final btnUpdate = find.text("Mettre à jour ma situation").first;
+    final btnUpdate = find.text("Voir l'action recommandée").first;
     await tester.ensureVisible(btnUpdate);
     await tester.tap(btnUpdate);
+    await tester.pumpAndSettle();
+    
+    // Tap the CTA inside GuidedActionScreen
+    final btnActionCta = find.byType(FilledButton).last;
+    await tester.ensureVisible(btnActionCta);
+    await tester.tap(btnActionCta);
     await tester.pumpAndSettle();
 
     final textsActionPlan = tester.allWidgets.whereType<Text>().map((t) => t.data).toList();

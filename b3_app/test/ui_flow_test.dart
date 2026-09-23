@@ -150,7 +150,13 @@ void main() {
     expect(planStr.contains('targetAssetId'), false);
     
     // Ouvre la Dependency Map depuis une action
-    final btnComprendre = find.text("Comprendre pourquoi").first;
+        final btnAction = find.text("Voir l'action recommandée").first;
+    await tester.ensureVisible(btnAction);
+    await tester.tap(btnAction);
+    await tester.pumpAndSettle();
+
+    final btnComprendre = find.text("Comprendre pourquoi (Voir la dépendance)").first;
+    
     await tester.ensureVisible(btnComprendre);
     await tester.pump(); await tester.pump(const Duration(milliseconds: 100)); await tester.pumpAndSettle();
     await tester.tap(btnComprendre);
