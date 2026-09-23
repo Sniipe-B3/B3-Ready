@@ -257,65 +257,86 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
         title: const Text('Synthèse de résilience'),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Vue globale du foyer', style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 24),
-              
-              if (_overview.recurringIssues.isNotEmpty) ...[
-                Text('Fragilités récurrentes', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ..._overview.recurringIssues.map((issue) => Card(
-                  child: ListTile(
-                    title: Text(issue.capabilityName),
-                    subtitle: Text('Vulnérable dans ${issue.failedScenarioIds.length + issue.degradedScenarioIds.length} scénario(s)'),
-                    trailing: const Text('Voir'),
-                    onTap: () => _showCapabilityDetails(issue),
-                  ),
-                )),
-                const SizedBox(height: 24),
-              ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Vue globale du foyer', style: theme.textTheme.headlineSmall),
+                  const SizedBox(height: 24),
+                  
+                  if (_overview.recurringIssues.isEmpty && _overview.dependencyImpacts.isEmpty && _overview.actions.isEmpty && _overview.uncertainties.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.shield_outlined, size: 48, color: theme.colorScheme.primary),
+                          const SizedBox(height: 16),
+                          const Text("Aucune fragilité critique croisée n'a été détectée. Votre foyer présente une excellente résilience globale.", textAlign: TextAlign.center),
+                        ],
+                      ),
+                    ),
+                  
+                  if (_overview.recurringIssues.isNotEmpty) ...[
+                    Text('Fragilités récurrentes', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ..._overview.recurringIssues.map((issue) => Card(
+                      child: ListTile(
+                        title: Text(issue.capabilityName),
+                        subtitle: Text('Vulnérable dans ${issue.failedScenarioIds.length + issue.degradedScenarioIds.length} scénario(s)'),
+                        trailing: const Text('Voir'),
+                        onTap: () => _showCapabilityDetails(issue),
+                      ),
+                    )),
+                    const SizedBox(height: 24),
+                  ],
 
-              if (_overview.dependencyImpacts.isNotEmpty) ...[
-                Text('Points de dépendance du foyer', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ..._overview.dependencyImpacts.map((dep) => DependencyImpactCard(
-                  impact: dep,
-                  onDetailTap: () => _showDependencyDetails(dep),
-                  getCapabilityName: _getNodeName,
-                  overview: _overview,
-                )),
-                const SizedBox(height: 24),
-              ],
+                  if (_overview.dependencyImpacts.isNotEmpty) ...[
+                    Text('Points de dépendance du foyer', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ..._overview.dependencyImpacts.map((dep) => DependencyImpactCard(
+                      impact: dep,
+                      onDetailTap: () => _showDependencyDetails(dep),
+                      getCapabilityName: _getNodeName,
+                      overview: _overview,
+                    )),
+                    const SizedBox(height: 24),
+                  ],
 
-              if (_overview.actions.isNotEmpty) ...[
-                Text('Actions utiles dans plusieurs scénarios', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ..._overview.actions.map((action) => Card(
-                  child: ListTile(
-                    title: Text(action.title),
-                    subtitle: Text('Concerne ${action.scenarioIds.length} scénario(s)'),
-                    trailing: const Text('Voir l\'action'),
-                    onTap: () => _showActionDetails(action),
-                  ),
-                )),
-                const SizedBox(height: 24),
-              ],
+                  if (_overview.actions.isNotEmpty) ...[
+                    Text('Actions utiles dans plusieurs scénarios', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ..._overview.actions.map((action) => Card(
+                      child: ListTile(
+                        title: Text(action.title),
+                        subtitle: Text('Concerne ${action.scenarioIds.length} scénario(s)'),
+                        trailing: const Text('Voir l\'action'),
+                        onTap: () => _showActionDetails(action),
+                      ),
+                    )),
+                    const SizedBox(height: 24),
+                  ],
 
-              if (_overview.uncertainties.isNotEmpty) ...[
-                Text('Informations à vérifier', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ..._overview.uncertainties.map((unc) => Card(
-                  child: ListTile(
-                    title: Text(unc.nodeName),
-                    subtitle: Text('Dans ${unc.scenarioIds.length} scénario(s)'),
-                  ),
-                )),
-              ],
-            ],
+                  if (_overview.uncertainties.isNotEmpty) ...[
+                    Text('Informations à vérifier', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ..._overview.uncertainties.map((unc) => Card(
+                      child: ListTile(
+                        title: Text(unc.nodeName),
+                        subtitle: Text('Dans ${unc.scenarioIds.length} scénario(s)'),
+                      ),
+                    )),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

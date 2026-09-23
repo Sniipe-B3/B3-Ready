@@ -21,6 +21,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
   
   DiagnosticQuestion? _currentQuestion;
   int _questionCount = 1;
+  bool _isFinished = false;
 
   // Local state for multiple choice
   final Set<String> _selectedMultipleOptions = {};
@@ -65,9 +66,19 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
 
   void _onMultipleOptionToggled(String optionId) {
     setState(() {
+      final optionText = _currentQuestion!.options.firstWhere((o) => o.id == optionId).text.toLowerCase();
+      
       if (_selectedMultipleOptions.contains(optionId)) {
         _selectedMultipleOptions.remove(optionId);
       } else {
+        if (optionText.contains('aucun') || optionText.contains('je ne sais pas')) {
+          _selectedMultipleOptions.clear();
+        } else {
+          _selectedMultipleOptions.removeWhere((id) {
+            final t = _currentQuestion!.options.firstWhere((o) => o.id == id).text.toLowerCase();
+            return t.contains('aucun') || t.contains('je ne sais pas');
+          });
+        }
         _selectedMultipleOptions.add(optionId);
       }
     });
@@ -75,6 +86,10 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
 
   void _submitMultipleChoice() {
     if (_currentQuestion == null) return;
+    if (_selectedMultipleOptions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Veuillez sélectionner au moins une option.")));
+      return;
+    }
     
     // Save history
     final clonedState = DiagnosticState();
@@ -90,14 +105,9 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
     final nextQuestion = _engine.getNextQuestion(_currentState);
 
     if (nextQuestion == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OverviewScreen(
-            config: _currentState.toHouseholdConfig(_allQuestions),
-          ),
-        ),
-      );
+      setState(() {
+        _isFinished = true;
+      });
     } else {
       setState(() {
         _currentQuestion = nextQuestion;
@@ -109,6 +119,48 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_isFinished) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+                    const SizedBox(height: 24),
+                    Text("Votre diagnostic est prêt", style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    Text("B3 a analysé les informations de votre foyer et identifié les points de vigilance.", style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OverviewScreen(
+                                config: _currentState.toHouseholdConfig(_allQuestions),
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text('Voir ma résilience'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     if (_currentQuestion == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -122,10 +174,13 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: _goBack,
         ),
-        title: Text('Analyse en cours (Étape $_questionCount)', style: const TextStyle(fontSize: 16)),
+        title: Text('Question $_questionCount', style: const TextStyle(fontSize: 16)),
       ),
       body: SafeArea(
-        child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
@@ -133,6 +188,23 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (_questionCount == 1) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          "B3 va analyser les moyens dont votre foyer dispose si certains services deviennent indisponibles.\nRépondez simplement selon votre situation actuelle.",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     Text(
                       _currentQuestion!.text,
                       style: theme.textTheme.headlineMedium?.copyWith(fontSize: 24),
@@ -232,9 +304,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: _selectedMultipleOptions.isEmpty 
-                        ? () => _submitMultipleChoice() // Allow empty if they really want, but maybe we should disable? The prompt says "Rien de tout cela" is an option. If it's empty, we let them proceed.
-                        : _submitMultipleChoice,
+                    onPressed: _submitMultipleChoice,
                     child: const Text('Continuer'),
                   ),
                 ),
@@ -242,6 +312,8 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
           ],
         ),
       ),
+    ),
+    ),
     );
   }
 }

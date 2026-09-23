@@ -10,7 +10,7 @@ import 'package:b3_app/data/app_knowledge_dataset.dart';
 import '../services/guided_action_mapper.dart';
 import './guided_action_screen.dart';
 
-class ActionPlanScreen extends StatelessWidget {
+class ActionPlanScreen extends StatefulWidget {
   final ResilienceSession session;
 
   const ActionPlanScreen({
@@ -19,33 +19,76 @@ class ActionPlanScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ActionPlanScreen> createState() => _ActionPlanScreenState();
+}
+
+class _ActionPlanScreenState extends State<ActionPlanScreen> {
+  bool _showAll = false;
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: session,
+      animation: widget.session,
       builder: (context, _) {
-        final plan = session.actionPlan;
+        final plan = widget.session.actionPlan;
         if (plan == null) return const Scaffold(body: Center(child: Text("Plan indisponible")));
         final theme = Theme.of(context);
+
+        final items = plan.items;
+        final visibleItems = _showAll ? items : items.take(5).toList();
+        final hasMore = items.length > 5;
 
         return Scaffold(
           appBar: AppBar(
             title: const Text('Mon plan d\'action'),
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${plan.items.length} actions prioritaires',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${items.length} action(s) prioritaire(s)',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (items.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(Icons.check_circle_outline, size: 48, color: theme.colorScheme.primary),
+                              const SizedBox(height: 16),
+                              const Text("Votre foyer est bien préparé pour ce scénario. Aucune action prioritaire n'est requise.", textAlign: TextAlign.center),
+                            ],
+                          ),
+                        ),
+                      ...visibleItems.map((item) => _buildActionCard(context, item, theme)),
+                      
+                      if (hasMore && !_showAll)
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _showAll = true;
+                              });
+                            },
+                            child: Text('Voir toutes les actions (${items.length - 5} masquées)'),
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  ...plan.items.map((item) => _buildActionCard(context, item, theme)),
-                ],
+                ),
               ),
             ),
           ),
@@ -77,8 +120,8 @@ class ActionPlanScreen extends StatelessWidget {
         break;
     }
 
-    String capabilityName = item.capabilityIds.map(_getCapabilityName).join(', ');
-    bool isCompleted = session.completedActionIds.contains(item.id);
+    String capabilityName = item.capabilityIds.map((id) => _getCapabilityName(id)).join(', ');
+    bool isCompleted = widget.session.completedActionIds.contains(item.id);
 
     if (isCompleted) {
       return Card(
@@ -165,22 +208,21 @@ class ActionPlanScreen extends StatelessWidget {
               child: FilledButton(
                 onPressed: () {
                   final mapper = GuidedActionMapper(appKnowledgeBase);
-                  final details = mapper.map(item, session.requestedScenarioId);
+                  final details = mapper.map(item, widget.session.requestedScenarioId);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => GuidedActionScreen(
                         details: details,
-                        session: session,
+                        session: widget.session,
                         onUpdate: () {
-                          
                           if (item.type == RecommendationType.organize || 
-        item.type == RecommendationType.learn || 
-        item.type == RecommendationType.useExisting) {
-      _applyActionCompleted(context, item);
-    } else {
-      _showUpdateDialog(context, item);
-    }
+                              item.type == RecommendationType.learn || 
+                              item.type == RecommendationType.useExisting) {
+                            _applyActionCompleted(context, item);
+                          } else {
+                            _showUpdateDialog(context, item);
+                          }
                         },
                         onUnderstand: () {
                            if (item.capabilityIds.isNotEmpty) {
@@ -189,10 +231,10 @@ class ActionPlanScreen extends StatelessWidget {
                                MaterialPageRoute(
                                  builder: (_) => DependencyMapScreen(
                                    capabilityId: item.capabilityIds.first,
-                                   config: session.config,
-                                   result: session.simulationResult!,
-                                   scenario: session.scenario!,
-                                   graph: session.graph!,
+                                   config: widget.session.config,
+                                   result: widget.session.simulationResult!,
+                                   scenario: widget.session.scenario!,
+                                   graph: widget.session.graph!,
                                  ),
                                ),
                              );
@@ -301,26 +343,27 @@ class ActionPlanScreen extends StatelessWidget {
 
   void _applyUpdate(BuildContext context, ActionPlanItem item, bool? isOwned, Duration? duration, bool isUnknown) {
     final update = ActionUpdateResolver.resolveResourceUpdate(item, isOwned, duration, isUnknown);
-    final result = session.recalculate(update);
+    final result = widget.session.recalculate(update);
     Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
   }
 
   void _applyAssetUpdate(BuildContext context, ActionPlanItem item, bool isOwned) {
     final update = ActionUpdateResolver.resolveAssetUpdate(item, isOwned);
-    final result = session.recalculate(update);
+    final result = widget.session.recalculate(update);
     Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
   }
 
   void _applyActionCompleted(BuildContext context, ActionPlanItem item) {
     final update = ActionUpdateResolver.resolveActionCompleted(item);
-    final result = session.recalculate(update);
+    final result = widget.session.recalculate(update);
     Navigator.push(context, MaterialPageRoute(builder: (_) => ProgressionScreen(result: result)));
   }
 
   String _getCapabilityName(String capabilityId) {
-    if (capabilityId == 'cuisiner') return 'Cuisiner';
-    if (capabilityId == 'chauffer') return 'Se chauffer';
-    if (capabilityId == 'eclairage') return 'S\'éclairer';
+    try {
+      final node = widget.session.graph?.firstWhere((n) => n.id == capabilityId);
+      if (node != null) return node.name;
+    } catch (_) {}
     return capabilityId;
   }
 }

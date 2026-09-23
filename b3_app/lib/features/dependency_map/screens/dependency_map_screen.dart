@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:b3_app/core/utils/ui_state_helper.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../../../app/theme/theme.dart';
 import '../models/dependency_node.dart';
@@ -144,7 +145,7 @@ class _NodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = _getColor(node.state);
+    final color = UiStateHelper.getColor(node.state);
     
     return Container(
       width: double.infinity,
@@ -196,15 +197,7 @@ class _NodeCard extends StatelessWidget {
     );
   }
 
-  Color _getColor(B3State state) {
-    switch (state) {
-      case B3State.maintained: return B3Theme.b3Green;
-      case B3State.degraded: return B3Theme.b3Orange;
-      case B3State.failed: return B3Theme.b3Red;
-      case B3State.unknown: return Colors.grey.shade600;
-      case B3State.notAssessed: return Colors.grey.shade400;
-    }
-  }
+  
 
   String _getTypeLabel(MapNodeType type) {
     switch (type) {
@@ -223,9 +216,9 @@ class _StateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getColor(state);
-    final label = _getLabel(state);
-    final icon = _getIcon(state);
+    final color = UiStateHelper.getColor(state);
+    final label = UiStateHelper.getLabel(state);
+    final icon = UiStateHelper.getIcon(state);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -250,35 +243,5 @@ class _StateBadge extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Color _getColor(B3State state) {
-    switch (state) {
-      case B3State.maintained: return B3Theme.b3Green;
-      case B3State.degraded: return B3Theme.b3Orange;
-      case B3State.failed: return B3Theme.b3Red;
-      case B3State.unknown: return Colors.grey.shade600;
-      case B3State.notAssessed: return Colors.grey.shade400;
-    }
-  }
-
-  String _getLabel(B3State state) {
-    switch (state) {
-      case B3State.maintained: return 'Disponible';
-      case B3State.degraded: return 'Disponible (limité)';
-      case B3State.failed: return 'Indisponible';
-      case B3State.unknown: return 'Inconnu';
-      case B3State.notAssessed: return 'Non évalué';
-    }
-  }
-
-  IconData _getIcon(B3State state) {
-    switch (state) {
-      case B3State.maintained: return Icons.check_circle;
-      case B3State.degraded: return Icons.warning_rounded;
-      case B3State.failed: return Icons.cancel;
-      case B3State.unknown: return Icons.help_outline;
-      case B3State.notAssessed: return Icons.circle_outlined;
-    }
   }
 }

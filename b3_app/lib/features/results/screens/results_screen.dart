@@ -124,108 +124,113 @@ class _ResultsScreenState extends State<ResultsScreen> {
             title: const Text('Bilan de résilience'),
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(scenarioName, style: theme.textTheme.headlineLarge),
-                  const SizedBox(height: 16),
-                  if (_session.scenarioError != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange),
-                      ),
-                      child: Text(
-                        _session.scenarioError!,
-                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.orange.shade900),
-                      ),
-                    ),
-                  ],
-                  if (totalPoints > 0)
-                    Text(
-                      vigilanceText,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: vulns.isNotEmpty ? B3Theme.b3Red : B3Theme.b3Orange,
-                      ),
-                    )
-                  else
-                    Text(
-                      "Votre foyer semble bien préparé pour $scenarioName.",
-                      style: theme.textTheme.titleLarge?.copyWith(color: B3Theme.b3Green),
-                    ),
-                  const SizedBox(height: 32),
-                  
-                  ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de $scenarioName")),
-                  ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, "Partiellement vulnérable (réserve limitée)")),
-                  
-                  const SizedBox(height: 32),
-                  Card(
-                    color: B3Theme.b3Blue.withValues(alpha: 0.1),
-                    margin: const EdgeInsets.only(bottom: 24.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mon plan d\'action',
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: B3Theme.b3Blue),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(scenarioName, style: theme.textTheme.headlineLarge),
+                      const SizedBox(height: 16),
+                      if (_session.scenarioError != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange),
                           ),
-                          const SizedBox(height: 12),
-                          Text('Découvrez les actions prioritaires pour améliorer la résilience de votre foyer.', style: theme.textTheme.bodyLarge),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ActionPlanScreen(session: _session),
-                                  ),
-                                );
-                              },
-                              child: const Text('Voir mon plan d\'action'),
-                            ),
+                          child: Text(
+                            _session.scenarioError!,
+                            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.orange.shade900),
                           ),
-                        ],
+                        ),
+                      ],
+                      if (totalPoints > 0)
+                        Text(
+                          vigilanceText,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: vulns.isNotEmpty ? B3Theme.b3Red : B3Theme.b3Orange,
+                          ),
+                        )
+                      else
+                        Text(
+                          "Votre foyer semble bien préparé pour $scenarioName.",
+                          style: theme.textTheme.titleLarge?.copyWith(color: B3Theme.b3Green),
+                        ),
+                      const SizedBox(height: 32),
+                      
+                      ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de $scenarioName")),
+                      ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, "Partiellement vulnérable (réserve limitée)")),
+                      
+                      const SizedBox(height: 32),
+                      Card(
+                        color: B3Theme.b3Blue.withValues(alpha: 0.1),
+                        margin: const EdgeInsets.only(bottom: 24.0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mon plan d\'action',
+                                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: B3Theme.b3Blue),
+                              ),
+                              const SizedBox(height: 12),
+                              Text('Découvrez les actions prioritaires pour améliorer la résilience de votre foyer.', style: theme.textTheme.bodyLarge),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ActionPlanScreen(session: _session),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Voir mon plan d\'action'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.tonal(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => OverviewScreen(
-                              config: _session.config,
-                              completedActionIds: _session.completedActionIds,
-                              repository: SharedPrefsHouseholdRepository(),
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Text('Résilience par scénario'),
-                    ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonal(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => OverviewScreen(
+                                  config: _session.config,
+                                  completedActionIds: _session.completedActionIds,
+                                  repository: SharedPrefsHouseholdRepository(),
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Résilience par scénario'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                          child: const Text('Retour à l\'accueil'),
+                        ),
+                      )
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                      child: const Text('Retour à l\'accueil'),
-                    ),
-                  )
-                ],
+                ),
               ),
             ),
           ),
@@ -244,15 +249,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return '🔧';
   }
 
-  String _getCapabilityName(String capabilityId) {
-    if (capabilityId == 'cuisiner') return 'CUISINER';
-    if (capabilityId == 'chauffer') return 'SE CHAUFFER';
-    if (capabilityId == 'eclairage') return 'S\'ÉCLAIRER';
-    if (capabilityId == 'disposer_eau') return 'DISPOSER D\'EAU';
-    if (capabilityId == 'acceder_internet') return 'ACCÉDER À INTERNET';
-    if (capabilityId == 'communiquer') return 'COMMUNIQUER';
-    return capabilityId.toUpperCase();
-  }
+  
 
   Widget _buildVulnCard(Vulnerability v, ThemeData theme, Color color, String subtitle) {
     final capId = v.capability.id;
@@ -269,7 +266,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _getCapabilityName(capId),
+                    v.capability.name.toUpperCase(),
                     style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
                   ),
                 ),

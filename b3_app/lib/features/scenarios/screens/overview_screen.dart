@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:b3_app/app/theme/theme.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../../../data/app_knowledge_dataset.dart';
 import '../../../data/household_repository.dart';
@@ -125,38 +126,43 @@ class _OverviewScreenState extends State<OverviewScreen> {
         title: const Text('Résilience par scénario'),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Votre foyer face aux perturbations', style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final changed = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => GlobalOverviewScreen(
-                          analyses: _analyses,
-                          config: _currentConfig,
-                          completedActionIds: _currentCompletedActionIds,
-                          repository: widget.repository ?? SharedPrefsHouseholdRepository(),
-                        ),
-                      ),
-                    );
-                    if (changed == true) {
-                      _refreshFromRepository();
-                    }
-                  },
-                  child: const Text('Vue globale du foyer'),
-                ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Votre foyer face aux perturbations', style: theme.textTheme.headlineSmall),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final changed = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => GlobalOverviewScreen(
+                              analyses: _analyses,
+                              config: _currentConfig,
+                              completedActionIds: _currentCompletedActionIds,
+                              repository: widget.repository ?? SharedPrefsHouseholdRepository(),
+                            ),
+                          ),
+                        );
+                        if (changed == true) {
+                          _refreshFromRepository();
+                        }
+                      },
+                      child: const Text('Vue globale du foyer'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ..._analyses.map((analysis) => _buildScenarioCard(analysis, theme)),
+                ],
               ),
-              const SizedBox(height: 24),
-              ..._analyses.map((analysis) => _buildScenarioCard(analysis, theme)),
-            ],
+            ),
           ),
         ),
       ),
@@ -226,12 +232,12 @@ class _OverviewScreenState extends State<OverviewScreen> {
               if (analysis.failedCount > 0)
                 Text(
                   '${analysis.failedCount} vulnérabilité(s) critique(s)',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: B3Theme.b3Red, fontWeight: FontWeight.bold),
                 )
               else
                 Text(
                   'Aucune vulnérabilité critique',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green.shade700, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: B3Theme.b3Green, fontWeight: FontWeight.bold),
                 ),
               const SizedBox(height: 16),
               if (toWatch.isNotEmpty) ...[
@@ -248,7 +254,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 alignment: Alignment.centerRight,
                 child: FilledButton.tonal(
                   onPressed: () => _openScenario(analysis),
-                  child: const Text('Voir'),
+                  child: const Text('Voir le détail'),
                 ),
               ),
             ],

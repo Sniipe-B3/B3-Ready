@@ -63,7 +63,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Confirm dialog
-    expect(find.text('Toutes vos données locales seront supprimées. Confirmer ?'), findsOneWidget);
+    expect(find.text('Êtes-vous sûr de vouloir réinitialiser votre foyer ? Toutes vos données locales seront définitivement supprimées.'), findsOneWidget);
     await tester.tap(find.text('Réinitialiser'));
     await tester.pumpAndSettle();
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:b3_engine/b3_engine.dart';
+import 'package:b3_app/core/utils/ui_state_helper.dart';
 import '../models/progression_result.dart';
 import '../models/household_update.dart';
 import '../../../app/theme/theme.dart';
@@ -10,7 +10,7 @@ class ProgressionScreen extends StatelessWidget {
   const ProgressionScreen({Key? key, required this.result}) : super(key: key);
 
   String _getHeaderText() {
-    if (!result.hasStructuralChange) return 'Action enregistrée';
+    if (!result.hasStructuralChange) return 'Action marquée comme terminée.';
     if (result.updateNature == UpdateNature.observation) {
       if (result.changedCapabilities.any((c) => c.meaning == ProgressionMeaning.vulnerabilityConfirmed)) {
         return 'Analyse précisée';
@@ -34,37 +34,42 @@ class ProgressionScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _getHeaderText(),
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              if (result.changedCapabilities.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Text(
-                      'Cette action a bien été enregistrée. Elle ne modifie cependant pas immédiatement votre bilan de résilience.',
-                      style: theme.textTheme.bodyLarge,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getHeaderText(),
+                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 24),
+                  if (result.changedCapabilities.isEmpty)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Text(
+                          'Cette action a bien été enregistrée. Elle ne modifie cependant pas immédiatement votre bilan de résilience.',
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ),
+                    )
+                  else
+                    ...result.changedCapabilities.map((c) => _buildChangeCard(context, c, theme)),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Voir mon nouveau plan'),
                     ),
                   ),
-                )
-              else
-                ...result.changedCapabilities.map((c) => _buildChangeCard(context, c, theme)),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Voir mon nouveau plan'),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -80,7 +85,7 @@ class ProgressionScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              change.capabilityName.toUpperCase(),
+              change.capabilityName,
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -92,7 +97,7 @@ class ProgressionScreen extends StatelessWidget {
                     children: [
                       Text('Avant', style: theme.textTheme.bodySmall),
                       const SizedBox(height: 4),
-                      Text(_getStateName(change.beforeState), style: TextStyle(fontWeight: FontWeight.bold, color: _getStateColor(change.beforeState))),
+                      Text(UiStateHelper.getLabel(change.beforeState), style: TextStyle(fontWeight: FontWeight.bold, color: UiStateHelper.getColor(change.beforeState))),
                     ],
                   ),
                 ),
@@ -103,7 +108,7 @@ class ProgressionScreen extends StatelessWidget {
                     children: [
                       Text('Après', style: theme.textTheme.bodySmall),
                       const SizedBox(height: 4),
-                      Text(_getStateName(change.afterState), style: TextStyle(fontWeight: FontWeight.bold, color: _getStateColor(change.afterState))),
+                      Text(UiStateHelper.getLabel(change.afterState), style: TextStyle(fontWeight: FontWeight.bold, color: UiStateHelper.getColor(change.afterState))),
                     ],
                   ),
                 ),
@@ -126,23 +131,7 @@ class ProgressionScreen extends StatelessWidget {
     );
   }
 
-  String _getStateName(B3State state) {
-    switch (state) {
-      case B3State.maintained: return 'Disponible';
-      case B3State.degraded: return 'Partiellement (réserve limitée)';
-      case B3State.failed: return 'Indisponible';
-      case B3State.unknown: return 'Situation inconnue';
-      case B3State.notAssessed: return 'Non évalué';
-    }
-  }
+  
 
-  Color _getStateColor(B3State state) {
-    switch (state) {
-      case B3State.maintained: return B3Theme.b3Green;
-      case B3State.degraded: return B3Theme.b3Orange;
-      case B3State.failed: return B3Theme.b3Red;
-      case B3State.unknown: return B3Theme.b3Blue;
-      case B3State.notAssessed: return Colors.grey;
-    }
-  }
+  
 }

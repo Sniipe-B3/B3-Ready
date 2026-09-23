@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Réinitialiser mon foyer"),
-        content: const Text("Toutes vos données locales seront supprimées. Confirmer ?"),
+        content: const Text("Êtes-vous sûr de vouloir réinitialiser votre foyer ? Toutes vos données locales seront définitivement supprimées."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -105,122 +105,127 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('B3 Ready', style: theme.textTheme.headlineLarge),
-                    const SizedBox(height: 32),
-                    Text(
-                      'Moins dépendant.\nPlus préparé.\nPlus serein.',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        height: 1.3,
-                        fontSize: 28,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "Découvrez de quoi votre foyer dépend réellement, ce qui pourrait vous manquer en cas de perturbation et quelles améliorations auraient le plus d'impact.",
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 48),
-                    _buildFeatureRow(context, Icons.analytics_outlined, "Analyser", "Comprendre les dépendances de votre foyer."),
-                    _buildFeatureRow(context, Icons.search_outlined, "Identifier", "Repérer les points vulnérables."),
-                    _buildFeatureRow(context, Icons.lightbulb_outline, "Agir", "Améliorer progressivement votre autonomie."),
-                    const Spacer(),
-                    const SizedBox(height: 32),
-                    
-                    if (_snapshot != null) ...[
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () async {
-                            final session = ResilienceSession(
-                              knowledgeJson: appKnowledgeBase,
-                              scenarioId: _snapshot!.scenarioId,
-                              initialConfig: _snapshot!.config,
-                              initialCompletedActionIds: _snapshot!.completedActionIds,
-                              repository: _repository,
-                              isRestored: true,
-                            );
-                            if (!mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => ResultsScreen(session: session)),
-                            );
-                          },
-                          child: const Text(
-                            'Reprendre mon foyer',
-                            style: TextStyle(fontSize: 18),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('B3 Ready', style: theme.textTheme.headlineLarge),
+                        const SizedBox(height: 32),
+                        Text(
+                          'Moins dépendant.\nPlus préparé.\nPlus serein.',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            height: 1.3,
+                            fontSize: 28,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.tonal(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => OverviewScreen(
-                                  config: _snapshot!.config,
-                                  completedActionIds: _snapshot!.completedActionIds,
+                        const SizedBox(height: 16),
+                        Text(
+                          "Découvrez de quoi votre foyer dépend réellement, ce qui pourrait vous manquer en cas de perturbation et quelles améliorations auraient le plus d'impact.",
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                        const SizedBox(height: 48),
+                        _buildFeatureRow(context, Icons.analytics_outlined, "Analyser", "Comprendre les dépendances de votre foyer."),
+                        _buildFeatureRow(context, Icons.search_outlined, "Identifier", "Repérer les points vulnérables."),
+                        _buildFeatureRow(context, Icons.lightbulb_outline, "Agir", "Améliorer progressivement votre autonomie."),
+                        const Spacer(),
+                        const SizedBox(height: 32),
+                        
+                        if (_snapshot != null) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () async {
+                                final session = ResilienceSession(
+                                  knowledgeJson: appKnowledgeBase,
+                                  scenarioId: _snapshot!.scenarioId,
+                                  initialConfig: _snapshot!.config,
+                                  initialCompletedActionIds: _snapshot!.completedActionIds,
                                   repository: _repository,
-                                ),
+                                  isRestored: true,
+                                );
+                                if (!mounted) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => ResultsScreen(session: session)),
+                                );
+                              },
+                              child: const Text(
+                                'Reprendre mon foyer',
+                                style: TextStyle(fontSize: 18),
                               ),
-                            );
-                          },
-                          child: const Text(
-                            'Résilience par scénario',
-                            style: TextStyle(fontSize: 18),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.tonal(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => OverviewScreen(
+                                      config: _snapshot!.config,
+                                      completedActionIds: _snapshot!.completedActionIds,
+                                      repository: _repository,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Résilience par scénario',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: TextButton(
+                              onPressed: _reset,
+                              child: const Text("Réinitialiser mon foyer", style: TextStyle(color: Colors.red)),
+                            ),
+                          ),
+                        ] else ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const DiagnosticScreen()),
+                                );
+                              },
+                              child: const Text(
+                                'Commencer mon diagnostic',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Center(
+                          child: Text(
+                            "Vos données sont enregistrées uniquement sur cet appareil.",
+                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: TextButton(
-                          onPressed: _reset,
-                          child: const Text("Réinitialiser mon foyer", style: TextStyle(color: Colors.red)),
-                        ),
-                      ),
-                    ] else ...[
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const DiagnosticScreen()),
-                            );
-                          },
-                          child: const Text(
-                            'Commencer mon diagnostic',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        "Vos données sont enregistrées uniquement sur cet appareil.",
-                        style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
-                        textAlign: TextAlign.center,
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:b3_app/core/utils/ui_state_helper.dart';
+import 'package:b3_engine/b3_engine.dart';
 import '../models/dependency_impact.dart';
 
 import '../models/global_household_overview.dart';
@@ -44,8 +46,8 @@ class DependencyImpactCard extends StatelessWidget {
             ],
 
             if (impact.maintainedCapabilityIds.isNotEmpty) ...[
-              Text('Actuellement maintenu :', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green.shade700)),
-              ...impact.maintainedCapabilityIds.map((c) => Text('• ${getCapabilityName(c)}', style: TextStyle(color: Colors.green.shade700))),
+              Text('Actuellement maintenu :', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: UiStateHelper.getColor(B3State.maintained))),
+              ...impact.maintainedCapabilityIds.map((c) => Text('• ${getCapabilityName(c)}', style: TextStyle(color: UiStateHelper.getColor(B3State.maintained)))),
               const SizedBox(height: 12),
             ],
             
