@@ -133,6 +133,7 @@ void main() {
       expect(session.horizon, PreparednessHorizon.oneDay);
       // It uses the horizon 24h duration, not the scenario's default duration
       expect(session.horizon.duration, const Duration(hours: 24));
+      expect(session.scenario?.duration, const Duration(hours: 24));
     });
   });
 }

@@ -97,6 +97,16 @@ void main() {
       expect(session.simulationResult!.nodeStates['chauffer'], B3State.unknown);
       // Make sure the UI still says it's uncertain
       expect(find.text("À vérifier (info manquante)"), findsWidgets);
+
+      await tester.tap(find.text('72 h'));
+      await tester.pumpAndSettle();
+      expect(session.horizon, PreparednessHorizon.threeDays);
+      expect(find.text("À vérifier (info manquante)"), findsWidgets);
+
+      await tester.tap(find.text('6 h'));
+      await tester.pumpAndSettle();
+      expect(session.horizon, PreparednessHorizon.sixHours);
+      expect(find.text("À vérifier (info manquante)"), findsWidgets);
     });
     
     testWidgets('NOT_ASSESSED remains "Non évalué" across horizons', (WidgetTester tester) async {
