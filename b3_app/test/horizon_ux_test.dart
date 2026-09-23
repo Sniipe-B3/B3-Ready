@@ -96,7 +96,7 @@ void main() {
       expect(session.horizon, PreparednessHorizon.sevenDays);
       expect(session.simulationResult!.nodeStates['chauffer'], B3State.unknown);
       // Make sure the UI still says it's uncertain
-      expect(find.textContaining('capacité(s) à vérifier'), findsWidgets);
+      expect(find.text("À vérifier (info manquante)"), findsWidgets);
     });
     
     testWidgets('NOT_ASSESSED remains "Non évalué" across horizons', (WidgetTester tester) async {
@@ -123,7 +123,7 @@ void main() {
       
       expect(session.horizon, PreparednessHorizon.sixHours);
       expect(session.simulationResult!.nodeStates['chauffer'], B3State.notAssessed);
-      expect(find.textContaining('capacité(s) à vérifier'), findsWidgets);
+      expect(find.text('Non évalué'), findsWidgets);
     });
     
     testWidgets('FAILED remains "Indisponible" across horizons', (WidgetTester tester) async {
@@ -150,6 +150,7 @@ void main() {
       
       expect(session.horizon, PreparednessHorizon.threeDays);
       expect(session.simulationResult!.nodeStates['chauffer'], B3State.failed);
+      expect(find.text("Indisponible dans ce scénario"), findsWidgets);
     });
 
   });

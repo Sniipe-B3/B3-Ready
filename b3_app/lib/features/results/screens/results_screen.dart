@@ -1,3 +1,4 @@
+import 'package:b3_app/core/utils/ui_state_helper.dart';
 import '../../../data/household_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
@@ -111,6 +112,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
         final vulns = _session.simulationResult!.vulnerabilities.where((v) => v.state == B3State.failed).toList();
         final degraded = _session.simulationResult!.vulnerabilities.where((v) => v.state == B3State.degraded).toList();
+        final uncertainties = _session.simulationResult!.uncertainties;
         
         
         
@@ -172,8 +174,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                       Text('• ${_session.graph!.whereType<Capability>().where((c) => _session.simulationResult!.nodeStates[c.id] == B3State.failed || _session.simulationResult!.nodeStates[c.id] == B3State.degraded).length} capacité(s) insuffisante(s)', style: theme.textTheme.bodyLarge),
                       const SizedBox(height: 32),
                       
-                      ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de $scenarioName")),
-                      ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, "Partiellement vulnérable (réserve limitée)")),
+                      ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, UiStateHelper.getLabel(v.state))),
+                      ...degraded.map((v) => _buildVulnCard(v, theme, B3Theme.b3Orange, UiStateHelper.getLabel(v.state))),
+                      ...uncertainties.map((v) => _buildVulnCard(v, theme, B3Theme.b3Blue, UiStateHelper.getLabel(v.state))),
                       
                       const SizedBox(height: 32),
                       Card(
@@ -260,7 +263,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   
 
-  Widget _buildVulnCard(Vulnerability v, ThemeData theme, Color color, String subtitle) {
+  Widget _buildVulnCard(dynamic v, ThemeData theme, Color color, String subtitle) {
     final capId = v.capability.id;
     return Card(
       margin: const EdgeInsets.only(bottom: 24.0),
