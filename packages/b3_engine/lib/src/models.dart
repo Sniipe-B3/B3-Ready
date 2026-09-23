@@ -1,3 +1,38 @@
+enum PreparednessHorizon {
+  sixHours,
+  oneDay,
+  threeDays,
+  sevenDays,
+}
+
+extension PreparednessHorizonExtension on PreparednessHorizon {
+  Duration get duration {
+    switch (this) {
+      case PreparednessHorizon.sixHours:
+        return const Duration(hours: 6);
+      case PreparednessHorizon.oneDay:
+        return const Duration(days: 1);
+      case PreparednessHorizon.threeDays:
+        return const Duration(days: 3);
+      case PreparednessHorizon.sevenDays:
+        return const Duration(days: 7);
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case PreparednessHorizon.sixHours:
+        return "6 h";
+      case PreparednessHorizon.oneDay:
+        return "24 h";
+      case PreparednessHorizon.threeDays:
+        return "72 h";
+      case PreparednessHorizon.sevenDays:
+        return "7 j";
+    }
+  }
+}
+
 enum B3State {
   maintained,
   degraded,

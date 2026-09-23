@@ -22,6 +22,21 @@ class ResilienceSession extends ChangeNotifier {
 
   final List<String> _completedActionIds = [];
 
+  PreparednessHorizon _horizon = PreparednessHorizon.oneDay;
+  PreparednessHorizon get horizon => _horizon;
+
+  void setHorizon(PreparednessHorizon h) {
+    if (_horizon == h) return;
+    _horizon = h;
+    if (scenarioUnavailable) return;
+    
+    _scenario = DataMapper.parseScenario(knowledgeJson, _activeScenarioId, _horizon.duration);
+    _simulationResult = B3Engine().runSimulation(_graph!, _scenario!);
+    _recommendations = RecommendationEngine(knowledgeJson).generate(_simulationResult!, _config, _scenario!);
+    _actionPlan = ActionPlanBuilder(knowledgeJson).build(_recommendations!, _simulationResult!);
+    notifyListeners();
+  }
+
   Object? _saveError;
   String? _scenarioError;
   bool scenarioUnavailable = false;
@@ -90,12 +105,12 @@ class ResilienceSession extends ChangeNotifier {
   void _performInitialCalculation() {
     bool didFallback = false;
     try {
-      _scenario = DataMapper.parseScenario(knowledgeJson, requestedScenarioId);
+      _scenario = DataMapper.parseScenario(knowledgeJson, requestedScenarioId, _horizon.duration);
       _activeScenarioId = requestedScenarioId;
     } catch (e) {
       _scenarioError = "Votre ancien scénario n'est plus disponible. Votre foyer a été conservé.";
       try {
-        _scenario = DataMapper.parseScenario(knowledgeJson, 'panne_elec');
+        _scenario = DataMapper.parseScenario(knowledgeJson, 'panne_elec', _horizon.duration);
         _activeScenarioId = 'panne_elec';
         didFallback = true;
       } catch (fallbackError) {

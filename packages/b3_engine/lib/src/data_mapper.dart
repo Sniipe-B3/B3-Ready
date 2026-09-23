@@ -117,7 +117,7 @@ class DataMapper {
     return nodes.values.toList();
   }
 
-  static Scenario parseScenario(String knowledgeJson, String scenarioId) {
+  static Scenario parseScenario(String knowledgeJson, String scenarioId, [Duration? horizonDuration]) {
     final data = jsonDecode(knowledgeJson);
     if (data['scenarios'] != null) {
       for (var scen in data['scenarios']) {
@@ -134,7 +134,7 @@ class DataMapper {
           }
           return Scenario(
               name: scen['name'],
-              duration: Duration(hours: scen['duration'] ?? 0),
+              duration: horizonDuration ?? Duration(hours: scen['duration'] ?? 0),
               systemOverrides: overrides);
         }
       }

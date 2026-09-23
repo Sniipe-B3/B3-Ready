@@ -112,10 +112,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
         final vulns = _session.simulationResult!.vulnerabilities.where((v) => v.state == B3State.failed).toList();
         final degraded = _session.simulationResult!.vulnerabilities.where((v) => v.state == B3State.degraded).toList();
         
-        final totalPoints = vulns.length + degraded.length;
-        final String vigilanceText = totalPoints > 1 
-            ? "$totalPoints points de vigilance identifiés." 
-            : "1 point de vigilance identifié.";
+        
+        
+
+
             
         final scenarioName = _session.scenario?.name ?? 'cette perturbation';
 
@@ -149,18 +149,27 @@ class _ResultsScreenState extends State<ResultsScreen> {
                           ),
                         ),
                       ],
-                      if (totalPoints > 0)
-                        Text(
-                          vigilanceText,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: vulns.isNotEmpty ? B3Theme.b3Red : B3Theme.b3Orange,
-                          ),
-                        )
-                      else
-                        Text(
-                          "Votre foyer semble bien préparé pour $scenarioName.",
-                          style: theme.textTheme.titleLarge?.copyWith(color: B3Theme.b3Green),
+                      Text('Si la situation durait...', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<PreparednessHorizon>(
+                          segments: PreparednessHorizon.values.map((h) => ButtonSegment<PreparednessHorizon>(
+                            value: h,
+                            label: Text(h.label),
+                          )).toList(),
+                          selected: {_session.horizon},
+                          onSelectionChanged: (Set<PreparednessHorizon> newSelection) {
+                            _session.setHorizon(newSelection.first);
+                          },
                         ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text('À cet horizon :', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text('• ${_session.graph!.whereType<Capability>().where((c) => _session.simulationResult!.nodeStates[c.id] == B3State.maintained).length} capacité(s) reste(nt) disponible(s)', style: theme.textTheme.bodyLarge),
+                      Text('• ${_session.graph!.whereType<Capability>().where((c) => _session.simulationResult!.nodeStates[c.id] == B3State.unknown || _session.simulationResult!.nodeStates[c.id] == B3State.notAssessed).length} capacité(s) à vérifier', style: theme.textTheme.bodyLarge),
+                      Text('• ${_session.graph!.whereType<Capability>().where((c) => _session.simulationResult!.nodeStates[c.id] == B3State.failed || _session.simulationResult!.nodeStates[c.id] == B3State.degraded).length} capacité(s) insuffisante(s)', style: theme.textTheme.bodyLarge),
                       const SizedBox(height: 32),
                       
                       ...vulns.map((v) => _buildVulnCard(v, theme, B3Theme.b3Red, "Vulnérable en cas de $scenarioName")),
