@@ -48,7 +48,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final scenarioIds = scenariosData.map((s) => s['id'] as String).toList();
     
     // We can do this sync, it's fast enough for MVP
-    final analyses = analyzer.analyze(_currentConfig, scenarioIds);
+    final analyses = analyzer.analyze(_currentConfig, scenarioIds, horizonDuration: PreparednessHorizon.oneDay.duration);
     
     if (mounted) {
       setState(() {

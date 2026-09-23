@@ -8,7 +8,7 @@ class MultiScenarioAnalyzer {
 
   MultiScenarioAnalyzer(this.knowledgeJson);
 
-  List<ScenarioAnalysis> analyze(HouseholdConfig config, List<String> scenarioIds) {
+  List<ScenarioAnalysis> analyze(HouseholdConfig config, List<String> scenarioIds, {Duration? horizonDuration}) {
     final results = <ScenarioAnalysis>[];
     
     // Parse knowledge base to get scenario names just in case some fail to parse
@@ -20,7 +20,7 @@ class MultiScenarioAnalyzer {
       final name = scenarioData != null ? scenarioData['name'] as String : id;
 
       try {
-        final scenario = DataMapper.parseScenario(knowledgeJson, id);
+        final scenario = DataMapper.parseScenario(knowledgeJson, id, horizonDuration);
         final graph = DataMapper.buildGraph(knowledgeJson, config.clone());
         
         final simulationResult = B3Engine().runSimulation(graph, scenario);

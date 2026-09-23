@@ -102,6 +102,8 @@ void main() {
     await tester.pumpAndSettle();
     
     await tester.ensureVisible(find.text("Voir mon plan d'action"));
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -5000));
+    await tester.pumpAndSettle();
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
 
@@ -140,6 +142,8 @@ void main() {
     await tester.tap(find.text('Reprendre mon analyse'));
     await tester.pumpAndSettle();
     
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -5000));
+    await tester.pumpAndSettle();
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
 
@@ -190,6 +194,8 @@ void main() {
     expect(find.text('Panne électrique prolongée'), findsOneWidget);
 
     await tester.ensureVisible(find.text("Voir mon plan d'action"));
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -5000));
+    await tester.pumpAndSettle();
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
     expect(find.text("Mon plan d'action"), findsWidgets);
@@ -280,6 +286,8 @@ void main() {
     expect(str1.contains('failed'), isFalse);
 
     await tester.ensureVisible(find.text("Voir mon plan d'action"));
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -5000));
+    await tester.pumpAndSettle();
     await tester.tap(find.text("Voir mon plan d'action"));
     await tester.pumpAndSettle();
 
@@ -317,7 +325,9 @@ void main() {
       await tester.pumpAndSettle();
       
       await tester.ensureVisible(find.text("Voir mon plan d'action"));
-      await tester.tap(find.text("Voir mon plan d'action"));
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -5000));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Voir mon plan d'action"));
       await tester.pumpAndSettle();
       
       await tester.ensureVisible(find.text("Voir comment faire").first);

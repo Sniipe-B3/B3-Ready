@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'package:b3_app/features/action_plan/models/action_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:b3_app/features/progression/models/resilience_session.dart';
 import 'package:b3_engine/b3_engine.dart';
@@ -115,7 +115,7 @@ void main() {
       );
       
       // Structured checks
-      expect(organize72.priority, ActionPriority.medium);
+      expect(organize72.priority, ActionPriority.important);
       expect(organize72.capabilityIds, contains('chauffer'));
       expect(organize72.causeNodeIds, contains('bois'));
     });

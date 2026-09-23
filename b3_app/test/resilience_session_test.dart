@@ -157,7 +157,7 @@ void main() {
       ownedAssets: ['poele_bois'],
       ownedResources: ['bois'],
       assessedResources: {'bois'},
-      resourceDurations: {'bois': const Duration(hours: 24)},
+      resourceDurations: {'bois': const Duration(hours: 12)},
       assessedCapabilities: {'chauffer'},
     );
     final session = ResilienceSession(
@@ -344,7 +344,7 @@ void main() {
       ownedAssets: ['poele_bois'],
       ownedResources: ['bois'],
       assessedResources: {'bois'},
-      resourceDurations: {'bois': const Duration(hours: 24)},
+      resourceDurations: {'bois': const Duration(hours: 12)},
       assessedCapabilities: {'chauffer'},
     );
     final session = ResilienceSession(

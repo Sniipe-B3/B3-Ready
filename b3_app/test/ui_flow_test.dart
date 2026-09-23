@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:b3_app/features/results/screens/results_screen.dart';
@@ -11,11 +10,15 @@ import 'package:b3_app/data/app_knowledge_dataset.dart';
 void main() {
   group('Navigation Horizon Test', () {
     testWidgets('Session horizon is preserved across navigation', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400); 
+      tester.view.devicePixelRatio = 1.0; 
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
+
       final config = HouseholdConfig(
         ownedAssets: ['poele_bois'],
         ownedResources: ['bois'],
         assessedResources: {'bois'},
-        resourceDurations: {'bois': const Duration(hours: 48)}
+        resourceDurations: {'bois': const Duration(hours: 12)}
       );
       
       final session = ResilienceSession(
@@ -43,40 +46,46 @@ void main() {
       
       expect(session.horizon, PreparednessHorizon.threeDays);
       
-      // Go to Action Plan
-      await tester.tap(find.text('Voir mon plan d\'action'));
+      // Scroll down to the Action Plan button
+      final actionPlanButton = find.text("Voir mon plan d'action");
+      await tester.scrollUntilVisible(actionPlanButton, 500.0, scrollable: find.byType(Scrollable).first);
+      await tester.tap(actionPlanButton);
       await tester.pumpAndSettle();
       
-      // We are in Action Plan, ensure horizon is still 72h
       expect(session.horizon, PreparednessHorizon.threeDays);
       expect(find.byType(ActionPlanScreen), findsOneWidget);
       
-      // Find the Organize action and go to Guided Action
-      // Wait, there might be a button "Voir l'action" or we tap the ListTile.
-      // ActionPlanItemCard has a button or is clickable.
-      await tester.tap(find.text('Augmenter l\'autonomie : Bois de chauffage (bûches)'));
+      // Scroll to the first action button
+      // We look for a FilledButton that isn't the back button (if back button exists).
+      // Actually we can look for "Voir comment faire". Wait, does it say that?
+      // In ActionPlanItemCard the button text is "Voir comment faire". Let's check ActionPlanScreen!
+      // In ActionPlanScreen we just found FilledButton. Let's find by text.
+      // Wait, is it "Voir comment faire" ? Let's use a Finder by Type FilledButton inside a Card.
+      final actionButton = find.descendant(of: find.byType(Card), matching: find.byType(FilledButton)).first;
+      await tester.scrollUntilVisible(actionButton, 500.0, scrollable: find.byType(Scrollable).first);
+      await tester.tap(actionButton);
       await tester.pumpAndSettle();
       
       expect(find.byType(GuidedActionScreen), findsOneWidget);
       expect(session.horizon, PreparednessHorizon.threeDays);
       
-      // Back
+      // Back from GuidedActionScreen
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(ActionPlanScreen), findsOneWidget);
       
-      // Back
+      // Back from ActionPlanScreen
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(ResultsScreen), findsOneWidget);
       
-      // Horizon still 72h
       expect(session.horizon, PreparednessHorizon.threeDays);
     });
 
     testWidgets('Responsive 320px for SegmentedButton', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(320, 800);
       tester.view.devicePixelRatio = 1.0;
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
       
       final config = HouseholdConfig(ownedAssets: []);
       final session = ResilienceSession(
@@ -88,17 +97,12 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: ResultsScreen(session: session)));
       await tester.pumpAndSettle();
       
-      // Ensure no exceptions
       expect(tester.takeException(), isNull);
       
-      // All labels must be visible
       expect(find.text('6 h'), findsOneWidget);
       expect(find.text('24 h'), findsOneWidget);
       expect(find.text('72 h'), findsOneWidget);
       expect(find.text('7 j'), findsOneWidget);
-      
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
     });
   });
 }
