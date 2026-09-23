@@ -1223,8 +1223,8 @@ const String appDiagnosticQuestionsJson = '''
     "type": "single_choice",
     "options": [
       {
-        "id": "opt_potable_dur_yes",
-        "text": "Oui, de quoi tenir plusieurs jours",
+        "id": "opt_potable_yes",
+        "text": "Oui, j'ai une réserve",
         "facts": [
           {
             "type": "add_resource",
@@ -1233,39 +1233,25 @@ const String appDiagnosticQuestionsJson = '''
           {
             "type": "assess_resource",
             "value": "reserve_eau_potable"
-          },
-          {
-            "type": "add_resource_duration",
-            "value": "reserve_eau_potable",
-            "duration": 72
           }
         ]
       },
       {
-        "id": "opt_potable_dur_short",
-        "text": "Oui, pour moins de 24h",
-        "facts": [
-          {
-            "type": "add_resource",
-            "value": "reserve_eau_potable"
-          },
-          {
-            "type": "assess_resource",
-            "value": "reserve_eau_potable"
-          },
-          {
-            "type": "add_resource_duration",
-            "value": "reserve_eau_potable",
-            "duration": 12
-          }
-        ]
-      },
-      {
-        "id": "opt_potable_dur_unk",
+        "id": "opt_potable_unk",
         "text": "Je ne sais pas",
         "facts": [
           {
             "type": "assess_resource_unknown",
+            "value": "reserve_eau_potable"
+          }
+        ]
+      },
+      {
+        "id": "opt_potable_no",
+        "text": "Non",
+        "facts": [
+          {
+            "type": "assess_resource",
             "value": "reserve_eau_potable"
           }
         ]

@@ -40,7 +40,7 @@ void main() {
     final res = engine.runSimulation(graph, scenarioElec);
     
     expect(res.nodeStates['gaz_bouteille'], B3State.notAssessed);
-    expect(res.nodeStates['rechaud_gaz'], B3State.notAssessed);
+    expect(res.nodeStates['gaziniere_bouteille'], B3State.notAssessed);
     expect(res.nodeStates['cuisiner'], B3State.notAssessed);
   });
 
