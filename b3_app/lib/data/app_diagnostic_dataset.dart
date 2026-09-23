@@ -1172,13 +1172,18 @@ const String appDiagnosticQuestionsJson = '''
       },
       {
         "id": "opt_pay_none",
-        "text": "Aucun / Je ne sais pas",
+        "text": "Aucun autre moyen",
         "facts": [
           {
             "type": "assess_capability",
             "value": "effectuer_paiement_essentiel"
           }
         ]
+      },
+      {
+        "id": "opt_pay_unk",
+        "text": "Je ne sais pas",
+        "facts": []
       }
     ]
   },

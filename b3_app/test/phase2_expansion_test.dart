@@ -59,15 +59,35 @@ void main() {
       expect(result.nodeStates['boire_eau_potable'], B3State.unknown);
     });
 
-    test('TEST G - NO CASH INVENTION', () {
+    test('TEST G1 - AUCUN MOYEN', () {
       final state = DiagnosticState()
-        ..answerMultiple('q_payment_main', ['opt_pay_none']); // "Aucun / Je ne sais pas"
+        ..answerMultiple('q_payment_main', ['opt_pay_none']); // "Aucun autre moyen"
       
       final config = state.toHouseholdConfig(questions);
       
       expect(config.ownedAssets.contains('especes_disponibles'), isFalse);
       expect(config.ownedAssets.contains('paiement_electronique'), isFalse);
       expect(config.assessedCapabilities.contains('effectuer_paiement_essentiel'), isTrue);
+      
+      final scenario = DataMapper.parseScenario(appKnowledgeBase, 'panne_paiement');
+      final graph = DataMapper.buildGraph(appKnowledgeBase, config);
+      final result = B3Engine().runSimulation(graph, scenario);
+      expect(result.nodeStates['effectuer_paiement_essentiel'], B3State.failed);
+    });
+
+    test('TEST G2 - JE NE SAIS PAS', () {
+      final state = DiagnosticState()
+        ..answerMultiple('q_payment_main', ['opt_pay_unk']); // "Je ne sais pas"
+      
+      final config = state.toHouseholdConfig(questions);
+      
+      expect(config.ownedAssets.contains('especes_disponibles'), isFalse);
+      expect(config.assessedCapabilities.contains('effectuer_paiement_essentiel'), isFalse);
+      
+      final scenario = DataMapper.parseScenario(appKnowledgeBase, 'panne_paiement');
+      final graph = DataMapper.buildGraph(appKnowledgeBase, config);
+      final result = B3Engine().runSimulation(graph, scenario);
+      expect(result.nodeStates['effectuer_paiement_essentiel'], B3State.notAssessed);
     });
 
     test('TEST C - UNKNOWN POTABLE', () {
@@ -150,7 +170,7 @@ void main() {
       }
     });
 
-    test('TEST J - GLOBAL OVERVIEW RÉEL', () {
+    test('TEST J - CROSS-SCENARIO ACTION PIPELINE', () {
       final config = HouseholdConfig(
         ownedAssets: ['paiement_electronique', 'stock_eau_potable'],
         unknownResources: {'especes_disponibles'}, // Simulate unknown cash
