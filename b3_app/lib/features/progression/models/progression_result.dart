@@ -43,7 +43,23 @@ class ProgressionResult {
   
   final List<CapabilityChange> changedCapabilities;
   final bool hasStructuralChange;
+  final List<String>? beforeCompletedActionIds;
+  final List<String>? afterCompletedActionIds;
 
+
+  List<String> get resolvedActionIds {
+    if (beforePlan == null || afterPlan == null) return [];
+    final beforeIds = beforePlan!.items.map((i) => i.id).toSet();
+    final afterIds = afterPlan!.items.map((i) => i.id).toSet();
+    return beforeIds.difference(afterIds).toList();
+  }
+
+  List<String> get newActionIds {
+    if (beforePlan == null || afterPlan == null) return [];
+    final beforeIds = beforePlan!.items.map((i) => i.id).toSet();
+    final afterIds = afterPlan!.items.map((i) => i.id).toSet();
+    return afterIds.difference(beforeIds).toList();
+  }
   ProgressionResult({
     required this.beforeConfig,
     required this.afterConfig,
@@ -53,6 +69,8 @@ class ProgressionResult {
     required this.afterPlan,
     required this.changedCapabilities,
     required this.updateNature,
-    this.hasStructuralChange = true,
+    required this.hasStructuralChange,
+    this.beforeCompletedActionIds,
+    this.afterCompletedActionIds,
   });
 }

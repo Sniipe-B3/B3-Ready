@@ -77,15 +77,15 @@ void main() {
     final capabilities = graph.whereType<Capability>();
     
     expect(capabilities.isNotEmpty, true, reason: 'Test setup should have capabilities');
-    int count = 0;
+    
     for (final cap in capabilities) {
-      count++;
+      
       expect(
         globalResult.nodeStates[cap.id],
         detailResult.nodeStates[cap.id],
         reason: 'Capability ${cap.id} should match at 24h horizon'
       );
     }
-    print('Compared $count capabilities successfully.');
+    // print('Compared $count capabilities successfully.');
   });
 }

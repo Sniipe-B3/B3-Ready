@@ -9,7 +9,7 @@ void main() {
   group('GlobalActionPlanBuilder Tests (A-J)', () {
     late GlobalActionPlanBuilder builder;
     late HouseholdConfig config;
-    final String kbJson = appKnowledgeBase; // Using real KB string
+    const String kbJson = appKnowledgeBase; // Using real KB string
     
     setUp(() {
       builder = GlobalActionPlanBuilder(kbJson);

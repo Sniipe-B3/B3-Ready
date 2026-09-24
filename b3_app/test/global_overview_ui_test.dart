@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:b3_app/data/household_repository.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +11,71 @@ import 'package:b3_app/app/app.dart';
 import 'package:b3_engine/b3_engine.dart';
 import 'package:b3_app/data/household_snapshot.dart';
 
+
+
+import 'package:b3_app/features/scenarios/models/scenario_analysis.dart';
+import 'package:b3_app/features/action_plan/models/action_plan.dart';
+import 'package:b3_app/features/scenarios/screens/global_overview_screen.dart';
+
+
+const appKnowledgeBase = '{"scenarios": {"panne_elec": {"id": "panne_elec", "title": "Panne", "description": "", "baseDuration": 24, "impacts": []}}, "capabilities": [], "resources": [], "assets": []}';
+class FakeHouseholdRepository implements HouseholdRepository {
+  FakeHouseholdRepository();
+@override
+Future<void> clear() async {}
+  @override
+  Future<HouseholdSnapshot?> load() async => null;
+  @override
+  Future<void> save(HouseholdSnapshot snapshot) async {}
+}
 void main() {
+  testWidgets("TEST K — PREVIEW AND TEST L — 320PX", (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final config = HouseholdConfig(ownedAssets: []);
+    final repository = FakeHouseholdRepository();
+    final analyses = <ScenarioAnalysis>[];
+
+    final globalPlan = ActionPlan([
+        ActionPlanItem(id: 'acq_1', type: RecommendationType.acquire, priority: ActionPriority.essential, capabilityIds: {'c1'}, title: 'Test 1', description: 'Desc 1', reason: '', targetAssetId: 'a1'),
+        ActionPlanItem(id: 'acq_2', type: RecommendationType.acquire, priority: ActionPriority.essential, capabilityIds: {'c2'}, title: 'Test 2', description: 'Desc 2', reason: '', targetAssetId: 'a2'),
+        ActionPlanItem(id: 'acq_3', type: RecommendationType.acquire, priority: ActionPriority.essential, capabilityIds: {'c3'}, title: 'Test 3', description: 'Desc 3', reason: '', targetAssetId: 'a3'),
+        ActionPlanItem(id: 'acq_4', type: RecommendationType.acquire, priority: ActionPriority.essential, capabilityIds: {'c4'}, title: 'Test 4', description: 'Desc 4', reason: '', targetAssetId: 'a4'),
+    ]);
+
+    await tester.pumpWidget(MaterialApp(
+      home: GlobalOverviewScreen(
+        config: config,
+        repository: repository,
+        analyses: analyses,
+        globalActionPlan: globalPlan,
+        completedActionIds: const [],
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final expectedTitles = ['Test 1', 'Test 2', 'Test 3'];
+
+    // Find all titles in the list of cards
+    final cardFinders = find.byType(Card);
+    final displayedTitles = <String>[];
+    for (var i = 0; i < cardFinders.evaluate().length; i++) {
+      final widget = tester.widget<Card>(cardFinders.at(i));
+      final listTile = widget.child as ListTile?;
+      if (listTile != null && listTile.title is Text) {
+        displayedTitles.add((listTile.title as Text).data ?? '');
+      }
+    }
+
+    // It should display exactly the top 3 items
+    expect(displayedTitles, equals(expectedTitles));
+    
+    expect(tester.takeException(), isNull);
+  });
+
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('Global Overview End-to-End Test', (WidgetTester tester) async {
@@ -54,11 +120,11 @@ void main() {
     expect(find.text('cuisiner'), findsNothing);
     expect(find.textContaining('Réseau Électrique'), findsWidgets);
 
-    // We test Top 3 navigation instead of the old cross-scenario action
-    final btnVoirPriority = find.text("Voir la priorité");
-    expect(btnVoirPriority, findsWidgets);
-    await tester.ensureVisible(btnVoirPriority.first);
-    await tester.tap(btnVoirPriority.first, warnIfMissed: false);
+    // We test Top 3 navigation using the Roadmap Preview list tile
+    final roadmapTiles = find.byType(ListTile);
+    expect(roadmapTiles, findsWidgets);
+    await tester.ensureVisible(roadmapTiles.first);
+    await tester.tap(roadmapTiles.first, warnIfMissed: false);
     await tester.pumpAndSettle();
 
     // Now inside GuidedActionScreen

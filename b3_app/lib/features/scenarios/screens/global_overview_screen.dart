@@ -6,8 +6,12 @@ import '../../action_plan/services/guided_action_mapper.dart';
 import '../../action_plan/screens/guided_action_screen.dart';
 import '../../progression/models/household_update.dart';
 import '../../progression/screens/progression_screen.dart';
+import '../../progression/models/progression_result.dart';
+import '../../action_plan/action_plan_builder.dart';
 import '../../progression/utils/action_update_resolver.dart';
 import '../../action_plan/models/action_plan.dart';
+import '../../action_plan/roadmap_builder.dart';
+import '../../action_plan/screens/roadmap_screen.dart';
 import '../../../data/household_repository.dart';
 import '../../../data/app_knowledge_dataset.dart';
 import '../models/scenario_analysis.dart';
@@ -248,7 +252,7 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
           builder: (_) => ProgressionScreen(result: result),
         ),
       );
-      if (!mounted) return; Navigator.pop(context, true); 
+      if (!mounted) return; if (mounted) Navigator.pop(context, true); 
     }
   }
 
@@ -272,84 +276,7 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
                   Text('Vue globale du foyer', style: theme.textTheme.headlineSmall),
                   const SizedBox(height: 24),
                   if (widget.globalActionPlan != null && widget.globalActionPlan!.items.isNotEmpty) ...[
-                    Text('Vos 3 priorités', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    ...widget.globalActionPlan!.items.take(3).map((item) {
-                      String urgencyLabel = '';
-                      Color urgencyColor = Colors.grey;
-                      if (item.urgency == ActionUrgencyCategory.top) {
-                        urgencyLabel = 'À faire d\'abord';
-                        urgencyColor = Colors.red;
-                      } else if (item.urgency == ActionUrgencyCategory.important) {
-                        urgencyLabel = 'Important';
-                        urgencyColor = Colors.orange;
-                      } else if (item.urgency == ActionUrgencyCategory.later) {
-                        urgencyLabel = 'À préparer ensuite';
-                        urgencyColor = Colors.blue;
-                      }
-                      
-                      return Card(
-                        child: ListTile(
-                          leading: Icon(Icons.stars, color: urgencyColor),
-                          title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(urgencyLabel, style: TextStyle(color: urgencyColor, fontWeight: FontWeight.bold)),
-                              if (item.priorityReasons.isNotEmpty)
-                                Text(item.priorityReasons.first.description, style: const TextStyle(fontStyle: FontStyle.italic)),
-                            ],
-                          ),
-                          trailing: const Text('Voir la priorité'),
-                          isThreeLine: item.priorityReasons.isNotEmpty,
-                          onTap: () {
-                            if (item.primaryScenarioId != null) {
-                              final tempSession = ResilienceSession(
-                                knowledgeJson: appKnowledgeBase,
-                                scenarioId: item.primaryScenarioId!,
-                                initialConfig: widget.config.clone(),
-                                repository: widget.repository,
-                              );
-                              
-                              final mapper = GuidedActionMapper(appKnowledgeBase);
-                              final details = mapper.map(item, item.primaryScenarioId!);
-                              
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => GuidedActionScreen(
-                                    details: details,
-                                    session: tempSession,
-                                    onUnderstand: () => Navigator.pop(context),
-                                    onUpdate: () {
-                                      final HouseholdUpdate update;
-                                      if (item.targetAssetId != null) {
-                                        update = ActionUpdateResolver.resolveAssetUpdate(item, true);
-                                      } else if (item.targetResourceId != null) {
-                                        update = ActionUpdateResolver.resolveResourceUpdate(item, true, const Duration(hours: 24), false);
-                                      } else {
-                                        update = ActionUpdateResolver.resolveActionCompleted(item);
-                                      }
-                                      final result = tempSession.recalculate(update);
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ProgressionScreen(result: result),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ).then((changed) {
-                                if (changed == true && mounted) {
-                                  Navigator.pop(context, true);
-                                }
-                              });
-                            }
-                          },
-                        ),
-                      );
-                    }),
+                    _buildRoadmapPreview(context, widget.globalActionPlan!, widget.completedActionIds),
                     const SizedBox(height: 24),
                   ],
 
@@ -424,6 +351,136 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoadmapPreview(BuildContext context, ActionPlan globalPlan, List<String> completedActionIds) {
+    final builder = PreparednessRoadmapBuilder();
+    final roadmap = builder.build(globalPlan, []);
+    
+    final theme = Theme.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Votre feuille de route', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 16),
+        
+        Text('MAINTENANT', style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        if (roadmap.now.isEmpty) 
+          const Text('Aucune action prioritaire pour le moment.')
+        else
+          ...roadmap.now.take(3).map((step) {
+            final reason = step.item.priorityReasons.isNotEmpty ? step.item.priorityReasons.first.description : '';
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                title: Text(step.item.title),
+                subtitle: reason.isNotEmpty ? Text("Pourquoi maintenant ?\n-> $reason") : null,
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () async {
+                  await _openGuidedAction(step.item);
+                },
+              ),
+            );
+          }).toList(),
+          
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            Text('ENSUITE — ${roadmap.next.length} actions', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
+            Text('PLUS TARD — ${roadmap.later.length} actions', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PreparednessRoadmapScreen(
+                roadmap: roadmap,
+                config: widget.config,
+                repository: widget.repository,
+                analyses: widget.analyses,
+                completedActionIds: widget.completedActionIds,
+              )));
+            },
+            child: const Text('Voir toute ma feuille de route'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openGuidedAction(ActionPlanItem item) async {
+        final primaryScenarioId = item.primaryScenarioId;
+    if (primaryScenarioId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Action globale ne nécessitant pas de mode guidé.")));
+      return;
+    }
+    final session = ResilienceSession(
+      knowledgeJson: appKnowledgeBase,
+      scenarioId: primaryScenarioId,
+      initialConfig: widget.config.clone(),
+      initialCompletedActionIds: widget.completedActionIds,
+      repository: widget.repository,
+    );
+
+    await session.waitForPendingSave();
+    final mapper = GuidedActionMapper(appKnowledgeBase);
+    final guidedDetails = mapper.map(item, primaryScenarioId);
+    
+    if (!mounted) return;
+    
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => GuidedActionScreen(
+          details: guidedDetails,
+          session: session,
+          onUnderstand: () {},
+          onUpdate: () {
+            final HouseholdUpdate update;
+            if (item.targetAssetId != null) {
+              update = ActionUpdateResolver.resolveAssetUpdate(item, true);
+            } else if (item.targetResourceId != null) {
+              update = ActionUpdateResolver.resolveResourceUpdate(item, true, const Duration(hours: 24), false);
+            } else {
+              update = ActionUpdateResolver.resolveActionCompleted(item);
+            }
+            final result = session.recalculate(update);
+            
+            final resultWithIds = ProgressionResult(
+               beforeConfig: result.beforeConfig,
+               afterConfig: result.afterConfig,
+               beforeResult: result.beforeResult,
+               afterResult: result.afterResult,
+               beforePlan: widget.globalActionPlan!,
+               afterPlan: ActionPlanBuilder(appKnowledgeBase).build(RecommendationEngine(appKnowledgeBase).generate(B3Engine().runSimulation(DataMapper.buildGraph(appKnowledgeBase, result.afterConfig), DataMapper.parseScenario(appKnowledgeBase, primaryScenarioId, const Duration(hours: 24))), result.afterConfig, DataMapper.parseScenario(appKnowledgeBase, primaryScenarioId, const Duration(hours: 24))), B3Engine().runSimulation(DataMapper.buildGraph(appKnowledgeBase, result.afterConfig), DataMapper.parseScenario(appKnowledgeBase, primaryScenarioId, const Duration(hours: 24)))),
+               changedCapabilities: result.changedCapabilities,
+               updateNature: result.updateNature,
+               hasStructuralChange: result.hasStructuralChange,
+               beforeCompletedActionIds: widget.completedActionIds,
+               afterCompletedActionIds: session.completedActionIds,
+            );
+            
+            Navigator.pushReplacement(
+              ctx,
+              MaterialPageRoute(
+                builder: (_) => ProgressionScreen(
+                  result: resultWithIds,
+                ),
+              ),
+            ).then((_) {
+               if (mounted) Navigator.pop(context, true);
+            });
+          },
         ),
       ),
     );

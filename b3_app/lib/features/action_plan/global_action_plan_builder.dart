@@ -79,10 +79,10 @@ class GlobalActionPlanBuilder {
         
         for (var scenarioId in affectedScenarioIds) {
           Duration dur = const Duration(hours: 24);
-          if (horizon == PreparednessHorizon.sixHours) dur = const Duration(hours: 6);
-          else if (horizon == PreparednessHorizon.oneDay) dur = const Duration(hours: 24);
-          else if (horizon == PreparednessHorizon.threeDays) dur = const Duration(hours: 72);
-          else if (horizon == PreparednessHorizon.sevenDays) dur = const Duration(days: 7);
+          if (horizon == PreparednessHorizon.sixHours) { dur = const Duration(hours: 6); }
+          else if (horizon == PreparednessHorizon.oneDay) { dur = const Duration(hours: 24); }
+          else if (horizon == PreparednessHorizon.threeDays) { dur = const Duration(hours: 72); }
+          else if (horizon == PreparednessHorizon.sevenDays) { dur = const Duration(days: 7); }
           
           Scenario scenario;
           try {

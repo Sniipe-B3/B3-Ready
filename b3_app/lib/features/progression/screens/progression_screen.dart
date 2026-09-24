@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:b3_app/core/utils/ui_state_helper.dart';
 import '../models/progression_result.dart';
+import '../../action_plan/roadmap_builder.dart';
 import '../models/household_update.dart';
 import '../../../app/theme/theme.dart';
 
@@ -59,6 +60,8 @@ class ProgressionScreen extends StatelessWidget {
                     )
                   else
                     ...result.changedCapabilities.map((c) => _buildChangeCard(context, c, theme)),
+                  const SizedBox(height: 16),
+                  _buildRoadmapDelta(context),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -71,6 +74,45 @@ class ProgressionScreen extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildRoadmapDelta(BuildContext context) {
+    if (result.beforePlan == null || result.afterPlan == null) return const SizedBox.shrink();
+    
+    final newlyResolved = result.resolvedActionIds.length;
+    
+    final builder = PreparednessRoadmapBuilder();
+    final beforeRoadmap = builder.build(result.beforePlan!, []);
+    final afterRoadmap = builder.build(result.afterPlan!, []);
+    
+    final beforeNowIds = beforeRoadmap.now.map((s) => s.item.id).toSet();
+    final afterNowIds = afterRoadmap.now.map((s) => s.item.id).toSet();
+    
+    final newPlanIds = result.newActionIds.toSet();
+    final movedToNow = afterNowIds.difference(beforeNowIds).difference(newPlanIds).length;
+    
+    if (newlyResolved == 0 && movedToNow == 0) return const SizedBox.shrink();
+    
+    final theme = Theme.of(context);
+    
+    return Card(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Votre feuille de route a été mise à jour.', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            if (newlyResolved > 0)
+              Text('• $newlyResolved priorité(s) résolue(s).', style: const TextStyle(color: Colors.green)),
+            if (movedToNow > 0)
+              Text('• $movedToNow nouvelle(s) action(s) devien(nen)t prioritaire(s).', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary)),
+          ],
         ),
       ),
     );
