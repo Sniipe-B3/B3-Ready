@@ -1,10 +1,31 @@
 import 'package:b3_engine/b3_engine.dart';
 
+
 enum ActionPriority {
   essential,
   important,
   toVerify,
   improvement,
+}
+
+enum ActionUrgencyCategory {
+  top,
+  important,
+  later,
+}
+
+enum PriorityReasonType {
+  blocksPurchaseDecision,
+  usesExistingSolution,
+  affectsMultipleCapabilities,
+  affectsMultipleScenarios,
+  appearsAtShortHorizon,
+}
+
+class PriorityReason {
+  final PriorityReasonType type;
+  final String description;
+  PriorityReason(this.type, this.description);
 }
 
 class ActionPlanItem {
@@ -19,6 +40,12 @@ class ActionPlanItem {
   final String? targetAssetId;
   final String? targetResourceId;
 
+  final Set<String> affectedScenarioIds;
+  final PreparednessHorizon? earliestAffectedHorizon;
+  final ActionUrgencyCategory? urgency;
+  final List<PriorityReason> priorityReasons;
+  final String? primaryScenarioId;
+
   ActionPlanItem({
     required this.id,
     required this.title,
@@ -30,6 +57,11 @@ class ActionPlanItem {
     this.causeNodeIds = const {},
     this.targetAssetId,
     this.targetResourceId,
+    this.affectedScenarioIds = const {},
+    this.earliestAffectedHorizon,
+    this.urgency,
+    this.priorityReasons = const [],
+    this.primaryScenarioId,
   });
 }
 
@@ -37,4 +69,3 @@ class ActionPlan {
   final List<ActionPlanItem> items;
   ActionPlan(this.items);
 }
-

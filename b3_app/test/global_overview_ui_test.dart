@@ -54,18 +54,19 @@ void main() {
     expect(find.text('cuisiner'), findsNothing);
     expect(find.textContaining('Réseau Électrique'), findsWidgets);
 
-    final btnVoirAction = find.text("Voir l'action");
-    expect(btnVoirAction, findsWidgets);
-    await tester.tap(btnVoirAction.first, warnIfMissed: false);
+    // We test Top 3 navigation instead of the old cross-scenario action
+    final btnVoirPriority = find.text("Voir la priorité");
+    expect(btnVoirPriority, findsWidgets);
+    await tester.ensureVisible(btnVoirPriority.first);
+    await tester.tap(btnVoirPriority.first, warnIfMissed: false);
     await tester.pumpAndSettle();
 
-    final btnOuvrirAction = find.text("Ouvrir dans mon plan d'action");
-    expect(btnOuvrirAction, findsOneWidget);
-    await tester.tap(btnOuvrirAction);
+    // Now inside GuidedActionScreen
+    final btnComplete = find.byType(FilledButton).last;
+    await tester.ensureVisible(btnComplete);
+    await tester.tap(btnComplete);
     await tester.pumpAndSettle();
 
-    // Inside ProgressionScreen
-    // Inside ProgressionScreen, it just shows the success message
     final btnVoirNouveauPlan = find.text("Voir mon nouveau plan");
     expect(btnVoirNouveauPlan, findsOneWidget);
     await tester.tap(btnVoirNouveauPlan);

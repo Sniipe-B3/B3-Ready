@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:b3_engine/b3_engine.dart';
 import '../../progression/models/resilience_session.dart';
+import '../../action_plan/services/guided_action_mapper.dart';
+import '../../action_plan/screens/guided_action_screen.dart';
 import '../../progression/models/household_update.dart';
 import '../../progression/screens/progression_screen.dart';
 import '../../progression/utils/action_update_resolver.dart';
@@ -17,12 +19,14 @@ import 'dependency_impact_card.dart';
 class GlobalOverviewScreen extends StatefulWidget {
   final List<ScenarioAnalysis> analyses;
   final HouseholdConfig config;
+  final ActionPlan? globalActionPlan;
   final List<String> completedActionIds;
   final HouseholdRepository repository;
 
   const GlobalOverviewScreen({
     Key? key,
     required this.analyses,
+    this.globalActionPlan,
     required this.config,
     required this.completedActionIds,
     required this.repository,
@@ -267,6 +271,88 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
                 children: [
                   Text('Vue globale du foyer', style: theme.textTheme.headlineSmall),
                   const SizedBox(height: 24),
+                  if (widget.globalActionPlan != null && widget.globalActionPlan!.items.isNotEmpty) ...[
+                    Text('Vos 3 priorités', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ...widget.globalActionPlan!.items.take(3).map((item) {
+                      String urgencyLabel = '';
+                      Color urgencyColor = Colors.grey;
+                      if (item.urgency == ActionUrgencyCategory.top) {
+                        urgencyLabel = 'À faire d\'abord';
+                        urgencyColor = Colors.red;
+                      } else if (item.urgency == ActionUrgencyCategory.important) {
+                        urgencyLabel = 'Important';
+                        urgencyColor = Colors.orange;
+                      } else if (item.urgency == ActionUrgencyCategory.later) {
+                        urgencyLabel = 'À préparer ensuite';
+                        urgencyColor = Colors.blue;
+                      }
+                      
+                      return Card(
+                        child: ListTile(
+                          leading: Icon(Icons.stars, color: urgencyColor),
+                          title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(urgencyLabel, style: TextStyle(color: urgencyColor, fontWeight: FontWeight.bold)),
+                              if (item.priorityReasons.isNotEmpty)
+                                Text(item.priorityReasons.first.description, style: const TextStyle(fontStyle: FontStyle.italic)),
+                            ],
+                          ),
+                          trailing: const Text('Voir la priorité'),
+                          isThreeLine: item.priorityReasons.isNotEmpty,
+                          onTap: () {
+                            if (item.primaryScenarioId != null) {
+                              final tempSession = ResilienceSession(
+                                knowledgeJson: appKnowledgeBase,
+                                scenarioId: item.primaryScenarioId!,
+                                initialConfig: widget.config.clone(),
+                                repository: widget.repository,
+                              );
+                              
+                              final mapper = GuidedActionMapper(appKnowledgeBase);
+                              final details = mapper.map(item, item.primaryScenarioId!);
+                              
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GuidedActionScreen(
+                                    details: details,
+                                    session: tempSession,
+                                    onUnderstand: () => Navigator.pop(context),
+                                    onUpdate: () {
+                                      final HouseholdUpdate update;
+                                      if (item.targetAssetId != null) {
+                                        update = ActionUpdateResolver.resolveAssetUpdate(item, true);
+                                      } else if (item.targetResourceId != null) {
+                                        update = ActionUpdateResolver.resolveResourceUpdate(item, true, const Duration(hours: 24), false);
+                                      } else {
+                                        update = ActionUpdateResolver.resolveActionCompleted(item);
+                                      }
+                                      final result = tempSession.recalculate(update);
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ProgressionScreen(result: result),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ).then((changed) {
+                                if (changed == true && mounted) {
+                                  Navigator.pop(context, true);
+                                }
+                              });
+                            }
+                          },
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 24),
+                  ],
+
                   
                   if (_overview.recurringIssues.isEmpty && _overview.dependencyImpacts.isEmpty && _overview.actions.isEmpty && _overview.uncertainties.isEmpty)
                     Container(
@@ -317,7 +403,7 @@ class _GlobalOverviewScreenState extends State<GlobalOverviewScreen> {
                       child: ListTile(
                         title: Text(action.title),
                         subtitle: Text('Concerne ${action.scenarioIds.length} scénario(s)'),
-                        trailing: const Text('Voir l\'action'),
+                        trailing: const Text("Voir l'action"),
                         onTap: () => _showActionDetails(action),
                       ),
                     )),

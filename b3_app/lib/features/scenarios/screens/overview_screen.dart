@@ -10,6 +10,9 @@ import '../../results/screens/results_screen.dart';
 import '../models/scenario_analysis.dart';
 import '../services/multi_scenario_analyzer.dart';
 import 'global_overview_screen.dart';
+import '../../action_plan/global_action_plan_builder.dart';
+import '../../action_plan/models/action_plan.dart';
+
 
 class OverviewScreen extends StatefulWidget {
   final HouseholdConfig config;
@@ -29,6 +32,7 @@ class OverviewScreen extends StatefulWidget {
 
 class _OverviewScreenState extends State<OverviewScreen> {
   late List<ScenarioAnalysis> _analyses;
+  ActionPlan? _globalActionPlan;
   bool _isLoading = true;
   late HouseholdConfig _currentConfig;
   late List<String> _currentCompletedActionIds;
@@ -50,9 +54,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
     // We can do this sync, it's fast enough for MVP
     final analyses = analyzer.analyze(_currentConfig, scenarioIds, horizonDuration: PreparednessHorizon.oneDay.duration);
     
+    final globalBuilder = GlobalActionPlanBuilder(appKnowledgeBase);
+    final globalPlan = globalBuilder.build(analyses, _currentConfig);
+    
     if (mounted) {
       setState(() {
         _analyses = analyses;
+        _globalActionPlan = globalPlan;
         _isLoading = false;
       });
     }
@@ -145,6 +153,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           MaterialPageRoute(
                             builder: (_) => GlobalOverviewScreen(
                               analyses: _analyses,
+                              globalActionPlan: _globalActionPlan,
                               config: _currentConfig,
                               completedActionIds: _currentCompletedActionIds,
                               repository: widget.repository ?? SharedPrefsHouseholdRepository(),

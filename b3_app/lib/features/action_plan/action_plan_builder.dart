@@ -59,6 +59,8 @@ class ActionPlanBuilder {
         targetAssetId: first.targetAssetId,
         targetResourceId: first.targetResourceId,
         causeNodeIds: causeNodeIds,
+        affectedScenarioIds: const {},
+        primaryScenarioId: null,
       ));
     }
 
